@@ -2,6 +2,7 @@ package encoding
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -58,6 +59,9 @@ func DecodeUint256orHex(val *string) (*big.Int, error) {
 // DecodeInt64orHex decodes a string int64 or hex string into a int64
 func DecodeInt64orHex(val *string) (int64, error) {
 	i, err := DecodeUint64orHex(val)
+	if i > math.MaxInt64 {
+		return 0, fmt.Errorf("value exceeds int64 upper bound")
+	}
 	return int64(i), err
 }
 
