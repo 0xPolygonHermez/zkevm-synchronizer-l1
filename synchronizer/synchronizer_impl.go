@@ -102,6 +102,19 @@ func (s *SynchronizerImpl) GetL1InfoRootPerIndex(ctx context.Context, L1InfoTree
 	return root, err
 }
 
+func (s *SynchronizerImpl) GetL1InfoTreeLeaves(ctx context.Context, indexLeaves []uint32) (map[uint32]L1InfoTreeLeaf, error) {
+	leaves, err := s.l1InfoTreeManager.GetL1InfoTreeLeaves(ctx, indexLeaves, nil)
+	if err != nil {
+		return nil, err
+	}
+	// Convert type state.L1InfoTreeLeaf to type L1InfoTreeLeaf
+	returnLeaves := make(map[uint32]L1InfoTreeLeaf)
+	for _, idx := range indexLeaves {
+		returnLeaves[idx] = L1InfoTreeLeaf(leaves[idx])
+	}
+	return returnLeaves, nil
+}
+
 func convertStorageBlock(block *pgstorage.L1Block) *L1Block {
 	return &L1Block{
 		BlockNumber: block.BlockNumber,

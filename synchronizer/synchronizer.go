@@ -3,6 +3,7 @@ package synchronizer
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/config"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
@@ -15,6 +16,17 @@ var (
 	// ErrNotFound is used when the object is not found
 	ErrNotFound = errors.New("not found")
 )
+
+type L1InfoTreeLeaf struct {
+	L1InfoTreeRoot    common.Hash
+	L1InfoTreeIndex   uint32
+	PreviousBlockHash common.Hash
+	BlockNumber       uint64
+	Timestamp         time.Time
+	MainnetExitRoot   common.Hash
+	RollupExitRoot    common.Hash
+	GlobalExitRoot    common.Hash
+}
 
 type SynchronizerRunner interface {
 	// Sync is blocking call, must be launched as a goroutine
@@ -34,6 +46,7 @@ type SynchronizerL1InfoTreeQuerier interface {
 	// GetL1InfoRootPerIndex returns the L1InfoTree root hash for a given index
 	// if not found returns ErrNotFound
 	GetL1InfoRootPerIndex(ctx context.Context, L1InfoTreeIndex uint32) (common.Hash, error)
+	GetL1InfoTreeLeaves(ctx context.Context, indexLeaves []uint32) (map[uint32]L1InfoTreeLeaf, error)
 }
 
 type Synchronizer interface {
