@@ -13,5 +13,6 @@ type Config struct {
 	SyncChunkSize uint64 `mapstructure:"SyncChunkSize"`
 
 	// GenesisBlockNumber is the block number of the genesis block (first block to synchronize)
+	// if it's zero it finds the etrog upgrade block
 	GenesisBlockNumber uint64 `mapstructure:"GenesisBlockNumber"`
 }

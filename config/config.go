@@ -76,7 +76,8 @@ func LoadFile(configFilePath string) (*Config, error) {
 	if err != nil {
 		_, ok := err.(viper.ConfigFileNotFoundError)
 		if ok {
-			log.Infof("config file not found")
+			log.Infof("config file not found %s", configFilePath)
+			return nil, err
 		} else {
 			log.Infof("error reading config file: ", err)
 			return nil, err
