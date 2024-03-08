@@ -344,10 +344,10 @@ func (etherMan *Client) VerifyGenBlockNumber(ctx context.Context, genBlockNumber
 
 // GetL1BlockUpgradeLxLy It returns the block genesis for LxLy before genesisBlock or error
 // TODO: Check if all RPC providers support this range of blocks
-func (etherMan *Client) GetL1BlockUpgradeLxLy(ctx context.Context, genesisBlock uint64) (uint64, error) {
+func (etherMan *Client) GetL1BlockUpgradeLxLy(ctx context.Context, genesisBlock *uint64) (uint64, error) {
 	it, err := etherMan.RollupManager.FilterInitialized(&bind.FilterOpts{
 		Start:   1,
-		End:     &genesisBlock,
+		End:     genesisBlock,
 		Context: ctx,
 	})
 	if err != nil {
@@ -487,7 +487,11 @@ func (etherMan *Client) GetRollupInfoByBlockRange(ctx context.Context, fromBlock
 	query := ethereum.FilterQuery{
 		FromBlock: new(big.Int).SetUint64(fromBlock),
 		Addresses: etherMan.SCAddresses,
-		Topics:    [][]common.Hash{{updateL1InfoTreeSignatureHash}},
+		Topics: [][]common.Hash{{updateL1InfoTreeSignatureHash,
+			updateZkEVMVersionSignatureHash,
+			updateRollupSignatureHash,
+			addExistingRollupSignatureHash,
+			createNewRollupSignatureHash}},
 	}
 	if toBlock != nil {
 		query.ToBlock = new(big.Int).SetUint64(*toBlock)

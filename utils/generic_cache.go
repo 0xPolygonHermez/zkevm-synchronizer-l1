@@ -1,7 +1,11 @@
-package common
+package utils
 
 import (
 	"time"
+)
+
+const (
+	InfiniteTimeOfLiveItems = time.Duration(24 * 365 * 50 * time.Hour)
 )
 
 type cacheItem[T any] struct {

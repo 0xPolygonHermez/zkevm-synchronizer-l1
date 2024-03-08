@@ -12,10 +12,10 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/etrog"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/incaberry"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/processor_manager"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
 	syncconfig "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/config"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/utils/gerror"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jackc/pgx/v4"
 )
@@ -41,6 +41,7 @@ type SynchronizerImpl struct {
 	l1EventProcessors   *processor_manager.L1EventProcessors
 	blockRangeProcessor syncinterfaces.BlockRangeProcessor
 	l1InfoTreeManager   *state.L1InfoTreeState
+	ForkIdState         *state.ForkIdState
 }
 
 // NewSynchronizer creates and initializes an instance of Synchronizer
@@ -67,10 +68,21 @@ func NewSynchronizerImpl(
 		//l1RollupExitRoot: ger.ExitRoots[1],
 	}
 	sync.l1InfoTreeManager = state.NewL1InfoTreeManager(storage)
+	sync.ForkIdState = state.NewForkIdState(storage)
 	builder := processor_manager.NewL1EventProcessorsBuilder()
 	builder.Register(etrog.NewProcessorL1InfoTreeUpdate(sync.l1InfoTreeManager))
+	builder.Register(incaberry.NewProcessorForkId(sync.ForkIdState))
 	sync.l1EventProcessors = builder.Build()
-	sync.blockRangeProcessor = NewBlockRangeProcessLegacy(storage, sync.l1EventProcessors, nil)
+	sync.blockRangeProcessor = NewBlockRangeProcessLegacy(storage, nil, sync.l1EventProcessors, nil)
+	if cfg.GenesisBlockNumber == 0 {
+		firstBlock, err := ethMan.GetL1BlockUpgradeLxLy(ctx, nil)
+		if err != nil {
+			log.Errorf("Error getting the first block from the blockchain. Error: %v", err)
+			return nil, err
+		}
+		log.Infof("First block from the blockchain: %d (ETROG)", firstBlock)
+		sync.genBlockNumber = firstBlock
+	}
 	return &sync, nil
 
 }
@@ -90,6 +102,15 @@ func (s *SynchronizerImpl) GetL1InfoRootPerIndex(ctx context.Context, L1InfoTree
 	return root, err
 }
 
+func convertStorageBlock(block *pgstorage.L1Block) *L1Block {
+	return &L1Block{
+		BlockNumber: block.BlockNumber,
+		BlockHash:   block.BlockHash,
+		ParentHash:  block.ParentHash,
+		ReceivedAt:  block.ReceivedAt,
+	}
+}
+
 func (s *SynchronizerImpl) getLastBlockFromStorage(ctx context.Context, dbTx pgx.Tx) (*L1Block, error) {
 	lastBlockSynced, err := s.storage.GetLastBlock(s.ctx, dbTx)
 	if err != nil {
@@ -98,8 +119,7 @@ func (s *SynchronizerImpl) getLastBlockFromStorage(ctx context.Context, dbTx pgx
 	if lastBlockSynced == nil {
 		return nil, nil
 	}
-	block := L1Block(*lastBlockSynced)
-	return &block, nil
+	return convertStorageBlock(lastBlockSynced), nil
 }
 
 func (s *SynchronizerImpl) getPreviousBlockFromStorage(ctx context.Context, offset uint64, dbTx pgx.Tx) (*L1Block, error) {
@@ -110,8 +130,7 @@ func (s *SynchronizerImpl) getPreviousBlockFromStorage(ctx context.Context, offs
 	if dbBlock == nil {
 		return nil, nil
 	}
-	block := L1Block(*dbBlock)
-	return &block, nil
+	return convertStorageBlock(dbBlock), nil
 }
 
 // Sync function will read the last state synced and will continue from that point.
@@ -121,18 +140,24 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 	// Get the latest synced block. If there is no block on db, use genesis block
 	log.Infof("NetworkID: %d, Synchronization started", s.networkID)
 	s.synced = false
+
+	forks, _ := s.etherMan.GetForks(s.ctx, s.genBlockNumber, s.genBlockNumber-10)
+	log.Info(forks)
 	lastBlockSynced, err := s.getLastBlockFromStorage(s.ctx, nil)
 	if err != nil {
-		if err == pgstorage.ErrNotFound {
+		if errors.Is(err, pgstorage.ErrNotFound) {
 			//log.Infof("networkID: %d, error getting the latest ethereum block. No data stored. Setting genesis block. Error: %v", s.networkID, err)
 			lastBlockSynced = &L1Block{
-				BlockNumber: min(0, s.genBlockNumber-1),
+				BlockNumber: max(0, s.genBlockNumber-1),
 			}
 			log.Infof("networkID: %d, error getting the latest block. No data stored. Using starting block: %d ",
 				s.networkID, lastBlockSynced.BlockNumber)
 		} else {
 			log.Fatalf("networkID: %d, unexpected error getting the latest block. Error: %s", s.networkID, err.Error())
 		}
+	} else {
+		log.Infof("networkID: %d, continuing from the last block stored on DB. lastBlockSynced: %+v", s.networkID, lastBlockSynced)
+
 	}
 	log.Infof("NetworkID: %d, initial lastBlockSynced: %+v", s.networkID, lastBlockSynced)
 	for {
@@ -226,7 +251,7 @@ func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, error
 	for {
 		toBlock := fromBlock + s.cfg.SyncChunkSize
 
-		log.Debugf("NetworkID: %d, Getting bridge info from block %d to block %d", s.networkID, fromBlock, toBlock)
+		log.Debugf("NetworkID: %d, Getting info from block %d to block %d", s.networkID, fromBlock, toBlock)
 		// This function returns the rollup information contained in the ethereum blocks and an extra param called order.
 		// Order param is a map that contains the event order to allow the synchronizer store the info in the same order that is read.
 		// Name can be different in the order struct. This name is an identifier to check if the next info that must be stored in the db.
@@ -371,7 +396,7 @@ func (s *SynchronizerImpl) checkReorg(latestBlock *L1Block) (*L1Block, error) {
 				}
 				return nil, errC
 			}
-			if errors.Is(err, gerror.ErrStorageNotFound) {
+			if errors.Is(err, pgstorage.ErrStorageNotFound) {
 				log.Warnf("networkID: %d, error checking reorg: previous block not found in db: %v", s.networkID, err)
 				return &L1Block{}, nil
 			} else if err != nil {

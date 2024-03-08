@@ -18,6 +18,8 @@ type EthermanInterface interface {
 	EthBlockByNumber(ctx context.Context, blockNumber uint64) (*types.Block, error)
 	//GetNetworkID(ctx context.Context) (uint, error)
 	GetRollupID() uint
+	GetL1BlockUpgradeLxLy(ctx context.Context, genesisBlock *uint64) (uint64, error)
+	GetForks(ctx context.Context, genBlockNumber uint64, lastL1BlockSynced uint64) ([]etherman.ForkIDInterval, error)
 }
 
 type StorageBlockInterface interface {
@@ -31,8 +33,9 @@ type StorageResetInterface interface {
 }
 
 type StorageForkIDInterface interface {
-	GetForkIDByBatchNumber(batchNumber uint64) uint64
-	GetForkIDByBlockNumber(blockNumber uint64) uint64
+	AddForkID(ctx context.Context, forkID pgstorage.ForkIDInterval, dbTx pgx.Tx) error
+	GetForkIDs(ctx context.Context, dbTx pgx.Tx) ([]pgstorage.ForkIDInterval, error)
+	UpdateForkID(ctx context.Context, forkID pgstorage.ForkIDInterval, dbTx pgx.Tx) error
 }
 
 type StorageL1InfoTreeInterface interface {

@@ -100,12 +100,12 @@ func scanL1InfoTreeExitRootStorageEntry(row pgx.Row) (L1InfoTreeLeaf, error) {
 	if err := row.Scan(
 		&entry.BlockNumber, &entry.Timestamp, &MainnetExitRoot, &RollupExitRoot, &GlobalExitRoot,
 		&PreviousBlockHash, &L1InfoTreeRoot, &entry.L1InfoTreeIndex); err != nil {
-		entry.L1InfoTreeRoot = common.HexToHash(L1InfoTreeRoot)
-		entry.PreviousBlockHash = common.HexToHash(PreviousBlockHash)
-		entry.MainnetExitRoot = common.HexToHash(MainnetExitRoot)
-		entry.RollupExitRoot = common.HexToHash(RollupExitRoot)
-		entry.GlobalExitRoot = common.HexToHash(GlobalExitRoot)
 		return entry, err
 	}
+	entry.L1InfoTreeRoot = common.HexToHash(L1InfoTreeRoot)
+	entry.PreviousBlockHash = common.HexToHash(PreviousBlockHash)
+	entry.MainnetExitRoot = common.HexToHash(MainnetExitRoot)
+	entry.RollupExitRoot = common.HexToHash(RollupExitRoot)
+	entry.GlobalExitRoot = common.HexToHash(GlobalExitRoot)
 	return entry, nil
 }

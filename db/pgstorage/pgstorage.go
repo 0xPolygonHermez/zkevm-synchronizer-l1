@@ -6,7 +6,6 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/utils/gerror"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
@@ -52,7 +51,7 @@ func (p *PostgresStorage) Rollback(ctx context.Context, dbTx pgx.Tx) error {
 		return dbTx.Rollback(ctx)
 	}
 
-	return gerror.ErrNilDBTransaction
+	return ErrNilDBTransaction
 }
 
 // Commit commits a db transaction.
@@ -60,7 +59,7 @@ func (p *PostgresStorage) Commit(ctx context.Context, dbTx pgx.Tx) error {
 	if dbTx != nil {
 		return dbTx.Commit(ctx)
 	}
-	return gerror.ErrNilDBTransaction
+	return ErrNilDBTransaction
 }
 
 // BeginDBTransaction starts a transaction block.
@@ -122,7 +121,7 @@ func (p *PostgresStorage) GetPreviousBlock(ctx context.Context, networkID uint, 
 	e := p.getExecQuerier(dbTx)
 	err := e.QueryRow(ctx, getPreviousBlockSQL, networkID, offset).Scan(&block.BlockNumber, &block.BlockHash, &block.ParentHash, &block.NetworkID, &block.ReceivedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, gerror.ErrStorageNotFound
+		return nil, ErrStorageNotFound
 	}
 	return &block, err
 }
@@ -154,7 +153,7 @@ func (p *PostgresStorage) GetClaim(ctx context.Context, depositCount, networkID 
 	const getClaimSQL = "SELECT index, orig_net, orig_addr, amount, dest_addr, block_id, network_id, tx_hash, rollup_index, mainnet_flag FROM sync.claim WHERE index = $1 AND network_id = $2"
 	err := p.getExecQuerier(dbTx).QueryRow(ctx, getClaimSQL, depositCount, networkID).Scan(&claim.Index, &claim.OriginalNetwork, &claim.OriginalAddress, &amount, &claim.DestinationAddress, &claim.BlockID, &claim.NetworkID, &claim.TxHash, &claim.RollupIndex, &claim.MainnetFlag)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, gerror.ErrStorageNotFound
+		return nil, ErrStorageNotFound
 	}
 	claim.Amount, _ = new(big.Int).SetString(amount, 10) //nolint:gomnd
 	return &claim, err
@@ -169,7 +168,7 @@ func (p *PostgresStorage) GetDeposit(ctx context.Context, depositCounterUser uin
 	const getDepositSQL = "SELECT leaf_type, orig_net, orig_addr, amount, dest_net, dest_addr, deposit_cnt, block_id, b.block_num, d.network_id, tx_hash, metadata, ready_for_claim FROM sync.deposit as d INNER JOIN sync.block as b ON d.network_id = b.network_id AND d.block_id = b.id WHERE d.network_id = $1 AND deposit_cnt = $2"
 	err := p.getExecQuerier(dbTx).QueryRow(ctx, getDepositSQL, networkID, depositCounterUser).Scan(&deposit.LeafType, &deposit.OriginalNetwork, &deposit.OriginalAddress, &amount, &deposit.DestinationNetwork, &deposit.DestinationAddress, &deposit.DepositCount, &deposit.BlockID, &deposit.BlockNumber, &deposit.NetworkID, &deposit.TxHash, &deposit.Metadata, &deposit.ReadyForClaim)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, gerror.ErrStorageNotFound
+		return nil, ErrStorageNotFound
 	}
 	deposit.Amount, _ = new(big.Int).SetString(amount, 10) //nolint:gomnd
 
@@ -195,7 +194,7 @@ func (p *PostgresStorage) GetLatestL1SyncedExitRoot(ctx context.Context, dbTx pg
 	err := p.getExecQuerier(dbTx).QueryRow(ctx, getLatestL1SyncedExitRootSQL).Scan(&ger.BlockID, &ger.GlobalExitRoot, pq.Array(&exitRoots))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return &ger, gerror.ErrStorageNotFound
+			return &ger, ErrStorageNotFound
 		}
 		return nil, err
 	}
@@ -213,7 +212,7 @@ func (p *PostgresStorage) GetLatestTrustedExitRoot(ctx context.Context, dbTx pgx
 	err := p.getExecQuerier(dbTx).QueryRow(ctx, getLatestTrustedExitRootSQL).Scan(&ger.GlobalExitRoot, pq.Array(&exitRoots))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, gerror.ErrStorageNotFound
+			return nil, ErrStorageNotFound
 		}
 		return nil, err
 	}
@@ -227,7 +226,7 @@ func (p *PostgresStorage) GetDepositCountByRoot(ctx context.Context, root []byte
 	const getDepositCountByRootSQL = "SELECT sync.deposit.deposit_cnt FROM mt.root INNER JOIN sync.deposit ON sync.deposit.id = mt.root.deposit_id WHERE mt.root.root = $1 AND mt.root.network = $2"
 	err := p.getExecQuerier(dbTx).QueryRow(ctx, getDepositCountByRootSQL, root, network).Scan(&depositCount)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return 0, gerror.ErrStorageNotFound
+		return 0, ErrStorageNotFound
 	}
 	return depositCount, nil
 }
@@ -238,7 +237,7 @@ func (p *PostgresStorage) CheckIfRootExists(ctx context.Context, root []byte, ne
 	const getDepositCountByRootSQL = "SELECT count(*) FROM mt.root WHERE root = $1 AND network = $2"
 	err := p.getExecQuerier(dbTx).QueryRow(ctx, getDepositCountByRootSQL, root, network).Scan(&count)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return false, gerror.ErrStorageNotFound
+		return false, ErrStorageNotFound
 	}
 	if count == 0 {
 		return false, nil
@@ -252,7 +251,7 @@ func (p *PostgresStorage) GetRoot(ctx context.Context, depositCnt uint, network 
 	const getRootByDepositCntSQL = "SELECT root FROM mt.root inner join sync.deposit on mt.root.deposit_id = sync.deposit.id WHERE sync.deposit.deposit_cnt = $1 AND network = $2"
 	err := p.getExecQuerier(dbTx).QueryRow(ctx, getRootByDepositCntSQL, depositCnt, network).Scan(&root)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, gerror.ErrStorageNotFound
+		return nil, ErrStorageNotFound
 	}
 	return root, err
 }
@@ -270,7 +269,7 @@ func (p *PostgresStorage) Get(ctx context.Context, key []byte, dbTx pgx.Tx) ([][
 	var data [][]byte
 	err := p.getExecQuerier(dbTx).QueryRow(ctx, getValueByKeySQL, key).Scan(pq.Array(&data))
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, gerror.ErrStorageNotFound
+		return nil, ErrStorageNotFound
 	}
 	return data, err
 }
@@ -301,7 +300,7 @@ func (p *PostgresStorage) GetRollupExitLeavesByRoot(ctx context.Context, root co
 	const getLeavesSQL = "SELECT id, leaf, rollup_id, root, block_id FROM mt.rollup_exit WHERE root = $1 ORDER BY rollup_id ASC"
 	rows, err := p.getExecQuerier(dbTx).Query(ctx, getLeavesSQL, root)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, gerror.ErrStorageNotFound
+		return nil, ErrStorageNotFound
 	} else if err != nil {
 		return nil, err
 	}
@@ -324,7 +323,7 @@ func (p *PostgresStorage) IsRollupExitRoot(ctx context.Context, root common.Hash
 	var count int
 	err := p.getExecQuerier(dbTx).QueryRow(ctx, getLeavesSQL, root).Scan(&count)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return false, gerror.ErrStorageNotFound
+		return false, ErrStorageNotFound
 	} else if err != nil {
 		return false, err
 	}
@@ -340,7 +339,7 @@ func (p *PostgresStorage) IsLxLyActivated(ctx context.Context, dbTx pgx.Tx) (boo
 	var count int
 	err := p.getExecQuerier(dbTx).QueryRow(ctx, getLeavesSQL).Scan(&count)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return false, gerror.ErrStorageNotFound
+		return false, ErrStorageNotFound
 	} else if err != nil {
 		return false, err
 	}
@@ -387,7 +386,7 @@ func (p *PostgresStorage) GetLastDepositCount(ctx context.Context, network uint,
 		return 0, nil
 	}
 	if depositCnt < 0 {
-		return 0, gerror.ErrStorageNotFound
+		return 0, ErrStorageNotFound
 	}
 	return uint(depositCnt), nil
 }
@@ -398,7 +397,7 @@ func (p *PostgresStorage) GetClaimCount(ctx context.Context, destAddr string, db
 	var claimCount uint64
 	err := p.getExecQuerier(dbTx).QueryRow(ctx, getClaimCountSQL, common.FromHex(destAddr)).Scan(&claimCount)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return 0, gerror.ErrStorageNotFound
+		return 0, ErrStorageNotFound
 	}
 	return claimCount, err
 }

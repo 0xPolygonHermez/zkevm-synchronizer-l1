@@ -16,8 +16,8 @@ CREATE TABLE sync.block
     block_num   BIGINT PRIMARY KEY,
     block_hash  VARCHAR NOT NULL,
     parent_hash VARCHAR,
-    
-    received_at TIMESTAMP WITH TIME ZONE NOT NULL
+    received_at TIMESTAMP WITH TIME ZONE NOT NULL,
+	sync_version VARCHAR
 );
 
 CREATE TABLE sync.exit_root (
@@ -37,6 +37,15 @@ CREATE TABLE sync.exit_root (
 CREATE INDEX idx_exit_root_l1_info_tree_index ON sync.exit_root USING btree (l1_info_tree_index);
 CREATE INDEX idx_exit_root_global_exit_root_index ON sync.exit_root USING btree (global_exit_root);
 
+
+CREATE TABLE sync.fork_id (
+	fork_id int8 NOT NULL,
+	from_batch_num numeric NOT NULL,
+	to_batch_num numeric NOT NULL,
+	"version" varchar NULL,
+	block_num int8 NOT NULL,
+	CONSTRAINT fork_id_pkey PRIMARY KEY (fork_id)
+);
 
 -- CREATE TABLE sync.exit_root
 -- (

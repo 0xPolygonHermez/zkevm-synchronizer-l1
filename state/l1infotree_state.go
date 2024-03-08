@@ -3,6 +3,7 @@ package state
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/l1infotree"
@@ -10,6 +11,22 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jackc/pgx/v4"
 )
+
+const (
+	// SkipL1InfoTreeLeaf is special  index that skip the change of GlobalExitRoot, so the value of this leaf is never used
+	SkipL1InfoTreeLeaf = uint32(0)
+)
+
+type L1InfoTreeLeaf struct {
+	L1InfoTreeRoot    common.Hash
+	L1InfoTreeIndex   uint32
+	PreviousBlockHash common.Hash
+	BlockNumber       uint64
+	Timestamp         time.Time
+	MainnetExitRoot   common.Hash
+	RollupExitRoot    common.Hash
+	GlobalExitRoot    common.Hash
+}
 
 type StorageL1InfoTreeInterface interface {
 	AddL1InfoTreeLeaf(ctx context.Context, exitRoot *pgstorage.L1InfoTreeLeaf, dbTx pgx.Tx) error
@@ -29,7 +46,7 @@ func NewL1InfoTreeManager(storage StorageL1InfoTreeInterface) *L1InfoTreeState {
 	}
 }
 
-func HashLeaf(leaf *pgstorage.L1InfoTreeLeaf) common.Hash {
+func HashLeaf(leaf *L1InfoTreeLeaf) common.Hash {
 	timestamp := uint64(leaf.Timestamp.Unix())
 	return l1infotree.HashLeafData(leaf.GlobalExitRoot, leaf.PreviousBlockHash, timestamp)
 }
@@ -46,7 +63,8 @@ func (s *L1InfoTreeState) BuildL1InfoTreeCacheIfNeed(ctx context.Context, dbTx p
 	}
 	var leaves [][32]byte
 	for _, leaf := range allLeaves {
-		leaves = append(leaves, HashLeaf(&leaf))
+		tmp := L1InfoTreeLeaf(leaf)
+		leaves = append(leaves, HashLeaf(&tmp))
 	}
 	mt, err := l1infotree.NewL1InfoTree(uint8(32), leaves) //nolint:gomnd
 	if err != nil {
@@ -57,7 +75,7 @@ func (s *L1InfoTreeState) BuildL1InfoTreeCacheIfNeed(ctx context.Context, dbTx p
 	return nil
 }
 
-func (s *L1InfoTreeState) AddL1InfoTreeLeaf(ctx context.Context, exitRoot *pgstorage.L1InfoTreeLeaf, dbTx pgx.Tx) (*pgstorage.L1InfoTreeLeaf, error) {
+func (s *L1InfoTreeState) AddL1InfoTreeLeaf(ctx context.Context, exitRoot *L1InfoTreeLeaf, dbTx pgx.Tx) (*L1InfoTreeLeaf, error) {
 	var newIndex uint32
 	lastLeaf, err := s.storage.GetLatestL1InfoTreeLeaf(ctx, dbTx)
 	if err != nil {
@@ -80,7 +98,7 @@ func (s *L1InfoTreeState) AddL1InfoTreeLeaf(ctx context.Context, exitRoot *pgsto
 		log.Error("error add new leaf to the L1InfoTree. Error: ", err)
 		return nil, err
 	}
-	entry := *exitRoot
+	entry := pgstorage.L1InfoTreeLeaf(*exitRoot)
 	entry.L1InfoTreeRoot = root
 	entry.L1InfoTreeIndex = newIndex
 	err = s.storage.AddL1InfoTreeLeaf(ctx, &entry, dbTx)
@@ -88,7 +106,8 @@ func (s *L1InfoTreeState) AddL1InfoTreeLeaf(ctx context.Context, exitRoot *pgsto
 		log.Error("error adding L1InfoRoot to ExitRoot. Error: ", err)
 		return nil, err
 	}
-	return &entry, nil
+	tmp := L1InfoTreeLeaf(entry)
+	return &tmp, nil
 }
 
 func (s *L1InfoTreeState) GetL1InfoRootPerLeafIndex(ctx context.Context, L1InfoTreeIndex uint32, dbTx pgx.Tx) (common.Hash, error) {
@@ -101,4 +120,30 @@ func (s *L1InfoTreeState) GetL1InfoRootPerLeafIndex(ctx context.Context, L1InfoT
 		return common.Hash{}, ErrNotFound
 	}
 	return leaf.L1InfoTreeRoot, nil
+}
+
+// GetL1InfoTreeLeaves returns the required leaves for the L1InfoTree
+func (s *L1InfoTreeState) GetL1InfoTreeLeaves(ctx context.Context, indexLeaves []uint32, dbTx pgx.Tx) (map[uint32]L1InfoTreeLeaf, error) {
+	res := map[uint32]L1InfoTreeLeaf{}
+	for _, idx := range indexLeaves {
+		if idx == SkipL1InfoTreeLeaf {
+			// Skip this value
+			continue
+		}
+		if _, found := res[idx]; found {
+			// Is already in the result map
+			continue
+		}
+		leaf, err := s.storage.GetL1InfoLeafPerIndex(ctx, indexLeaves[idx], dbTx)
+		if err != nil {
+			err = fmt.Errorf("error getting L1InfoTree leaf %d. Error: %w", idx, err)
+			log.Errorf(err.Error())
+			return nil, err
+		}
+		if leaf == nil {
+			return nil, ErrNotFound
+		}
+		res[idx] = L1InfoTreeLeaf(*leaf)
+	}
+	return res, nil
 }

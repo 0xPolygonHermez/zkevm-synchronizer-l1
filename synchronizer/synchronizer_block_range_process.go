@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 
+	zkevm_synchronizer_l1 "github.com/0xPolygonHermez/zkevm-synchronizer-l1"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1event_orders"
@@ -17,13 +19,16 @@ import (
 type stateBlockRangeProcessor interface {
 	BeginStateTransaction(ctx context.Context) (pgx.Tx, error)
 	AddBlock(ctx context.Context, block *pgstorage.L1Block, dbTx pgx.Tx) error
-	GetForkIDByBatchNumber(batchNumber uint64) uint64
-	GetForkIDByBlockNumber(blockNumber uint64) uint64
+}
+type stateForkId interface {
+	GetForkIDByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) uint64
+	GetForkIDByBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) uint64
 }
 
 // BlockRangeProcess is the struct that process the block range that implements syncinterfaces.BlockRangeProcessor
 type BlockRangeProcess struct {
 	state             stateBlockRangeProcessor
+	stateForkId       stateForkId
 	l1EventProcessors syncinterfaces.L1EventProcessorManager
 	flushIdManager    syncinterfaces.SynchronizerFlushIDManager
 }
@@ -31,11 +36,13 @@ type BlockRangeProcess struct {
 // NewBlockRangeProcessLegacy creates a new BlockRangeProcess
 func NewBlockRangeProcessLegacy(
 	state stateBlockRangeProcessor,
+	stateForkId stateForkId,
 	l1EventProcessors syncinterfaces.L1EventProcessorManager,
 	flushIdManager syncinterfaces.SynchronizerFlushIDManager,
 ) *BlockRangeProcess {
 	return &BlockRangeProcess{
 		state:             state,
+		stateForkId:       stateForkId,
 		l1EventProcessors: l1EventProcessors,
 		flushIdManager:    flushIdManager,
 	}
@@ -58,6 +65,7 @@ func (s *BlockRangeProcess) addBlock(ctx context.Context, block *etherman.Block,
 		BlockHash:   block.BlockHash,
 		ParentHash:  block.ParentHash,
 		ReceivedAt:  block.ReceivedAt,
+		SyncVersion: zkevm_synchronizer_l1.Version,
 	}
 	// Add block information
 	return s.state.AddBlock(ctx, &b, dbTx)
@@ -139,13 +147,15 @@ func (s *BlockRangeProcess) processBlock(ctx context.Context, blocks []etherman.
 
 func (s *BlockRangeProcess) processElement(ctx context.Context, element etherman.Order, blocks []etherman.Block, i int, dbTx pgx.Tx) error {
 	batchSequence := l1event_orders.GetSequenceFromL1EventOrder(element.Name, &blocks[i], element.Pos)
-	var forkId uint64
-	if batchSequence != nil {
-		forkId = s.state.GetForkIDByBatchNumber(batchSequence.FromBatchNumber)
-		log.Debug("EventOrder: ", element.Name, ". Batch Sequence: ", batchSequence, "forkId: ", forkId)
-	} else {
-		forkId = s.state.GetForkIDByBlockNumber(blocks[i].BlockNumber)
-		log.Debug("EventOrder: ", element.Name, ". BlockNumber: ", blocks[i].BlockNumber, "forkId: ", forkId)
+	forkId := state.FORKID_ZERO
+	if s.stateForkId != nil {
+		if batchSequence != nil {
+			forkId = s.stateForkId.GetForkIDByBatchNumber(ctx, batchSequence.FromBatchNumber, dbTx)
+			log.Debug("EventOrder: ", element.Name, ". Batch Sequence: ", batchSequence, "forkId: ", forkId)
+		} else {
+			forkId = s.stateForkId.GetForkIDByBlockNumber(ctx, blocks[i].BlockNumber, dbTx)
+			log.Debug("EventOrder: ", element.Name, ". BlockNumber: ", blocks[i].BlockNumber, "forkId: ", forkId)
+		}
 	}
 	forkIdTyped := actions.ForkIdType(forkId)
 
