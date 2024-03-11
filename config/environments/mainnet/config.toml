@@ -12,11 +12,13 @@
 [Synchronizer]
 	SyncInterval = "10s"
 	SyncChunkSize = 1000
-	GenesisBlockNumber = 5157839
+	# 0 means find out the block of ETROG upgrade
+	GenesisBlockNumber = 0
 [Etherman]
 	L1URL = "http://your.L1node.url"
-	L1ChainID = 11155111
+	ChainId = 11155111
 	[Etherman.Contracts]
-		GlobalExitRootManagerAddr = "0xAd1490c248c5d3CbAE399Fd529b79B42984277DF"
-		RollupManagerAddr = "0x32d33D5137a7cFFb54c5Bf8371172bcEc5f310ff"
-		ZkEVMAddr = "0xA13Ddb14437A8F34897131367ad3ca78416d6bCa"
+		GlobalExitRootManagerAddr = "0x580bda1e7A0CFAe92Fa7F6c20A3794F169CE3CFb"
+		RollupManagerAddr = "0x5132A183E9F3CB7C848b0AAC5Ae0c4f0491B7aB2"
+		ZkEVMAddr = "0x519E42c24163192Dca44CD3fBDCEBF6be9130987"
+	
