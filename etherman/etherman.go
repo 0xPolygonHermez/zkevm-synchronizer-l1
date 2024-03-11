@@ -11,13 +11,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/metrics"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/etrogpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/oldpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/oldpolygonzkevmglobalexitroot"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/pol"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonrollupmanager"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevmglobalexitroot"
@@ -199,7 +199,6 @@ type Client struct {
 	RollupManager            *polygonrollupmanager.Polygonrollupmanager
 	GlobalExitRootManager    *polygonzkevmglobalexitroot.Polygonzkevmglobalexitroot
 	OldGlobalExitRootManager *oldpolygonzkevmglobalexitroot.Oldpolygonzkevmglobalexitroot
-	Pol                      *pol.Pol
 	SCAddresses              []common.Address
 
 	RollupID uint32
@@ -217,6 +216,21 @@ func NewClient(cfg Config) (*Client, error) {
 	if err != nil {
 		log.Errorf("error connecting to %s: %+v", cfg.L1URL, err)
 		return nil, err
+	}
+	l1ChainID, err := ethClient.ChainID(context.Background())
+	if err != nil {
+		log.Errorf("error getting chainID from %s: %+v", cfg.L1URL, err)
+		return nil, err
+	}
+	if cfg.L1ChainID != 0 {
+		if l1ChainID.Cmp(big.NewInt(int64(cfg.L1ChainID))) != 0 {
+			log.Errorf("chainID from %s: %s does not match the expected chainID: %d", cfg.L1URL, l1ChainID.String(), cfg.L1ChainID)
+			return nil, fmt.Errorf("chainID from %s: %s does not match the expected chainID: %d", cfg.L1URL, l1ChainID.String(), cfg.L1ChainID)
+		}
+		log.Infof("Validated L1 Chain ID: %d", cfg.L1ChainID)
+	} else {
+		log.Infof("Using L1 Chain ID: %d as reported by L1URL", l1ChainID.Uint64())
+		cfg.L1ChainID = l1ChainID.Uint64()
 	}
 
 	// Create smc clients
@@ -250,11 +264,7 @@ func NewClient(cfg Config) (*Client, error) {
 		log.Errorf("error creating NewOldpolygonzkevmglobalexitroot client (%s). Error: %w", cfg.Contracts.GlobalExitRootManagerAddr.String(), err)
 		return nil, err
 	}
-	pol, err := pol.NewPol(cfg.Contracts.PolAddr, ethClient)
-	if err != nil {
-		log.Errorf("error creating NewPol client (%s). Error: %w", cfg.Contracts.PolAddr.String(), err)
-		return nil, err
-	}
+
 	var scAddresses []common.Address
 	scAddresses = append(scAddresses, cfg.Contracts.ZkEVMAddr, cfg.Contracts.RollupManagerAddr, cfg.Contracts.GlobalExitRootManagerAddr)
 
@@ -273,7 +283,6 @@ func NewClient(cfg Config) (*Client, error) {
 		EtrogZKEVM:               etrogZkevm,
 		OldZkEVM:                 oldZkevm,
 		RollupManager:            rollupManager,
-		Pol:                      pol,
 		GlobalExitRootManager:    globalExitRoot,
 		OldGlobalExitRootManager: oldGlobalExitRoot,
 		SCAddresses:              scAddresses,
@@ -528,18 +537,65 @@ type Order struct {
 	Pos  int
 }
 
+func (etherMan *Client) RetrieveBlocksInParallel(ctx context.Context, blocksHash []common.Hash) (map[common.Hash]Block, error) {
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var blocksRetrieved = make(map[common.Hash]Block)
+	var err error
+	for _, blockHash := range blocksHash {
+		wg.Add(1)
+		go func(etherMan *Client, blockHash common.Hash) {
+			defer wg.Done()
+			block, localErr := etherMan.retrieveFullBlockbyHash(ctx, blockHash)
+			if localErr != nil || block == nil {
+				mu.Lock()
+				err = localErr
+				mu.Unlock()
+				return
+			}
+			mu.Lock()
+			blocksRetrieved[blockHash] = *block
+			mu.Unlock()
+		}(etherMan, blockHash)
+	}
+	wg.Wait()
+	return blocksRetrieved, err
+}
+func getBlockHashesFromLogs(logs []types.Log) []common.Hash {
+	var blockHashes []common.Hash
+	for _, log := range logs {
+		blockHashes = append(blockHashes, log.BlockHash)
+	}
+	return blockHashes
+}
+
 func (etherMan *Client) readEvents(ctx context.Context, query ethereum.FilterQuery) ([]Block, map[common.Hash][]Order, error) {
 	start := time.Now()
+
 	logs, err := etherMan.EthClient.FilterLogs(ctx, query)
 	metrics.GetEventsTime(time.Since(start))
 	if err != nil {
 		return nil, nil, err
 	}
 	var blocks []Block
+	var blocksRetrieved map[common.Hash]Block
+	if etherMan.cfg.PararellBlockRequest {
+		blocksRetrieved, err = etherMan.RetrieveBlocksInParallel(ctx, getBlockHashesFromLogs(logs))
+		if err != nil {
+			log.Errorf("error retrieving blocks: %s", err.Error())
+			return nil, nil, err
+		}
+	}
 	blocksOrder := make(map[common.Hash][]Order)
 	startProcess := time.Now()
 	for _, vLog := range logs {
 		startProcessSingleEvent := time.Now()
+		if !isheadBlockInArray(&blocks, vLog.BlockHash, vLog.BlockNumber) {
+			blockRetrieve, ok := blocksRetrieved[vLog.BlockHash]
+			if ok {
+				blocks = append(blocks, blockRetrieve)
+			}
+		}
 		err := etherMan.processEvent(ctx, vLog, &blocks, &blocksOrder)
 		metrics.ProcessSingleEventTime(time.Since(startProcessSingleEvent))
 		metrics.EventCounter()
@@ -898,6 +954,7 @@ func (etherMan *Client) updateL1InfoTreeEvent(ctx context.Context, vLog types.Lo
 	var block *Block
 	if !isheadBlockInArray(blocks, vLog.BlockHash, vLog.BlockNumber) {
 		// Need to add the block, doesnt mind if inside the blocks because I have to respect the order so insert at end
+		log.Debugf("Retrieve block for UpdateL1InfoTree event. BlockNumber: %d", vLog.BlockNumber)
 		block, err = etherMan.retrieveFullBlockForEvent(ctx, vLog)
 		if err != nil {
 			return err
@@ -916,6 +973,42 @@ func (etherMan *Client) updateL1InfoTreeEvent(ctx context.Context, vLog types.Lo
 	}
 	(*blocksOrder)[block.BlockHash] = append((*blocksOrder)[block.BlockHash], order)
 	return nil
+}
+func (etherMan *Client) retrieveFullBlockbyHash(ctx context.Context, blockHash common.Hash) (*Block, error) {
+	var err error
+	var fullBlock *types.Block
+	doned := false
+	remainingRetries := 5
+
+	vectorDelaysInSeconds := []int{30, 60, 120, 600}
+	for !doned && remainingRetries > 0 {
+		remainingRetries--
+		fullBlock, err = etherMan.EthClient.BlockByHash(ctx, blockHash)
+		if httpErr, ok := err.(rpc.HTTPError); ok {
+			// Check if error is 429
+			if httpErr.StatusCode == 429 {
+				delay := vectorDelaysInSeconds[(4-remainingRetries)%len(vectorDelaysInSeconds)]
+				log.Errorf("Error 429. Waiting %d seconds to retry... remaining retries: %d", delay, remainingRetries)
+				time.Sleep(time.Duration(delay) * time.Second)
+				log.Infof("Retrying to get block %s", blockHash.String())
+				continue
+			}
+		}
+		doned = true
+	}
+	if err != nil {
+		return nil, fmt.Errorf("error getting hashParent. BlockNumber: %d. Error: %w", blockHash, err)
+	}
+	t := time.Unix(int64(fullBlock.Time()), 0)
+
+	//block := prepareBlock(vLog, t, fullBlock)
+	block := Block{
+		BlockNumber: fullBlock.NumberU64(),
+		BlockHash:   blockHash,
+		ParentHash:  fullBlock.ParentHash(),
+		ReceivedAt:  t,
+	}
+	return &block, nil
 }
 
 func (etherMan *Client) retrieveFullBlockForEvent(ctx context.Context, vLog types.Log) (*Block, error) {
@@ -1679,26 +1772,6 @@ func (etherMan *Client) GetTx(ctx context.Context, txHash common.Hash) (*types.T
 // GetTxReceipt function gets ethereum tx receipt
 func (etherMan *Client) GetTxReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
 	return etherMan.EthClient.TransactionReceipt(ctx, txHash)
-}
-
-// ApprovePol function allow to approve tokens in pol smc
-func (etherMan *Client) ApprovePol(ctx context.Context, account common.Address, polAmount *big.Int, to common.Address) (*types.Transaction, error) {
-	opts, err := etherMan.getAuthByAddress(account)
-	if err == ErrNotFound {
-		return nil, errors.New("can't find account private key to sign tx")
-	}
-	if etherMan.GasProviders.MultiGasProvider {
-		opts.GasPrice = etherMan.GetL1GasPrice(ctx)
-	}
-	tx, err := etherMan.Pol.Approve(&opts, etherMan.cfg.Contracts.ZkEVMAddr, polAmount)
-	if err != nil {
-		if parsedErr, ok := tryParseError(err); ok {
-			err = parsedErr
-		}
-		return nil, fmt.Errorf("error approving balance to send the batch. Error: %w", err)
-	}
-
-	return tx, nil
 }
 
 // GetTrustedSequencerURL Gets the trusted sequencer url from rollup smc
