@@ -1,12 +1,12 @@
 package pgstorage
 
 import (
+	"embed"
 	"os"
 	"strconv"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/gobuffalo/packr/v2"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/stdlib"
 	migrate "github.com/rubenv/sql-migrate"
@@ -44,6 +44,9 @@ func ResetDB(cfg Config) error {
 	return nil
 }
 
+//go:embed migrations/*
+var dbMigrations embed.FS
+
 // runMigrations will execute pending migrations if needed to keep
 // the database updated with the latest changes in either direction of up or down.
 func runMigrations(cfg Config, direction migrate.MigrationDirection) error {
@@ -52,8 +55,11 @@ func runMigrations(cfg Config, direction migrate.MigrationDirection) error {
 		return err
 	}
 	db := stdlib.OpenDB(*c)
+	migrations := migrate.EmbedFileSystemMigrationSource{
+		FileSystem: dbMigrations,
+		Root:       "migrations",
+	}
 
-	var migrations = &migrate.PackrMigrationSource{Box: packr.New("hermez-db-migrations", "./migrations")}
 	nMigrations, err := migrate.Exec(db, "postgres", migrations, direction)
 	if err != nil {
 		return err
