@@ -49,7 +49,7 @@ You need a config file to pass the parameters
 ```
 
 ### Setup a Postgres Database 
-- Be sure that the config file `DB` section match your database
+- Be sure that the config file `DB` section matches your database
 
 
 ### Run it
