@@ -1,5 +1,3 @@
-include version.mk
-
 ARCH := $(shell arch)
 
 ifeq ($(ARCH),x86_64)
@@ -15,10 +13,6 @@ GOENVVARS := GOBIN=$(GOBIN) CGO_ENABLED=0 GOOS=linux GOARCH=$(ARCH)
 GOBINARY := zkevm-synchronizer-l1
 GOCMD := $(GOBASE)/cmd
 
-LDFLAGS += -X 'github.com/0xPolygonHermez/zkevm_synchronizer_l1.Version=$(VERSION)'
-LDFLAGS += -X 'github.com/0xPolygonHermez/zkevm_synchronizer_l1.GitRev=$(GITREV)'
-LDFLAGS += -X 'github.com/0xPolygonHermez/zkevm_synchronizer_l1.GitBranch=$(GITBRANCH)'
-LDFLAGS += -X 'github.com/0xPolygonHermez/zkevm_synchronizer_l1.BuildDate=$(DATE)'
 
 # Variables
 VENV           = .venv
@@ -76,7 +70,7 @@ generate-code-from-proto: check-protoc
 
 .PHONY: build
 build: ## Builds the binary locally into ./dist
-	$(GOENVVARS) go build -ldflags "all=$(LDFLAGS)" -o $(GOBIN)/$(GOBINARY) $(GOCMD)
+	$(GOENVVARS) go build  -o $(GOBIN)/$(GOBINARY) $(GOCMD)
 
 .PHONY: build-docker
 build-docker: ## Builds a docker image with the node binary

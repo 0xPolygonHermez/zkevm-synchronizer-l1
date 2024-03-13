@@ -23,3 +23,4 @@ The parameter `returnOnSync` allows to return when the synchornization is finish
 ## Interacting
 You can call to `IsSynced` to known if the system is syncrhonized
 
+Check [usage.md](docs/usage.md) for a client example
