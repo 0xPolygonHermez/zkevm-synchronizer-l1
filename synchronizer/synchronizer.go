@@ -56,14 +56,14 @@ type SequencedBatches struct {
 	Timestamp       time.Time
 }
 type SynchronizerSequencedBatchesQuerier interface {
-	GetLatestSequencedBatches(ctx context.Context) (SequencedBatches, error)
-	GetSequenceForBatchNumber(ctx context.Context, batchNumber uint64) (SequencedBatches, error)
+	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64) (*SequencedBatches, error)
 }
 
 type Synchronizer interface {
 	SynchronizerRunner
 	SynchornizerStatusQuerier
 	SynchronizerL1InfoTreeQuerier
+	SynchronizerSequencedBatchesQuerier
 }
 
 func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Synchronizer, error) {

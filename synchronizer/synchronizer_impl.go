@@ -116,6 +116,12 @@ func (s *SynchronizerImpl) GetL1InfoTreeLeaves(ctx context.Context, indexLeaves 
 	return returnLeaves, nil
 }
 
+func (s *SynchronizerImpl) GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64) (*SequencedBatches, error) {
+	sequence, err := s.storage.GetSequenceByBatchNumber(ctx, batchNumber, nil)
+	res := SequencedBatches(*sequence)
+	return &res, err
+}
+
 func convertStorageBlock(block *pgstorage.L1Block) *L1Block {
 	return &L1Block{
 		BlockNumber: block.BlockNumber,
