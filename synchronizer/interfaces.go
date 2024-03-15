@@ -52,10 +52,16 @@ type storageTransactionInterface interface {
 	Commit(ctx context.Context, dbTx pgx.Tx) error
 }
 
+type storageSequenceBatchesInterface interface {
+	AddSequencedBatches(ctx context.Context, sequence pgstorage.SequencedBatches, dbTx pgx.Tx) error
+	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*pgstorage.SequencedBatches, error)
+}
+
 type storageInterface interface {
 	storageTransactionInterface
 	StorageBlockInterface
 	StorageResetInterface
 	StorageForkIDInterface
 	StorageL1InfoTreeInterface
+	storageSequenceBatchesInterface
 }

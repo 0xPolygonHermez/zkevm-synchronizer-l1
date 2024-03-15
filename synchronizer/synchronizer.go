@@ -49,10 +49,21 @@ type SynchronizerL1InfoTreeQuerier interface {
 	GetL1InfoTreeLeaves(ctx context.Context, indexLeaves []uint32) (map[uint32]L1InfoTreeLeaf, error)
 }
 
+type SequencedBatches struct {
+	FromBatchNumber uint64
+	ToBatchNumber   uint64
+	L1BlockNumber   uint64
+	Timestamp       time.Time
+}
+type SynchronizerSequencedBatchesQuerier interface {
+	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64) (*SequencedBatches, error)
+}
+
 type Synchronizer interface {
 	SynchronizerRunner
 	SynchornizerStatusQuerier
 	SynchronizerL1InfoTreeQuerier
+	SynchronizerSequencedBatchesQuerier
 }
 
 func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Synchronizer, error) {

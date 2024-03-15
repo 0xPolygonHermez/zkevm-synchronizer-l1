@@ -71,6 +71,7 @@ func NewSynchronizerImpl(
 	sync.ForkIdState = state.NewForkIdState(storage)
 	builder := processor_manager.NewL1EventProcessorsBuilder()
 	builder.Register(etrog.NewProcessorL1InfoTreeUpdate(sync.l1InfoTreeManager))
+	builder.Register(etrog.NewProcessorL1SequenceBatches(storage))
 	builder.Register(incaberry.NewProcessorForkId(sync.ForkIdState))
 	sync.l1EventProcessors = builder.Build()
 	sync.blockRangeProcessor = NewBlockRangeProcessLegacy(storage, nil, sync.l1EventProcessors, nil)
@@ -113,6 +114,15 @@ func (s *SynchronizerImpl) GetL1InfoTreeLeaves(ctx context.Context, indexLeaves 
 		returnLeaves[idx] = L1InfoTreeLeaf(leaves[idx])
 	}
 	return returnLeaves, nil
+}
+
+func (s *SynchronizerImpl) GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64) (*SequencedBatches, error) {
+	sequence, err := s.storage.GetSequenceByBatchNumber(ctx, batchNumber, nil)
+	if sequence == nil {
+		return nil, err
+	}
+	res := SequencedBatches(*sequence)
+	return &res, err
 }
 
 func convertStorageBlock(block *pgstorage.L1Block) *L1Block {
