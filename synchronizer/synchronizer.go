@@ -49,6 +49,17 @@ type SynchronizerL1InfoTreeQuerier interface {
 	GetL1InfoTreeLeaves(ctx context.Context, indexLeaves []uint32) (map[uint32]L1InfoTreeLeaf, error)
 }
 
+type SequencedBatches struct {
+	FromBatchNumber uint64
+	ToBatchNumber   uint64
+	L1BlockNumber   uint64
+	Timestamp       time.Time
+}
+type SynchronizerSequencedBatchesQuerier interface {
+	GetLatestSequencedBatches(ctx context.Context) (SequencedBatches, error)
+	GetSequenceForBatchNumber(ctx context.Context, batchNumber uint64) (SequencedBatches, error)
+}
+
 type Synchronizer interface {
 	SynchronizerRunner
 	SynchornizerStatusQuerier

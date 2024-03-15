@@ -500,7 +500,8 @@ func (etherMan *Client) GetRollupInfoByBlockRange(ctx context.Context, fromBlock
 			updateZkEVMVersionSignatureHash,
 			updateRollupSignatureHash,
 			addExistingRollupSignatureHash,
-			createNewRollupSignatureHash}},
+			createNewRollupSignatureHash,
+			sequenceBatchesSignatureHash}},
 	}
 	if toBlock != nil {
 		query.ToBlock = new(big.Int).SetUint64(*toBlock)

@@ -11,7 +11,7 @@
 	MaxConns = 10
 [Synchronizer]
 	SyncInterval = "10s"
-	SyncChunkSize = 1000
+	SyncChunkSize = 100
 	GenesisBlockNumber = 5157839
 [Etherman]
 	L1URL = "http://your.L1node.url"
