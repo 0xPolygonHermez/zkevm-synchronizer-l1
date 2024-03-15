@@ -118,6 +118,9 @@ func (s *SynchronizerImpl) GetL1InfoTreeLeaves(ctx context.Context, indexLeaves 
 
 func (s *SynchronizerImpl) GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64) (*SequencedBatches, error) {
 	sequence, err := s.storage.GetSequenceByBatchNumber(ctx, batchNumber, nil)
+	if sequence == nil {
+		return nil, err
+	}
 	res := SequencedBatches(*sequence)
 	return &res, err
 }

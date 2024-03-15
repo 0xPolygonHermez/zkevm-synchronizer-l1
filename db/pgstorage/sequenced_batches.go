@@ -25,7 +25,7 @@ func (p *PostgresStorage) AddSequencedBatches(ctx context.Context, sequence Sequ
 
 func (p *PostgresStorage) GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*SequencedBatches, error) {
 	const sql = `SELECT from_batch_num, to_batch_num, timestamp,block_num FROM sync.sequenced_batches 
-		WHERE  from_batch_num >= $1 AND to_batch_num <= $1
+		WHERE  $1 >= from_batch_num  AND $1 <= to_batch_num 
 		ORDER BY block_num DESC LIMIT 1;`
 	e := p.getExecQuerier(dbTx)
 	row := e.QueryRow(ctx, sql, batchNumber)
