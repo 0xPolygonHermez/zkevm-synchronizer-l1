@@ -25,7 +25,7 @@ type SynchronizerImpl struct {
 	etherMan EthermanInterface
 	// TODO: remove
 
-	storage        storageInterface
+	storage        StorageInterface
 	ctx            context.Context
 	cancelCtx      context.CancelFunc
 	genBlockNumber uint64
@@ -47,7 +47,7 @@ type SynchronizerImpl struct {
 // NewSynchronizer creates and initializes an instance of Synchronizer
 func NewSynchronizerImpl(
 	ctx context.Context,
-	storage storageInterface,
+	storage StorageInterface,
 	ethMan EthermanInterface,
 	cfg syncconfig.Config) (*SynchronizerImpl, error) {
 	ctx, cancel := context.WithCancel(ctx)

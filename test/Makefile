@@ -109,8 +109,18 @@ run: stop run-dbs ## runs all services
 	sleep 7
 	$(RUN_BRIDGE)
 
+.PHONY: install-mockery
+install-mockery: ## Installs mockery with the correct version to generate the mocks
+	go install github.com/vektra/mockery/v2@v2.39.0
 
-
+COMMON_MOCKERY_PARAMS=--disable-version-string --with-expecter
+.PHONY: generate-mocks
+generate-mocks:
+	rm -Rf ../synchronizer/mocks
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/ --output ../synchronizer/mocks --outpkg mock_synchronizer ${COMMON_MOCKERY_PARAMS}
+	rm -Rf ../state/mocks
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../state/ --output ../state/mocks --outpkg mock_state ${COMMON_MOCKERY_PARAMS}
+	
 
 ## Help display.
 ## Pulls comments from beside commands and prints a nicely formatted

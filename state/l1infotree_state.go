@@ -134,7 +134,7 @@ func (s *L1InfoTreeState) GetL1InfoTreeLeaves(ctx context.Context, indexLeaves [
 			// Is already in the result map
 			continue
 		}
-		leaf, err := s.storage.GetL1InfoLeafPerIndex(ctx, indexLeaves[idx], dbTx)
+		leaf, err := s.storage.GetL1InfoLeafPerIndex(ctx, idx, dbTx)
 		if err != nil {
 			err = fmt.Errorf("error getting L1InfoTree leaf %d. Error: %w", idx, err)
 			log.Errorf(err.Error())
