@@ -1,7 +1,7 @@
 -- +migrate Up
 CREATE TABLE IF NOT EXISTS sync.sequenced_batches
 (
-    block_num int8 NOT NULL,
+    block_num BIGINT NOT NULL,
     from_batch_num int8 NOT NULL PRIMARY KEY,
     to_batch_num int8 NOT NULL,
     "timestamp" timestamptz NOT NULL,

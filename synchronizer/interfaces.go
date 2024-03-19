@@ -45,23 +45,23 @@ type StorageL1InfoTreeInterface interface {
 	GetL1InfoLeafPerIndex(ctx context.Context, L1InfoTreeIndex uint32, dbTx pgx.Tx) (*pgstorage.L1InfoTreeLeaf, error)
 }
 
-type storageTransactionInterface interface {
+type StorageTransactionInterface interface {
 	Rollback(ctx context.Context, dbTx pgx.Tx) error
 	BeginDBTransaction(ctx context.Context) (pgx.Tx, error)
 	BeginStateTransaction(ctx context.Context) (pgx.Tx, error)
 	Commit(ctx context.Context, dbTx pgx.Tx) error
 }
 
-type storageSequenceBatchesInterface interface {
+type StorageSequenceBatchesInterface interface {
 	AddSequencedBatches(ctx context.Context, sequence pgstorage.SequencedBatches, dbTx pgx.Tx) error
 	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*pgstorage.SequencedBatches, error)
 }
 
-type storageInterface interface {
-	storageTransactionInterface
+type StorageInterface interface {
+	StorageTransactionInterface
 	StorageBlockInterface
 	StorageResetInterface
 	StorageForkIDInterface
 	StorageL1InfoTreeInterface
-	storageSequenceBatchesInterface
+	StorageSequenceBatchesInterface
 }
