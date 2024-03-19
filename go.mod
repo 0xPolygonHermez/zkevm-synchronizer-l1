@@ -15,7 +15,7 @@ require (
 	github.com/rubenv/sql-migrate v1.6.1
 	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.4
-	github.com/urfave/cli/v2 v2.26.0
+	github.com/urfave/cli/v2 v2.27.1
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.20.0
 )
