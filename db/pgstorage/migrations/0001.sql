@@ -22,7 +22,7 @@ CREATE TABLE sync.block
 
 CREATE TABLE sync.exit_root (
 	id serial4 NOT NULL,
-	block_num int8 NOT NULL,
+	block_num  BIGINT REFERENCES sync.block (block_num) ON DELETE CASCADE,
 	"timestamp" timestamptz NOT NULL,
 	mainnet_exit_root VARCHAR NULL,
 	rollup_exit_root VARCHAR NULL,
@@ -43,7 +43,7 @@ CREATE TABLE sync.fork_id (
 	from_batch_num numeric NOT NULL,
 	to_batch_num numeric NOT NULL,
 	"version" varchar NULL,
-	block_num int8 NOT NULL,
+	block_num BIGINT REFERENCES sync.block (block_num) ON DELETE CASCADE,
 	CONSTRAINT fork_id_pkey PRIMARY KEY (fork_id)
 );
 
