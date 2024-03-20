@@ -56,6 +56,7 @@ type SequencedBatches struct {
 	ToBatchNumber   uint64
 	L1BlockNumber   uint64
 	Timestamp       time.Time
+	L1InfoRoot      common.Hash
 }
 type SynchronizerSequencedBatchesQuerier interface {
 	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64) (*SequencedBatches, error)
