@@ -5,8 +5,11 @@ package mock_state
 import (
 	context "context"
 
-	pgstorage "github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
+	common "github.com/ethereum/go-ethereum/common"
+
 	mock "github.com/stretchr/testify/mock"
+
+	pgstorage "github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
 
 	pgx "github.com/jackc/pgx/v4"
 )
@@ -246,6 +249,66 @@ func (_c *StorageL1InfoTreeInterface_GetLatestL1InfoTreeLeaf_Call) Return(_a0 *p
 }
 
 func (_c *StorageL1InfoTreeInterface_GetLatestL1InfoTreeLeaf_Call) RunAndReturn(run func(context.Context, pgx.Tx) (*pgstorage.L1InfoTreeLeaf, error)) *StorageL1InfoTreeInterface_GetLatestL1InfoTreeLeaf_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetLeafsByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot, dbTx
+func (_m *StorageL1InfoTreeInterface) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]pgstorage.L1InfoTreeLeaf, error) {
+	ret := _m.Called(ctx, l1InfoRoot, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLeafsByL1InfoRoot")
+	}
+
+	var r0 []pgstorage.L1InfoTreeLeaf
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, pgx.Tx) ([]pgstorage.L1InfoTreeLeaf, error)); ok {
+		return rf(ctx, l1InfoRoot, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, pgx.Tx) []pgstorage.L1InfoTreeLeaf); ok {
+		r0 = rf(ctx, l1InfoRoot, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]pgstorage.L1InfoTreeLeaf)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, common.Hash, pgx.Tx) error); ok {
+		r1 = rf(ctx, l1InfoRoot, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StorageL1InfoTreeInterface_GetLeafsByL1InfoRoot_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLeafsByL1InfoRoot'
+type StorageL1InfoTreeInterface_GetLeafsByL1InfoRoot_Call struct {
+	*mock.Call
+}
+
+// GetLeafsByL1InfoRoot is a helper method to define mock.On call
+//   - ctx context.Context
+//   - l1InfoRoot common.Hash
+//   - dbTx pgx.Tx
+func (_e *StorageL1InfoTreeInterface_Expecter) GetLeafsByL1InfoRoot(ctx interface{}, l1InfoRoot interface{}, dbTx interface{}) *StorageL1InfoTreeInterface_GetLeafsByL1InfoRoot_Call {
+	return &StorageL1InfoTreeInterface_GetLeafsByL1InfoRoot_Call{Call: _e.mock.On("GetLeafsByL1InfoRoot", ctx, l1InfoRoot, dbTx)}
+}
+
+func (_c *StorageL1InfoTreeInterface_GetLeafsByL1InfoRoot_Call) Run(run func(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx)) *StorageL1InfoTreeInterface_GetLeafsByL1InfoRoot_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(common.Hash), args[2].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StorageL1InfoTreeInterface_GetLeafsByL1InfoRoot_Call) Return(_a0 []pgstorage.L1InfoTreeLeaf, _a1 error) *StorageL1InfoTreeInterface_GetLeafsByL1InfoRoot_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StorageL1InfoTreeInterface_GetLeafsByL1InfoRoot_Call) RunAndReturn(run func(context.Context, common.Hash, pgx.Tx) ([]pgstorage.L1InfoTreeLeaf, error)) *StorageL1InfoTreeInterface_GetLeafsByL1InfoRoot_Call {
 	_c.Call.Return(run)
 	return _c
 }
