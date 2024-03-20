@@ -6,8 +6,9 @@ import (
 	"runtime"
 )
 
+// v0.2.0 - Add GetLeafsByL1InfoRoot
 var (
-	Version = "v0.1.0"
+	Version = "v0.2.0"
 )
 
 // PrintVersion prints version info into the provided io.Writer.

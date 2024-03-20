@@ -33,6 +33,7 @@ type StorageL1InfoTreeInterface interface {
 	GetAllL1InfoTreeLeaves(ctx context.Context, dbTx pgx.Tx) ([]pgstorage.L1InfoTreeLeaf, error)
 	GetLatestL1InfoTreeLeaf(ctx context.Context, dbTx pgx.Tx) (*pgstorage.L1InfoTreeLeaf, error)
 	GetL1InfoLeafPerIndex(ctx context.Context, L1InfoTreeIndex uint32, dbTx pgx.Tx) (*pgstorage.L1InfoTreeLeaf, error)
+	GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]pgstorage.L1InfoTreeLeaf, error)
 }
 
 type L1InfoTreeState struct {
@@ -144,6 +145,20 @@ func (s *L1InfoTreeState) GetL1InfoTreeLeaves(ctx context.Context, indexLeaves [
 			return nil, ErrNotFound
 		}
 		res[idx] = L1InfoTreeLeaf(*leaf)
+	}
+	return res, nil
+}
+
+func (s *L1InfoTreeState) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]L1InfoTreeLeaf, error) {
+	leaves, err := s.storage.GetLeafsByL1InfoRoot(ctx, l1InfoRoot, dbTx)
+	if err != nil {
+		log.Error("error getting leaves by L1InfoRoot. Error: ", err)
+		return nil, err
+	}
+	var res []L1InfoTreeLeaf
+	for _, leaf := range leaves {
+		tmp := L1InfoTreeLeaf(leaf)
+		res = append(res, tmp)
 	}
 	return res, nil
 }

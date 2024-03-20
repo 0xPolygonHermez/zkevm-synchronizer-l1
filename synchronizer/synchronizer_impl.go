@@ -95,6 +95,20 @@ func (s *SynchronizerImpl) IsSynced() bool {
 	return s.synced
 }
 
+func (s *SynchronizerImpl) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]L1InfoTreeLeaf, error) {
+	leaves, err := s.l1InfoTreeManager.GetLeafsByL1InfoRoot(ctx, l1InfoRoot, dbTx)
+	if err != nil {
+		log.Error("error getting leaves by L1InfoRoot. Error: ", err)
+		return nil, err
+	}
+	var res []L1InfoTreeLeaf
+	for _, leaf := range leaves {
+		tmp := L1InfoTreeLeaf(leaf)
+		res = append(res, tmp)
+	}
+	return res, nil
+}
+
 func (s *SynchronizerImpl) GetL1InfoRootPerIndex(ctx context.Context, L1InfoTreeIndex uint32) (common.Hash, error) {
 	root, err := s.l1InfoTreeManager.GetL1InfoRootPerLeafIndex(ctx, L1InfoTreeIndex, nil)
 	if errors.Is(err, state.ErrNotFound) {

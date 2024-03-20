@@ -10,6 +10,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/jackc/pgx/v4"
 )
 
 var (
@@ -47,6 +48,7 @@ type SynchronizerL1InfoTreeQuerier interface {
 	// if not found returns ErrNotFound
 	GetL1InfoRootPerIndex(ctx context.Context, L1InfoTreeIndex uint32) (common.Hash, error)
 	GetL1InfoTreeLeaves(ctx context.Context, indexLeaves []uint32) (map[uint32]L1InfoTreeLeaf, error)
+	GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]L1InfoTreeLeaf, error)
 }
 
 type SequencedBatches struct {
