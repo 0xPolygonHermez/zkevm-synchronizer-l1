@@ -18,7 +18,7 @@ func TestQueries(t *testing.T) {
 	require.NoError(t, err)
 	dbTx, err := storage.Begin(context.Background())
 	require.NoError(t, err)
-	defer dbTx.Rollback(context.Background())
+	defer func() { _ = dbTx.Rollback(context.Background()) }()
 	err = storage.AddBlock(context.Background(), &pgstorage.L1Block{BlockNumber: 300}, dbTx)
 	require.NoError(t, err)
 	sb := pgstorage.SequencedBatches{
