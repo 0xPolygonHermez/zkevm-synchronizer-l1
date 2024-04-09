@@ -37,12 +37,12 @@ func (g *ProcessorL1SequenceBatchesEtrog) Process(ctx context.Context, order eth
 	if l1Block == nil || len(l1Block.SequencedBatches) <= order.Pos {
 		return actions.ErrInvalidParams
 	}
-	err := g.ProcessSequenceBatches(ctx, l1Block.SequencedBatches[order.Pos], l1Block.BlockNumber, l1Block.ReceivedAt, dbTx)
+	err := g.ProcessSequenceBatches(ctx, l1Block.SequencedBatches[order.Pos], l1Block.BlockNumber, dbTx)
 	return err
 }
 
 // ProcessSequenceBatches process sequence of batches
-func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, l1BlockTimestamp time.Time, dbTx pgx.Tx) error {
+func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, dbTx pgx.Tx) error {
 	if len(sequencedBatches) == 0 {
 		log.Warn("Empty sequencedBatches array detected, ignoring...")
 		return nil
@@ -55,7 +55,7 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 		FromBatchNumber: sequencedBatches[0].BatchNumber,
 		ToBatchNumber:   sequencedBatches[len(sequencedBatches)-1].BatchNumber,
 		L1BlockNumber:   blockNumber,
-		Timestamp:       l1BlockTimestamp,
+		Timestamp:       time.Unix(int64(sequencedBatches[0].MaxSequenceTimestamp), 0),
 		L1InfoRoot:      l1inforoot,
 	}
 	return p.state.AddSequencedBatches(ctx, seq, dbTx)
