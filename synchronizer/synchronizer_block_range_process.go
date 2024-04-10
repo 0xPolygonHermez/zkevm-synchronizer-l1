@@ -20,15 +20,11 @@ type stateBlockRangeProcessor interface {
 	BeginStateTransaction(ctx context.Context) (pgx.Tx, error)
 	AddBlock(ctx context.Context, block *pgstorage.L1Block, dbTx pgx.Tx) error
 }
-type stateForkId interface {
-	GetForkIDByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) uint64
-	GetForkIDByBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) uint64
-}
 
 // BlockRangeProcess is the struct that process the block range that implements syncinterfaces.BlockRangeProcessor
 type BlockRangeProcess struct {
 	state             stateBlockRangeProcessor
-	stateForkId       stateForkId
+	stateForkId       StateForkIdQuerier
 	l1EventProcessors syncinterfaces.L1EventProcessorManager
 	flushIdManager    syncinterfaces.SynchronizerFlushIDManager
 }
@@ -36,7 +32,7 @@ type BlockRangeProcess struct {
 // NewBlockRangeProcessLegacy creates a new BlockRangeProcess
 func NewBlockRangeProcessLegacy(
 	state stateBlockRangeProcessor,
-	stateForkId stateForkId,
+	stateForkId StateForkIdQuerier,
 	l1EventProcessors syncinterfaces.L1EventProcessorManager,
 	flushIdManager syncinterfaces.SynchronizerFlushIDManager,
 ) *BlockRangeProcess {

@@ -50,6 +50,7 @@ func NewSynchronizerImpl(
 	ctx context.Context,
 	storage StorageInterface,
 	ethMan EthermanInterface,
+	StateForkIds StateForkIdQuerier,
 	cfg syncconfig.Config) (*SynchronizerImpl, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	// TODO: ??? GetNetworkID
@@ -77,7 +78,8 @@ func NewSynchronizerImpl(
 	builder.Register(incaberry.NewProcessorForkId(sync.ForkIdState))
 	builder.Register(elderberry.NewProcessorL1SequenceBatchesElderberry(etrogSequenceBatchesProcessor))
 	sync.l1EventProcessors = builder.Build()
-	sync.blockRangeProcessor = NewBlockRangeProcessLegacy(storage, nil, sync.l1EventProcessors, nil)
+
+	sync.blockRangeProcessor = NewBlockRangeProcessLegacy(storage, StateForkIds, sync.l1EventProcessors, nil)
 	if cfg.GenesisBlockNumber == 0 {
 		firstBlock, err := ethMan.GetL1BlockUpgradeLxLy(ctx, nil)
 		if err != nil {
@@ -209,7 +211,8 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 			log.Debugf("NetworkID: %d, syncing...", s.networkID)
 			//Sync L1Blocks
 
-			if lastBlockSynced, err = s.syncBlocks(lastBlockSynced); err != nil {
+			var isSynced bool
+			if lastBlockSynced, isSynced, err = s.syncBlocks(lastBlockSynced); err != nil {
 				log.Warnf("networkID: %d, error syncing blocks: %v", s.networkID, err)
 				lastBlockSynced, err = s.getLastBlockFromStorage(s.ctx, nil)
 				if err != nil {
@@ -227,13 +230,13 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 					continue
 				}
 				lastKnownBlock := header.Number.Uint64()
-				if lastBlockSynced.BlockNumber == lastKnownBlock && !s.synced {
-					log.Infof("NetworkID %d Synced!", s.networkID)
+				log.Debugf("NetworkID: %d, lastBlockSynced: %d, lastKnownBlock: %d", s.networkID, lastBlockSynced.BlockNumber, lastKnownBlock)
+				if isSynced && !s.synced {
+					log.Infof("NetworkID %d Synced!  lastL1Block: %d lastBlockSynced:%d ", s.networkID, lastKnownBlock, lastBlockSynced.BlockNumber)
 					waitDuration = s.cfg.SyncInterval.Duration
 					s.synced = true
-					//s.chSynced <- s.networkID
 					if returnOnSync {
-						log.Infof("NetworkID: %d, Synchronization finished, finishing", s.networkID)
+						log.Infof("NetworkID: %d, Synchronization finished, returning because returnOnSync=true", s.networkID)
 						return nil
 					}
 				}
@@ -249,6 +252,8 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 						}
 					}
 				}
+			} else {
+				s.synced = isSynced
 			}
 		}
 	}
@@ -260,26 +265,30 @@ func (s *SynchronizerImpl) Stop() {
 }
 
 // This function syncs the node from a specific block to the latest
-func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, error) {
+// returns:
+// lastBlockSynced: the last block synced
+// isSynced (bool): true if is synced
+// error: if there is an error
+func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, bool, error) {
 	// This function will read events fromBlockNum to latestEthBlock. Check reorg to be sure that everything is ok.
 	block, err := s.checkReorg(lastBlockSynced)
 	if err != nil {
 		log.Errorf("networkID: %d, error checking reorgs. Retrying... Err: %s", s.networkID, err.Error())
-		return lastBlockSynced, fmt.Errorf("networkID: %d, error checking reorgs", s.networkID)
+		return lastBlockSynced, false, fmt.Errorf("networkID: %d, error checking reorgs", s.networkID)
 	}
 	if block != nil {
 		err = s.resetState(block.BlockNumber)
 		if err != nil {
 			log.Errorf("networkID: %d, error resetting the state to a previous block. Retrying... Error: %s", s.networkID, err.Error())
-			return lastBlockSynced, fmt.Errorf("networkID: %d, error resetting the state to a previous block", s.networkID)
+			return lastBlockSynced, false, fmt.Errorf("networkID: %d, error resetting the state to a previous block", s.networkID)
 		}
-		return block, nil
+		return block, false, nil
 	}
 	log.Debugf("NetworkID: %d, after checkReorg: no reorg detected", s.networkID)
 	// Call the blockchain to retrieve data
 	header, err := s.etherMan.HeaderByNumber(s.ctx, nil)
 	if err != nil {
-		return lastBlockSynced, err
+		return lastBlockSynced, false, err
 	}
 	lastKnownBlock := header.Number
 
@@ -298,12 +307,12 @@ func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, error
 		// The value pos (position) tells what is the array index where this value is.
 		ethBlocks, order, err := s.etherMan.GetRollupInfoByBlockRange(s.ctx, fromBlock, &toBlock)
 		if err != nil {
-			return lastBlockSynced, err
+			return lastBlockSynced, false, err
 		}
 		blocks := convertArrayEthermanBlocks(ethBlocks)
 		err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, ethBlocks, order)
 		if err != nil {
-			return lastBlockSynced, err
+			return lastBlockSynced, false, err
 		}
 		if len(blocks) > 0 {
 			lastBlockSynced = &blocks[len(blocks)-1]
@@ -320,13 +329,13 @@ func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, error
 				//s.synced = true
 				//s.chSynced <- s.networkID
 			}
-			break
+			return lastBlockSynced, true, nil
 		}
 		if len(blocks) == 0 { // If there is no events in the checked blocks range and lastKnownBlock > fromBlock.
 			// Store the latest block of the block range. Get block info and process the block
 			fb, err := s.etherMan.EthBlockByNumber(s.ctx, toBlock)
 			if err != nil {
-				return lastBlockSynced, err
+				return lastBlockSynced, false, err
 			}
 			b := etherman.Block{
 				BlockNumber: fb.NumberU64(),
@@ -336,7 +345,7 @@ func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, error
 			}
 			err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, []etherman.Block{b}, order)
 			if err != nil {
-				return lastBlockSynced, err
+				return lastBlockSynced, false, err
 			}
 
 			lastBlockSynced = convertEthermanBlock(&b)
@@ -344,8 +353,6 @@ func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, error
 				s.networkID, b.BlockNumber, b.BlockHash.String())
 		}
 	}
-
-	return lastBlockSynced, nil
 }
 
 // This function allows reset the state until an specific ethereum block

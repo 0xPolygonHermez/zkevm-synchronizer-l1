@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/utils"
 	"github.com/jackc/pgx/v4"
 )
@@ -108,12 +109,40 @@ func (p *ForkIdState) GetForkIDs(ctx context.Context, dbTx pgx.Tx) ([]ForkIDInte
 
 // GetForkIDByBatchNumber returns the fork id for a given batch number
 func (s *ForkIdState) GetForkIDByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) uint64 {
-	return FORKID_ZERO
+	forks, err := s.GetForkIDs(ctx, dbTx)
+	if err != nil {
+		log.Warnf("error getting forkIDs. Error: %v", err)
+		return FORKID_ZERO
+	}
+	maxForId := uint64(0)
+	for _, v := range forks {
+		if batchNumber >= v.FromBatchNumber && batchNumber <= v.ToBatchNumber {
+			return v.ForkId
+		}
+		if v.ForkId > maxForId {
+			maxForId = v.ForkId
+		}
+	}
+	log.Warnf("error can't match batch: %d in current forkids. Returning last one: %d", batchNumber, maxForId)
+	return maxForId
 }
 
 // GetForkIDByBlockNumber returns the fork id for a given block number
 func (s *ForkIdState) GetForkIDByBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) uint64 {
-	return FORKID_ZERO
+	forks, err := s.GetForkIDs(ctx, dbTx)
+	if err != nil {
+		log.Warnf("error getting forkIDs. Error: %v", err)
+		return FORKID_ZERO
+	}
+	maxForId := uint64(0)
+	for _, v := range forks {
+		if v.BlockNumber > blockNumber {
+			maxForId = v.ForkId
+		} else {
+			return maxForId
+		}
+	}
+	return maxForId
 }
 
 func (s *ForkIdState) checkValidNewForkID(newForkID ForkIDInterval, currentForksIDs []ForkIDInterval) error {
