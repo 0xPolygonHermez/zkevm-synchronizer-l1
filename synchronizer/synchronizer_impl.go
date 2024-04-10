@@ -11,6 +11,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/elderberry"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/etrog"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/incaberry"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/processor_manager"
@@ -71,8 +72,10 @@ func NewSynchronizerImpl(
 	sync.ForkIdState = state.NewForkIdState(storage)
 	builder := processor_manager.NewL1EventProcessorsBuilder()
 	builder.Register(etrog.NewProcessorL1InfoTreeUpdate(sync.l1InfoTreeManager))
-	builder.Register(etrog.NewProcessorL1SequenceBatches(storage))
+	etrogSequenceBatchesProcessor := etrog.NewProcessorL1SequenceBatches(storage)
+	builder.Register(etrogSequenceBatchesProcessor)
 	builder.Register(incaberry.NewProcessorForkId(sync.ForkIdState))
+	builder.Register(elderberry.NewProcessorL1SequenceBatchesElderberry(etrogSequenceBatchesProcessor))
 	sync.l1EventProcessors = builder.Build()
 	sync.blockRangeProcessor = NewBlockRangeProcessLegacy(storage, nil, sync.l1EventProcessors, nil)
 	if cfg.GenesisBlockNumber == 0 {
