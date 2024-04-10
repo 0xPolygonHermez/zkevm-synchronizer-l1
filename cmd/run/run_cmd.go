@@ -20,5 +20,5 @@ func RunCmd(cliCtx *cli.Context) error {
 		log.Error("Error creating synchronizer", err)
 		return err
 	}
-	return sync.Sync(true)
+	return sync.Sync(false)
 }

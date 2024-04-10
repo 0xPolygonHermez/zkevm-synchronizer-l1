@@ -9,6 +9,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jackc/pgx/v4"
 )
@@ -99,7 +100,9 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 		log.Error("Error creating etherman", err)
 		return nil, err
 	}
-	sync, err := NewSynchronizerImpl(ctx, storage, etherman, config.Synchronizer)
+
+	forkidState := state.NewForkIdState(storage)
+	sync, err := NewSynchronizerImpl(ctx, storage, etherman, forkidState, config.Synchronizer)
 	if err != nil {
 		log.Error("Error creating synchronizer", err)
 		return nil, err

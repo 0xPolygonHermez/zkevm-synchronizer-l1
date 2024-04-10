@@ -8,8 +8,9 @@ import (
 
 // v0.2.0 - Add GetLeafsByL1InfoRoot
 // v0.2.1 - Add L1InfoRoot to sequenced batches
+// v0.2.5 - Support forkid 8 and 9 #10 + bug #23
 var (
-	Version = "v0.2.1"
+	Version = "v0.2.5"
 )
 
 // PrintVersion prints version info into the provided io.Writer.
