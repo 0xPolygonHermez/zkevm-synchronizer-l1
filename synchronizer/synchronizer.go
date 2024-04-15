@@ -90,6 +90,8 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 		MaxConns: config.DB.MaxConns,
 	}
 
+	log.Init(config.Log)
+
 	storage, err := pgstorage.NewPostgresStorage(configStorage)
 	if err != nil {
 		log.Error(err)
