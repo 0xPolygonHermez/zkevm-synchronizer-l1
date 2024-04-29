@@ -1,4 +1,4 @@
-name: UnitTest
+name: Test Database
 on:
   push:
     branches:
@@ -28,5 +28,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: testdb-results
-          path: coverage_db.out, report_db.json
+          path: | 
+            coverage_db.out
+            report_db.json
           retention-days: 5
