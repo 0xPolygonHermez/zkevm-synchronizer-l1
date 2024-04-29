@@ -2,7 +2,7 @@ name: SonarCloud analysis
 
 on:
   workflow_run:
-    workflows: ["Unit Test"]
+    workflows: [Unit Test]
     types:
       - completed
 jobs:
