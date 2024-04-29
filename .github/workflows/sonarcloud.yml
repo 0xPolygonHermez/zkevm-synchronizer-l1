@@ -2,7 +2,7 @@ name: SonarCloud analysis
 
 on:
   workflow_run:
-    workflows: ["Test Database", "UnitTest"]
+    workflows: ["Unit Test"]
     types:
       - completed
 jobs:
@@ -22,9 +22,7 @@ jobs:
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
-          name: |
-            testdb-results
-            uniittest-results
+          name: uniittest-results
           
         
       - name: SonarCloud Scan
