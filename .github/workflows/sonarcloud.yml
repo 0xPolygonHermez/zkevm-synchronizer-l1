@@ -1,15 +1,15 @@
-name: Unittest
+name: SonarCloud analysis
+
 on:
   push:
     branches:
-      - main
-      - master
       - develop
-      - update-external-dependencies
       - 'release/**'
-  pull_request:
+      - 'feature/**'
+
 jobs:
-  unittest:
+  sonarcloud_analysis:
+    name: SonarCloud
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
@@ -22,4 +22,10 @@ jobs:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Unittest
-        run: make unittest
+        run: make unittest-sonar
+        
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
