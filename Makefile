@@ -159,12 +159,9 @@ generate-code-from-proto: ## Generates code from proto files
 	cd proto/src/proto/executor/v1 && protoc --proto_path=. --go_out=../../../../../state/runtime/executor --go-grpc_out=../../../../../state/runtime/executor --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative executor.proto
 	cd proto/src/proto/aggregator/v1 && protoc --proto_path=. --proto_path=../../../../include --go_out=../../../../../aggregator/prover --go-grpc_out=../../../../../aggregator/prover --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative aggregator.proto
 
+
 .PHONY: unittest
 unittest: ## Runs the tests
-	trap '$(STOP)' EXIT; MallocNanoZone=0 go test -short -race -failfast -covermode=atomic -coverprofile=./coverage.out  -coverpkg ./... -timeout 70s ./... 
-
-.PHONY: unittest-sonar
-unittest-sonar: ## Runs the tests
 	rm report.json || true
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage_unittest.out  -coverpkg ./... -timeout 70s ./... -json > report_unittest.json
 

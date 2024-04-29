@@ -1,11 +1,6 @@
 name: SonarCloud analysis
 
 on:
-  push:
-    branches:
-      - develop
-      - 'release/**'
-      - 'feature/**'
   workflow_run:
     workflows: ["Test Database", "UnitTest"]
     types:
