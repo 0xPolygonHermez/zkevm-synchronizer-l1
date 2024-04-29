@@ -8,7 +8,7 @@ require (
 	github.com/iden3/go-iden3-crypto v0.0.15
 	github.com/invopop/jsonschema v0.12.0
 	github.com/jackc/pgconn v1.14.3
-	github.com/jackc/pgx/v4 v4.18.2
+	github.com/jackc/pgx/v4 v4.18.3
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/prometheus/client_model v0.6.1
