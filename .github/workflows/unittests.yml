@@ -1,4 +1,4 @@
-name: UnitTest
+name: Unit Test
 on:
   push:
     branches:
@@ -26,7 +26,7 @@ jobs:
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
         with:
-          name: uniittest-results
+          name: unittest-results
           path: | 
             coverage_unittest.out
             report_unittest.json
