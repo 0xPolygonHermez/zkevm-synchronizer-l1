@@ -20,6 +20,7 @@ type EthermanInterface interface {
 	GetRollupID() uint
 	GetL1BlockUpgradeLxLy(ctx context.Context, genesisBlock *uint64) (uint64, error)
 	GetForks(ctx context.Context, genBlockNumber uint64, lastL1BlockSynced uint64) ([]etherman.ForkIDInterval, error)
+	GetFinalizedBlockNumber(ctx context.Context) (uint64, error)
 }
 
 type StorageBlockInterface interface {

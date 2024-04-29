@@ -63,11 +63,19 @@ type SynchronizerSequencedBatchesQuerier interface {
 	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64) (*SequencedBatches, error)
 }
 
+// SynchronizerReorgSupporter is an interface that give support to the reorgs detected on L1
+type SynchronizerReorgSupporter interface {
+	// SetCallbackOnReorgDone sets a callback that will be called when the reorg is done
+	// to disable it you can set nil
+	SetCallbackOnReorgDone(callback func(newFirstL1BlockNumberValid uint64))
+}
+
 type Synchronizer interface {
 	SynchronizerRunner
 	SynchornizerStatusQuerier
 	SynchronizerL1InfoTreeQuerier
 	SynchronizerSequencedBatchesQuerier
+	SynchronizerReorgSupporter
 }
 
 func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Synchronizer, error) {

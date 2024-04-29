@@ -16,6 +16,6 @@ const (
 )
 
 type BlockRangeProcessor interface {
-	ProcessBlockRange(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order) error
-	ProcessBlockRangeSingleDbTx(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, storeBlocks ProcessBlockRangeL1BlocksMode, dbTx pgx.Tx) error
+	ProcessBlockRange(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64) error
+	ProcessBlockRangeSingleDbTx(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64, storeBlocks ProcessBlockRangeL1BlocksMode, dbTx pgx.Tx) error
 }

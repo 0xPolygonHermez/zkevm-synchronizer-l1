@@ -32,12 +32,7 @@ type SynchronizerImpl struct {
 	genBlockNumber uint64
 	cfg            syncconfig.Config
 	networkID      uint
-	// TODO: remove
-	//chExitRootEvent chan *etherman.GlobalExitRoot
-	// TODO: remove
-	//chSynced chan uint
-	// TODO: remove
-	synced bool
+	synced         bool
 
 	l1EventProcessors   *processor_manager.L1EventProcessors
 	blockRangeProcessor syncinterfaces.BlockRangeProcessor
@@ -98,6 +93,11 @@ var waitDuration = time.Duration(0)
 // IsSynced returns true if the synchronizer is synced or false if it's not
 func (s *SynchronizerImpl) IsSynced() bool {
 	return s.synced
+}
+
+func (s *SynchronizerImpl) SetCallbackOnReorgDone(callback func(newFirstL1BlockNumberValid uint64)) {
+	//TODO: Implement this function
+	log.Fatal("Not implemented")
 }
 
 func (s *SynchronizerImpl) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]L1InfoTreeLeaf, error) {
@@ -309,8 +309,14 @@ func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, bool,
 		if err != nil {
 			return lastBlockSynced, false, err
 		}
+		// Check the latest finalized block in L1
+		finalizedBlockNumber, err := s.etherMan.GetFinalizedBlockNumber(s.ctx)
+		if err != nil {
+			log.Errorf("error getting finalized block number in L1. Error: %v", err)
+			return lastBlockSynced, false, err
+		}
 		blocks := convertArrayEthermanBlocks(ethBlocks)
-		err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, ethBlocks, order)
+		err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, ethBlocks, order, finalizedBlockNumber)
 		if err != nil {
 			return lastBlockSynced, false, err
 		}
@@ -343,7 +349,7 @@ func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, bool,
 				ParentHash:  fb.ParentHash(),
 				ReceivedAt:  time.Unix(int64(fb.Time()), 0),
 			}
-			err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, []etherman.Block{b}, order)
+			err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, []etherman.Block{b}, order, finalizedBlockNumber)
 			if err != nil {
 				return lastBlockSynced, false, err
 			}

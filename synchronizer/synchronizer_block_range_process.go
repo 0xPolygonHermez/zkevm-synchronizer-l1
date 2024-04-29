@@ -45,30 +45,39 @@ func NewBlockRangeProcessLegacy(
 }
 
 // ProcessBlockRangeSingleDbTx process the L1 events and stores the information in the db reusing same DbTx
-func (s *BlockRangeProcess) ProcessBlockRangeSingleDbTx(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, storeBlocks syncinterfaces.ProcessBlockRangeL1BlocksMode, dbTx pgx.Tx) error {
-	return s.internalProcessBlockRange(ctx, blocks, order, storeBlocks, &dbTx)
+func (s *BlockRangeProcess) ProcessBlockRangeSingleDbTx(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64, storeBlocks syncinterfaces.ProcessBlockRangeL1BlocksMode, dbTx pgx.Tx) error {
+	return s.internalProcessBlockRange(ctx, blocks, order, finalizedBlockNumber, storeBlocks, &dbTx)
 }
 
 // ProcessBlockRange process the L1 events and stores the information in the db
-func (s *BlockRangeProcess) ProcessBlockRange(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order) error {
-	return s.internalProcessBlockRange(ctx, blocks, order, syncinterfaces.StoreL1Blocks, nil)
+func (s *BlockRangeProcess) ProcessBlockRange(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64) error {
+	return s.internalProcessBlockRange(ctx, blocks, order, finalizedBlockNumber, syncinterfaces.StoreL1Blocks, nil)
+}
+
+func isBlockFinalized(blockNumber uint64, finalizedBlockNumber uint64) bool {
+	return blockNumber <= finalizedBlockNumber
 }
 
 // ProcessBlockRange process the L1 events and stores the information in the db
-func (s *BlockRangeProcess) addBlock(ctx context.Context, block *etherman.Block, dbTx pgx.Tx) error {
+func (s *BlockRangeProcess) addBlock(ctx context.Context, block *etherman.Block, isFinalized bool, dbTx pgx.Tx) error {
 	b := pgstorage.L1Block{
 		BlockNumber: block.BlockNumber,
 		BlockHash:   block.BlockHash,
 		ParentHash:  block.ParentHash,
 		ReceivedAt:  block.ReceivedAt,
 		SyncVersion: zkevm_synchronizer_l1.Version,
+		Checked:     isFinalized,
 	}
 	// Add block information
 	return s.state.AddBlock(ctx, &b, dbTx)
 }
 
 // ProcessBlockRange process the L1 events and stores the information in the db
-func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, storeBlocks syncinterfaces.ProcessBlockRangeL1BlocksMode, dbTxExt *pgx.Tx) error {
+func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order,
+	finalizedBlockNumber uint64,
+	storeBlocksMode syncinterfaces.ProcessBlockRangeL1BlocksMode,
+	dbTxExt *pgx.Tx) error {
+
 	// New info has to be included into the db using the state
 	for i := range blocks {
 		// Begin db transaction
@@ -84,7 +93,7 @@ func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, block
 			dbTx = *dbTxExt
 		}
 		// Process event received from l1
-		err = s.processBlock(ctx, blocks, i, dbTx, order, storeBlocks)
+		err = s.processBlock(ctx, blocks, i, dbTx, order, storeBlocksMode, finalizedBlockNumber)
 		if err != nil {
 			if dbTxExt == nil {
 				// Rollback db transaction
@@ -113,19 +122,19 @@ func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, block
 	return nil
 }
 
-func (s *BlockRangeProcess) processBlock(ctx context.Context, blocks []etherman.Block, i int, dbTx pgx.Tx, order map[common.Hash][]etherman.Order, storeBlock syncinterfaces.ProcessBlockRangeL1BlocksMode) error {
+func (s *BlockRangeProcess) processBlock(ctx context.Context, blocks []etherman.Block, blockIndex int, dbTx pgx.Tx, order map[common.Hash][]etherman.Order, storeBlock syncinterfaces.ProcessBlockRangeL1BlocksMode, finalizedBlockNumber uint64) error {
 	var err error
 	if storeBlock == syncinterfaces.StoreL1Blocks {
-		err = s.addBlock(ctx, &blocks[i], dbTx)
+		err = s.addBlock(ctx, &blocks[blockIndex], isBlockFinalized(blocks[blockIndex].BlockNumber, finalizedBlockNumber), dbTx)
 		if err != nil {
-			log.Errorf("error adding block to db. BlockNumber: %d, error: %v", blocks[i].BlockNumber, err)
+			log.Errorf("error adding block to db. BlockNumber: %d, error: %v", blocks[blockIndex].BlockNumber, err)
 			return err
 		}
 	} else {
-		log.Debugf("Skip storing block BlockNumber:%d", blocks[i].BlockNumber)
+		log.Debugf("Skip storing block BlockNumber:%d", blocks[blockIndex].BlockNumber)
 	}
-	for _, element := range order[blocks[i].BlockHash] {
-		err := s.processElement(ctx, element, blocks, i, dbTx)
+	for _, element := range order[blocks[blockIndex].BlockHash] {
+		err := s.processElement(ctx, element, blocks, blockIndex, dbTx)
 		if err != nil {
 			return err
 		}
@@ -134,7 +143,7 @@ func (s *BlockRangeProcess) processBlock(ctx context.Context, blocks []etherman.
 		log.Debug("Checking FlushID to commit L1 data to db")
 		err = s.flushIdManager.CheckFlushID(dbTx)
 		if err != nil {
-			log.Errorf("error checking flushID. BlockNumber: %d, Error: %v", blocks[i].BlockNumber, err)
+			log.Errorf("error checking flushID. BlockNumber: %d, Error: %v", blocks[blockIndex].BlockNumber, err)
 			return err
 		}
 	}
