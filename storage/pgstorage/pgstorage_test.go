@@ -15,7 +15,8 @@ func TestQueries(t *testing.T) {
 		t.Skip()
 	}
 	dbConfig := getStorageConfig()
-	pgstorage.ResetDB(dbConfig)
+	err := pgstorage.ResetDB(dbConfig)
+	require.NoError(t, err)
 	storage, err := pgstorage.NewPostgresStorage(dbConfig)
 	require.NoError(t, err)
 	dbTx, err := storage.Begin(context.Background())
@@ -43,7 +44,8 @@ func TestBlockAddAndGets(t *testing.T) {
 	}
 	ctx := context.TODO()
 	dbConfig := getStorageConfig()
-	pgstorage.ResetDB(dbConfig)
+	err := pgstorage.ResetDB(dbConfig)
+	require.NoError(t, err)
 	storage, err := pgstorage.NewPostgresStorage(dbConfig)
 	require.NoError(t, err)
 	dbTx, err := storage.Begin(ctx)
