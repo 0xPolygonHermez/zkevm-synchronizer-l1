@@ -1,4 +1,4 @@
-name: Unittest
+name: UnitTest
 on:
   push:
     branches:
@@ -7,6 +7,7 @@ on:
       - develop
       - update-external-dependencies
       - 'release/**'
+      - 'feature/**'
   pull_request:
 jobs:
   unittest:
@@ -21,5 +22,11 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
-      - name: Unittest
-        run: make unittest
+      - name: Test Database
+        run: make test-db
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: testdb-results
+          path: coverage_db.out, report_db.json
+          retention-days: 5

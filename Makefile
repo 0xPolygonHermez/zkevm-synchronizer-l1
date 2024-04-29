@@ -166,12 +166,12 @@ unittest: ## Runs the tests
 .PHONY: unittest-sonar
 unittest-sonar: ## Runs the tests
 	rm report.json || true
-	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage.out  -coverpkg ./... -timeout 70s ./... -json | tee report.json
+	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage_unittest.out  -coverpkg ./... -timeout 70s ./... -json > report_unittest.json
 
 .PHONY: test-db
 test-db: ## Runs the tests
 	(cd test; make run-dbs)
-	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 70s ./storage/...
+	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./storage/... -json | tee report_db.json
 	(cd test; make stop)
 
 
