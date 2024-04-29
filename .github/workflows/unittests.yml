@@ -1,4 +1,4 @@
-name: Test Database
+name: UnitTest
 on:
   push:
     branches:
@@ -9,7 +9,7 @@ on:
       - 'release/**'
       - 'feature/**'
 jobs:
-  test_db:
+  unittest:
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
@@ -21,13 +21,14 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
-      - name: Test Database
-        run: make test-db
+      - name: Unittest
+        run: make unittest
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
         with:
-          name: testdb-results
+          name: uniittest-results
           path: | 
-            coverage_db.out
-            report_db.json
+            coverage_unittest.out
+            report_unittest.json
           retention-days: 5
+      

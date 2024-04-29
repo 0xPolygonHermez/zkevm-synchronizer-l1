@@ -6,7 +6,10 @@ on:
       - develop
       - 'release/**'
       - 'feature/**'
-
+  workflow_run:
+    workflows: ["Test Database", "UnitTest"]
+    types:
+      - completed
 jobs:
   sonarcloud_analysis:
     name: SonarCloud
@@ -24,7 +27,9 @@ jobs:
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
-          name: testdb-results, uniittest-results
+          name: |
+            testdb-results
+            uniittest-results
           
         
       - name: SonarCloud Scan
