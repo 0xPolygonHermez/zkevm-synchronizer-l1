@@ -9,7 +9,7 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	pgstorage "github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
+	pgstorage "github.com/0xPolygonHermez/zkevm-synchronizer-l1/storage/pgstorage"
 
 	pgx "github.com/jackc/pgx/v4"
 )

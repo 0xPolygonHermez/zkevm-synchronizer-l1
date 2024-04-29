@@ -5,10 +5,10 @@ import (
 	"errors"
 
 	zkevm_synchronizer_l1 "github.com/0xPolygonHermez/zkevm-synchronizer-l1"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/storage/pgstorage"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1event_orders"

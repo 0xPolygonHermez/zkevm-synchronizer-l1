@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	zkevm_synchronizer_l1 "github.com/0xPolygonHermez/zkevm-synchronizer-l1"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/storage/pgstorage"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer"
 	mock_synchronizer "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/mocks"
 	"github.com/ethereum/go-ethereum/common"

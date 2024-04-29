@@ -5,7 +5,7 @@ package mock_state
 import (
 	context "context"
 
-	pgstorage "github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
+	pgstorage "github.com/0xPolygonHermez/zkevm-synchronizer-l1/storage/pgstorage"
 	mock "github.com/stretchr/testify/mock"
 
 	pgx "github.com/jackc/pgx/v4"

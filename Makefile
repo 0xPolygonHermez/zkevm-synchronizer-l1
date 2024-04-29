@@ -161,12 +161,18 @@ generate-code-from-proto: ## Generates code from proto files
 
 .PHONY: unittest
 unittest: ## Runs the tests
-	trap '$(STOP)' EXIT; MallocNanoZone=0 go test -count=1 -short -race  -covermode=atomic -coverprofile=./coverage.out  -coverpkg ./... -timeout 70s ./... 
+	trap '$(STOP)' EXIT; MallocNanoZone=0 go test -short -race -failfast -covermode=atomic -coverprofile=./coverage.out  -coverpkg ./... -timeout 70s ./... 
 
 .PHONY: unittest-sonar
 unittest-sonar: ## Runs the tests
 	rm report.json || true
-	trap '$(STOP)' EXIT; MallocNanoZone=0 go test -count=1 -short -race  -covermode=atomic -coverprofile=./coverage.out  -coverpkg ./... -timeout 70s ./... -json | tee report.json
+	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage.out  -coverpkg ./... -timeout 70s ./... -json | tee report.json
+
+.PHONY: test-db
+test-db: ## Runs the tests
+	(cd test; make run-dbs)
+	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 70s ./storage/...
+	(cd test; make stop)
 
 
 ## Help display.

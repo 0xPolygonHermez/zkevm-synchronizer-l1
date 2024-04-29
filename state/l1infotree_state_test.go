@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
 	mock_state "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/mocks"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/storage/pgstorage"
 	"github.com/stretchr/testify/assert"
 )
 
