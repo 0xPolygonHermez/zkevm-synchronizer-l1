@@ -26,9 +26,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unittest-results
-          path: | 
-            ./coverage_unittest.out
-            ./report_unittest.json
+          path: ./coverage_unittest.out
           retention-days: 5
   test_db:
     runs-on: ubuntu-latest
@@ -48,9 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: testdb-results
-          path: | 
-            ./coverage_db.out
-            ./report_db.json
+          path: ./coverage_db.out
           retention-days: 5
   sonarcloud_analysis:
     name: SonarCloud
