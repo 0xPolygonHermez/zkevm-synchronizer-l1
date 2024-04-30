@@ -64,12 +64,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download test results
+      - name: Download unitTest results
         uses: actions/download-artifact@v4
         with:
-          name: |
-            unittest-results
-            testdb-results
+          name: unittest-results
+      - name: Download testDB results
+        uses: actions/download-artifact@v4
+        with:
+          name:  testdb-results
           
         
       - name: SonarCloud Scan
