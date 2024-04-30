@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
 	commonsync "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1_check_block"
 	mock_l1_check_block "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1_check_block/mocks"
@@ -21,7 +20,7 @@ type testPreCheckData struct {
 	mockInitialFetch *mock_l1_check_block.SafeL1BlockNumberFetcher
 	mockEndFetch     *mock_l1_check_block.SafeL1BlockNumberFetcher
 	ctx              context.Context
-	stateBlocks      []*state.Block
+	stateBlocks      []*L1Block
 }
 
 func newPreCheckData(t *testing.T) *testPreCheckData {
@@ -37,7 +36,7 @@ func newPreCheckData(t *testing.T) *testPreCheckData {
 		mockInitialFetch: mockInitialFetch,
 		mockEndFetch:     mockEndFetch,
 		ctx:              context.Background(),
-		stateBlocks: []*state.Block{
+		stateBlocks: []*L1Block{
 			{
 				BlockNumber: 1234,
 				BlockHash:   common.HexToHash("0xd77dd3a9ee6f9202ca5a75024b7d9cbd3d7436b2910d450f88c261c0089c0cd9"),

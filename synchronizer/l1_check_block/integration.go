@@ -5,21 +5,19 @@ import (
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
 	"github.com/jackc/pgx/v4"
 )
 
 // StateForL1BlockCheckerIntegration is an interface for the state
 type StateForL1BlockCheckerIntegration interface {
-	GetPreviousBlockToBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*state.Block, error)
+	GetPreviousBlockToBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*L1Block, error)
 }
 
 // L1BlockCheckerIntegration is a struct that integrates the L1BlockChecker with the synchronizer
 type L1BlockCheckerIntegration struct {
 	forceCheckOnStart  bool
-	checker            syncinterfaces.AsyncL1BlockChecker
-	preChecker         syncinterfaces.AsyncL1BlockChecker
+	checker            AsyncL1BlockChecker
+	preChecker         AsyncL1BlockChecker
 	state              StateForL1BlockCheckerIntegration
 	sync               SyncCheckReorger
 	timeBetweenRetries time.Duration
@@ -32,7 +30,7 @@ type SyncCheckReorger interface {
 }
 
 // NewL1BlockCheckerIntegration creates a new L1BlockCheckerIntegration
-func NewL1BlockCheckerIntegration(checker syncinterfaces.AsyncL1BlockChecker, preChecker syncinterfaces.AsyncL1BlockChecker, state StateForL1BlockCheckerIntegration, sync SyncCheckReorger, forceCheckOnStart bool, timeBetweenRetries time.Duration) *L1BlockCheckerIntegration {
+func NewL1BlockCheckerIntegration(checker AsyncL1BlockChecker, preChecker AsyncL1BlockChecker, state StateForL1BlockCheckerIntegration, sync SyncCheckReorger, forceCheckOnStart bool, timeBetweenRetries time.Duration) *L1BlockCheckerIntegration {
 	return &L1BlockCheckerIntegration{
 		forceCheckOnStart:  forceCheckOnStart,
 		checker:            checker,
@@ -67,7 +65,7 @@ func (v *L1BlockCheckerIntegration) OnStart(ctx context.Context) error {
 	return nil
 }
 
-func (v *L1BlockCheckerIntegration) runCheckerSync(ctx context.Context, checker syncinterfaces.AsyncL1BlockChecker) syncinterfaces.IterationResult {
+func (v *L1BlockCheckerIntegration) runCheckerSync(ctx context.Context, checker AsyncL1BlockChecker) IterationResult {
 	for {
 		result := checker.RunSynchronous(ctx)
 		if result.Err == nil {
@@ -96,7 +94,7 @@ func (v *L1BlockCheckerIntegration) OnResetState(ctx context.Context) {
 
 // CheckReorgWrapper is a wrapper over reorg function of synchronizer.
 // it checks the result of the function and the result of background process and decides which return
-func (v *L1BlockCheckerIntegration) CheckReorgWrapper(ctx context.Context, reorgFirstBlockOk *state.Block, errReportedByReorgFunc error) (*state.Block, error) {
+func (v *L1BlockCheckerIntegration) CheckReorgWrapper(ctx context.Context, reorgFirstBlockOk *L1Block, errReportedByReorgFunc error) (*L1Block, error) {
 	resultBackground := v.getMergedResults()
 	if resultBackground != nil && resultBackground.ReorgDetected {
 		// Background process detected a reorg, decide which return
@@ -144,9 +142,9 @@ func (v *L1BlockCheckerIntegration) checkBackgroundResult(ctx context.Context, p
 	return false
 }
 
-func (v *L1BlockCheckerIntegration) getMergedResults() *syncinterfaces.IterationResult {
+func (v *L1BlockCheckerIntegration) getMergedResults() *IterationResult {
 	result := v.checker.GetResult()
-	var preResult *syncinterfaces.IterationResult
+	var preResult *IterationResult
 	preResult = nil
 	if v.preChecker != nil {
 		preResult = v.preChecker.GetResult()
@@ -190,7 +188,7 @@ func (v *L1BlockCheckerIntegration) launch(ctx context.Context) {
 	}
 }
 
-func (v *L1BlockCheckerIntegration) executeResult(ctx context.Context, result syncinterfaces.IterationResult) bool {
+func (v *L1BlockCheckerIntegration) executeResult(ctx context.Context, result IterationResult) bool {
 	if result.ReorgDetected {
 		for {
 			err := v.sync.ExecuteReorgFromMismatchBlock(result.BlockNumber, result.ReorgMessage)

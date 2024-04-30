@@ -7,7 +7,6 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
 )
 
 // L1BlockChecker is an interface that defines the method to check L1 blocks
@@ -23,7 +22,7 @@ const (
 type AsyncCheck struct {
 	checker      L1BlockChecker
 	mutex        sync.Mutex
-	lastResult   *syncinterfaces.IterationResult
+	lastResult   *IterationResult
 	onFinishCall func()
 	periodTime   time.Duration
 	// Wg is a wait group to wait for the result
@@ -67,14 +66,14 @@ func (a *AsyncCheck) Stop() {
 }
 
 // RunSynchronous is a method that forces the check to be synchronous before starting the async check
-func (a *AsyncCheck) RunSynchronous(ctx context.Context) syncinterfaces.IterationResult {
+func (a *AsyncCheck) RunSynchronous(ctx context.Context) IterationResult {
 	return a.executeIteration(ctx)
 }
 
 // GetResult returns the last result of the check:
 // - Nil -> still running
 // - Not nil -> finished, and this is the result. You must call again Run to start a new check
-func (a *AsyncCheck) GetResult() *syncinterfaces.IterationResult {
+func (a *AsyncCheck) GetResult() *IterationResult {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 	return a.lastResult
@@ -100,7 +99,7 @@ func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 // GetResultBlockingUntilAvailable wait the time specific in timeout, if reach timeout returns current
 // result, if not, wait until the result is available.
 // if timeout is 0, it waits indefinitely
-func (a *AsyncCheck) GetResultBlockingUntilAvailable(timeout time.Duration) *syncinterfaces.IterationResult {
+func (a *AsyncCheck) GetResultBlockingUntilAvailable(timeout time.Duration) *IterationResult {
 	if timeout == 0 {
 		a.Wg.Wait()
 	} else {
@@ -109,7 +108,7 @@ func (a *AsyncCheck) GetResultBlockingUntilAvailable(timeout time.Duration) *syn
 	return a.GetResult()
 }
 
-func (a *AsyncCheck) setResult(result syncinterfaces.IterationResult) {
+func (a *AsyncCheck) setResult(result IterationResult) {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 	a.lastResult = &result
@@ -144,11 +143,11 @@ func (a *AsyncCheck) launchChecker(ctx context.Context) {
 
 // step is a method that executes until executeItertion
 // returns an error or a reorg
-func (a *AsyncCheck) step(ctx context.Context) *syncinterfaces.IterationResult {
+func (a *AsyncCheck) step(ctx context.Context) *IterationResult {
 	select {
 	case <-ctx.Done():
 		log.Debugf("%s L1BlockChecker: context done", logPrefix)
-		return &syncinterfaces.IterationResult{Err: ctx.Err()}
+		return &IterationResult{Err: ctx.Err()}
 	default:
 		result := a.executeIteration(ctx)
 		if result.ReorgDetected {
@@ -161,8 +160,8 @@ func (a *AsyncCheck) step(ctx context.Context) *syncinterfaces.IterationResult {
 }
 
 // executeIteration executes a single iteration of the checker
-func (a *AsyncCheck) executeIteration(ctx context.Context) syncinterfaces.IterationResult {
-	res := syncinterfaces.IterationResult{}
+func (a *AsyncCheck) executeIteration(ctx context.Context) IterationResult {
+	res := IterationResult{}
 	log.Debugf("%s calling checker.Step(...)", logPrefix)
 	res.Err = a.checker.Step(ctx)
 	log.Debugf("%s returned checker.Step(...) %w", logPrefix, res.Err)

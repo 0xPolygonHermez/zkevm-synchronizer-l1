@@ -25,7 +25,7 @@ type L1Requester interface {
 
 // StateInterfacer is an interface for the state
 type StateInterfacer interface {
-	GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx) (*state.Block, error)
+	GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx) (*L1Block, error)
 	UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx pgx.Tx) error
 }
 
@@ -78,7 +78,7 @@ func (p *CheckL1BlockHash) Step(ctx context.Context) error {
 	return p.doAllBlocks(ctx, *stateBlock, safeBlockNumber)
 }
 
-func (p *CheckL1BlockHash) doAllBlocks(ctx context.Context, firstStateBlock state.Block, safeBlockNumber uint64) error {
+func (p *CheckL1BlockHash) doAllBlocks(ctx context.Context, firstStateBlock L1Block, safeBlockNumber uint64) error {
 	var err error
 	startTime := time.Now()
 	stateBlock := &firstStateBlock
@@ -103,7 +103,7 @@ func (p *CheckL1BlockHash) doAllBlocks(ctx context.Context, firstStateBlock stat
 	}
 }
 
-func (p *CheckL1BlockHash) doBlock(ctx context.Context, stateBlock *state.Block) error {
+func (p *CheckL1BlockHash) doBlock(ctx context.Context, stateBlock *L1Block) error {
 	err := CheckBlockHash(ctx, stateBlock, p.L1Client, p.Name())
 	if err != nil {
 		return err
@@ -119,7 +119,7 @@ func (p *CheckL1BlockHash) doBlock(ctx context.Context, stateBlock *state.Block)
 }
 
 // CheckBlockHash is a method that checks the L1 block hash
-func CheckBlockHash(ctx context.Context, stateBlock *state.Block, L1Client L1Requester, checkerName string) error {
+func CheckBlockHash(ctx context.Context, stateBlock *L1Block, L1Client L1Requester, checkerName string) error {
 	if stateBlock == nil {
 		log.Warn("%s function CheckL1Block receive a nil pointer", checkerName)
 		return nil

@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common"
 	"github.com/jackc/pgx/v4"
 )
@@ -26,7 +25,7 @@ var (
 
 // StatePreCheckInterfacer is an interface for the state
 type StatePreCheckInterfacer interface {
-	GetUncheckedBlocks(ctx context.Context, fromBlockNumber uint64, toBlockNumber uint64, dbTx pgx.Tx) ([]*state.Block, error)
+	GetUncheckedBlocks(ctx context.Context, fromBlockNumber uint64, toBlockNumber uint64, dbTx pgx.Tx) ([]*L1Block, error)
 }
 
 // PreCheckL1BlockHash is a struct that implements a checker of L1Block hash
@@ -110,7 +109,7 @@ func (p *PreCheckL1BlockHash) Step(ctx context.Context) error {
 
 // CheckBlockHash is a method that checks the L1 block hash
 // returns true if is the same
-func (p *PreCheckL1BlockHash) checkThatStateBlockIsTheSame(ctx context.Context, block *state.Block) (bool, error) {
+func (p *PreCheckL1BlockHash) checkThatStateBlockIsTheSame(ctx context.Context, block *L1Block) (bool, error) {
 	blocks, err := p.State.GetUncheckedBlocks(ctx, block.BlockNumber, block.BlockNumber, nil)
 	if err != nil {
 		log.Warnf("%s: Fails to get blockNumber %d in state .Err:%s", p.Name(), block.BlockNumber, err.Error())

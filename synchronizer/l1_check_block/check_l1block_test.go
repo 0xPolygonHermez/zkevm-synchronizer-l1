@@ -22,7 +22,7 @@ type testData struct {
 	mockBlockNumberFetch *mock_l1_check_block.SafeL1BlockNumberFetcher
 	sut                  *l1_check_block.CheckL1BlockHash
 	ctx                  context.Context
-	stateBlock           *state.Block
+	stateBlock           *l1_check_block.L1Block
 }
 
 func newTestData(t *testing.T) *testData {
@@ -39,7 +39,7 @@ func newTestData(t *testing.T) *testData {
 		mockBlockNumberFetch: mockBlockNumberFetch,
 		sut:                  sut,
 		ctx:                  ctx,
-		stateBlock: &state.Block{
+		stateBlock: &l1_check_block.L1Block{
 			BlockNumber: 1234,
 			BlockHash:   common.HexToHash("0xb07e1289b32edefd8f3c702d016fb73c81d5950b2ebc790ad9d2cb8219066b4c"),
 		},
