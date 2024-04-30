@@ -161,22 +161,22 @@ generate-code-from-proto: ## Generates code from proto files
 
 
 .PHONY: unittest
-unittest: ## Runs the tests
+unittest: ## Runs the unittest
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage_unittest.out  -coverpkg ./... -timeout 70s ./... 
 
 .PHONY: unittest-report
-unittest: ## Runs the tests
+unittest-report: ## Runs the unittest and generate json report
 	rm report.json || true
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage_unittest.out  -coverpkg ./... -timeout 70s ./... -json > report_unittest.json
 
 .PHONY: test-db
-test-db: ## Runs the tests
+test-db: ## Runs the tests-db
 	(cd test; make run-dbs)
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./storage/... 
 	(cd test; make stop)
 
 .PHONY: test-db-report
-test-db: ## Runs the tests
+test-db-report: ## Runs the tests-db generate json report
 	(cd test; make run-dbs)
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./storage/... -json | tee report_db.json
 	(cd test; make stop)
