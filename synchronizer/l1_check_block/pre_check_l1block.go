@@ -66,7 +66,10 @@ func (p *PreCheckL1BlockHash) Step(ctx context.Context) error {
 		log.Warnf("%s: fromBlockNumber(%s) %d is greater than toBlockNumber(%s) %d, Check configuration", p.Name(), p.InitialSegmentBlockNumber.Description(), from, p.EndSegmentBlockNumber.Description(), to)
 		return nil
 	}
+	return p.StepFromTo(ctx, from, to)
+}
 
+func (p *PreCheckL1BlockHash) StepFromTo(ctx context.Context, from, to uint64) error {
 	blocksToCheck, err := p.State.GetUncheckedBlocks(ctx, from, to, nil)
 	if err != nil {
 		log.Warnf("%s can't get unchecked blocks, so it discard the reorg error", p.Name())
