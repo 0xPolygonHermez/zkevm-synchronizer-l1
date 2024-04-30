@@ -3,6 +3,7 @@ package synchronizer
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	zkevm_synchronizer_l1 "github.com/0xPolygonHermez/zkevm-synchronizer-l1"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
@@ -72,6 +73,43 @@ func (s *BlockRangeProcess) addBlock(ctx context.Context, block *etherman.Block,
 	return s.state.AddBlock(ctx, &b, dbTx)
 }
 
+func (s *BlockRangeProcess) beginStateTransactionIfNeed(ctx context.Context, dbTxExt *pgx.Tx) (pgx.Tx, error) {
+	if dbTxExt == nil {
+		log.Debugf("Starting dbTx")
+		return s.state.BeginStateTransaction(ctx)
+	}
+	return *dbTxExt, nil
+}
+
+func (s *BlockRangeProcess) rollbackIfNeed(ctx context.Context, err error, dbTx pgx.Tx, dbTxExt *pgx.Tx) error {
+	if dbTxExt == nil {
+		// Rollback db transaction
+		rollbackErr := dbTx.Rollback(ctx)
+		if rollbackErr != nil {
+			if !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+				log.Errorf("error rolling back state. RollbackErr: %s, Error : %v", rollbackErr.Error(), err)
+				return rollbackErr
+			} else {
+				log.Debugf("error rolling back state because is already closed. RollbackErr: %s, Error : %v", rollbackErr.Error(), err)
+				return err
+			}
+		}
+		return err
+	}
+	return err
+}
+
+func (s *BlockRangeProcess) commitIfNeed(ctx context.Context, dbTx pgx.Tx, dbTxExt *pgx.Tx) error {
+	if dbTxExt == nil {
+		// Commit db transaction
+		err := dbTx.Commit(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // ProcessBlockRange process the L1 events and stores the information in the db
 func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order,
 	finalizedBlockNumber uint64,
@@ -81,43 +119,23 @@ func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, block
 	// New info has to be included into the db using the state
 	for i := range blocks {
 		// Begin db transaction
-		var dbTx pgx.Tx
-		var err error
-		if dbTxExt == nil {
-			log.Debugf("Starting dbTx for BlockNumber:%d", blocks[i].BlockNumber)
-			dbTx, err = s.state.BeginStateTransaction(ctx)
-			if err != nil {
-				return err
-			}
-		} else {
-			dbTx = *dbTxExt
+		dbTx, err := s.beginStateTransactionIfNeed(ctx, dbTxExt)
+		if err != nil {
+			errExt := fmt.Errorf("error beginStateTransaction. BlockNumber: %d, Error: %w", blocks[i].BlockNumber, err)
+			return errExt
 		}
 		// Process event received from l1
 		err = s.processBlock(ctx, blocks, i, dbTx, order, storeBlocksMode, finalizedBlockNumber)
 		if err != nil {
-			if dbTxExt == nil {
-				// Rollback db transaction
-				rollbackErr := dbTx.Rollback(ctx)
-				if rollbackErr != nil {
-					if !errors.Is(rollbackErr, pgx.ErrTxClosed) {
-						log.Errorf("error rolling back state. RollbackErr: %s, Error : %v", rollbackErr.Error(), err)
-						return rollbackErr
-					} else {
-						log.Warnf("error rolling back state because is already closed. RollbackErr: %s, Error : %v", rollbackErr.Error(), err)
-						return err
-					}
-				}
-				return err
-			}
+			return s.rollbackIfNeed(ctx, err, dbTx, dbTxExt)
+		}
+
+		err = s.commitIfNeed(ctx, dbTx, dbTxExt)
+		if err != nil {
+			log.Errorf("error committing state. BlockNumber: %d, Error: %v", blocks[i].BlockNumber, err)
 			return err
 		}
-		if dbTxExt == nil {
-			// Commit db transaction
-			err = dbTx.Commit(ctx)
-			if err != nil {
-				log.Errorf("error committing state. BlockNumber: %d, Error: %v", blocks[i].BlockNumber, err)
-			}
-		}
+
 	}
 	return nil
 }
