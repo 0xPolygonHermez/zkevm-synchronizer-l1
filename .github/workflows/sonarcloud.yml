@@ -1,18 +1,60 @@
 name: SonarCloud analysis
 
 on:
-  workflow_run:
-    workflows: [Unit Test]
+  push:
     branches:
       - develop
       - update-external-dependencies
       - 'release/**'
       - 'feature/**'
-    types:
-      - completed
 jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21.x
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Unittest
+        run: make unittest-report
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unittest-results
+          path: | 
+            coverage_unittest.out
+            report_unittest.json
+          retention-days: 5
+  test_db:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21.x
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Test Database
+        run: make test-db-report
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: testdb-results
+          path: | 
+            coverage_db.out
+            report_db.json
+          retention-days: 5
   sonarcloud_analysis:
     name: SonarCloud
+    needs: [unittest, test_db]
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
@@ -25,7 +67,9 @@ jobs:
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
-          name: unittest-results
+          name: |
+            unittest-results
+            testdb-results
           
         
       - name: SonarCloud Scan

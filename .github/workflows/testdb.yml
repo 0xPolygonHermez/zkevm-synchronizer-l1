@@ -23,11 +23,3 @@ jobs:
 
       - name: Test Database
         run: make test-db
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v4
-        with:
-          name: testdb-results
-          path: | 
-            coverage_db.out
-            report_db.json
-          retention-days: 5
