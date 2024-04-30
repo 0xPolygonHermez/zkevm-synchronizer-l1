@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jackc/pgx/v4"
 )
@@ -53,6 +54,41 @@ func (p *PostgresStorage) GetBlockByNumber(ctx context.Context, blockNumber uint
 func (p *PostgresStorage) GetPreviousBlock(ctx context.Context, offset uint64, dbTx pgx.Tx) (*L1Block, error) {
 	const getPreviousBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at,checked,sync_version FROM sync.block ORDER BY block_num DESC LIMIT 1 OFFSET $1"
 	return p.queryBlock(ctx, getPreviousBlockSQL, dbTx, offset)
+}
+
+// GetFirstUncheckedBlock returns the first L1 block that has not been checked from a given block number.
+func (p *PostgresStorage) GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx) (*L1Block, error) {
+	const getLastBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at, checked FROM sync.block  WHERE block_num>=$1 AND  checked=false ORDER BY block_num LIMIT 1"
+	return p.queryBlock(ctx, getLastBlockSQL, dbTx, fromBlockNumber)
+}
+
+func (p *PostgresStorage) GetUncheckedBlocks(ctx context.Context, fromBlockNumber uint64, toBlockNumber uint64, dbTx pgx.Tx) ([]*state.Block, error) {
+	const getUncheckedBlocksSQL = "SELECT block_num, block_hash, parent_hash, received_at, checked FROM state.block WHERE block_num>=$1 AND block_num<=$2 AND checked=false ORDER BY block_num"
+
+	q := p.getExecQuerier(dbTx)
+
+	rows, err := q.Query(ctx, getUncheckedBlocksSQL, fromBlockNumber, toBlockNumber)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var blocks []*state.Block
+	for rows.Next() {
+		var (
+			blockHash  string
+			parentHash string
+			block      state.Block
+		)
+		err := rows.Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
+		if err != nil {
+			return nil, err
+		}
+		block.BlockHash = common.HexToHash(blockHash)
+		block.ParentHash = common.HexToHash(parentHash)
+		blocks = append(blocks, &block)
+	}
+	return blocks, nil
 }
 
 func (p *PostgresStorage) queryBlock(ctx context.Context, sql string, dbTx pgx.Tx, args ...interface{}) (*L1Block, error) {
