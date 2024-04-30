@@ -496,12 +496,13 @@ func (etherMan *Client) GetRollupInfoByBlockRange(ctx context.Context, fromBlock
 	query := ethereum.FilterQuery{
 		FromBlock: new(big.Int).SetUint64(fromBlock),
 		Addresses: etherMan.SCAddresses,
-		Topics: [][]common.Hash{{updateL1InfoTreeSignatureHash,
-			updateZkEVMVersionSignatureHash,
-			updateRollupSignatureHash,
-			addExistingRollupSignatureHash,
-			createNewRollupSignatureHash,
-			sequenceBatchesSignatureHash}},
+		/*Topics: [][]common.Hash{{updateL1InfoTreeSignatureHash,
+		updateZkEVMVersionSignatureHash,
+		updateRollupSignatureHash,
+		addExistingRollupSignatureHash,
+		createNewRollupSignatureHash,
+		sequenceBatchesSignatureHash,
+		initialSequenceBatchesSignatureHash}},*/
 	}
 	if toBlock != nil {
 		query.ToBlock = new(big.Int).SetUint64(*toBlock)

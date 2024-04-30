@@ -26,7 +26,7 @@ type ProcessorL1SequenceBatchesEtrog struct {
 func NewProcessorL1SequenceBatches(state stateProcessSequenceBatches) *ProcessorL1SequenceBatchesEtrog {
 	return &ProcessorL1SequenceBatchesEtrog{
 		ProcessorBase: actions.ProcessorBase[ProcessorL1SequenceBatchesEtrog]{
-			SupportedEvent:    []etherman.EventOrder{etherman.SequenceBatchesOrder, etherman.InitialSequenceBatchesOrder},
+			SupportedEvent:    []etherman.EventOrder{etherman.SequenceBatchesOrder},
 			SupportedForkdIds: &actions.ForksIdOnlyEtrog},
 		state: state,
 	}

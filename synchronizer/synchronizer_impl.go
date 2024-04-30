@@ -76,6 +76,7 @@ func NewSynchronizerImpl(
 	etrogSequenceBatchesProcessor := etrog.NewProcessorL1SequenceBatches(storage)
 	builder.Register(etrogSequenceBatchesProcessor)
 	builder.Register(incaberry.NewProcessorForkId(sync.ForkIdState))
+	builder.Register(etrog.NewProcessorL1InitialSequenceBatches(storage))
 	builder.Register(elderberry.NewProcessorL1SequenceBatchesElderberry(etrogSequenceBatchesProcessor))
 	sync.l1EventProcessors = builder.Build()
 
