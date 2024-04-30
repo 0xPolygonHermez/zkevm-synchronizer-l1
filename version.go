@@ -11,7 +11,7 @@ import (
 // v0.2.5 - Support forkid 8 and 9 #10 + bug #23
 // v0.2.6 - Init logger
 var (
-	Version = "v0.2.6"
+	Version = "v0.2.7"
 )
 
 // PrintVersion prints version info into the provided io.Writer.
