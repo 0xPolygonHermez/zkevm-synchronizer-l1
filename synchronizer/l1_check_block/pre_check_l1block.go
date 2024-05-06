@@ -15,7 +15,6 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common"
-	"github.com/jackc/pgx/v4"
 )
 
 var (
@@ -25,7 +24,7 @@ var (
 
 // StatePreCheckInterfacer is an interface for the state
 type StatePreCheckInterfacer interface {
-	GetUncheckedBlocks(ctx context.Context, fromBlockNumber uint64, toBlockNumber uint64, dbTx pgx.Tx) ([]*L1Block, error)
+	GetUncheckedBlocks(ctx context.Context, fromBlockNumber uint64, toBlockNumber uint64, dbTx stateTxType) ([]*L1Block, error)
 }
 
 // PreCheckL1BlockHash is a struct that implements a checker of L1Block hash

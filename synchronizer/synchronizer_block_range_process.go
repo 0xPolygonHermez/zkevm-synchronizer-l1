@@ -8,8 +8,8 @@ import (
 	zkevm_synchronizer_l1 "github.com/0xPolygonHermez/zkevm-synchronizer-l1"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/storage/pgstorage"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage/pgstorage"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1event_orders"
@@ -17,42 +17,41 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-type stateBlockRangeProcessor interface {
-	BeginStateTransaction(ctx context.Context) (pgx.Tx, error)
-	AddBlock(ctx context.Context, block *pgstorage.L1Block, dbTx pgx.Tx) error
-}
+type stateTxProvider = syncinterfaces.StateTxProvider
 
 // BlockRangeProcess is the struct that process the block range that implements syncinterfaces.BlockRangeProcessor
 type BlockRangeProcess struct {
-	state             stateBlockRangeProcessor
-	stateForkId       StateForkIdQuerier
+	storage           syncinterfaces.StorageBlockReaderInterface
+	stateForkId       syncinterfaces.StateForkIdQuerier
+	stateTxProvider   stateTxProvider
 	l1EventProcessors syncinterfaces.L1EventProcessorManager
-	flushIdManager    syncinterfaces.SynchronizerFlushIDManager
 }
 
 // NewBlockRangeProcessLegacy creates a new BlockRangeProcess
 func NewBlockRangeProcessLegacy(
-	state stateBlockRangeProcessor,
-	stateForkId StateForkIdQuerier,
+	state syncinterfaces.StorageBlockReaderInterface,
+	stateForkId syncinterfaces.StateForkIdQuerier,
+	stateTxProvider stateTxProvider,
 	l1EventProcessors syncinterfaces.L1EventProcessorManager,
-	flushIdManager syncinterfaces.SynchronizerFlushIDManager,
 ) *BlockRangeProcess {
 	return &BlockRangeProcess{
-		state:             state,
+		storage:           state,
 		stateForkId:       stateForkId,
+		stateTxProvider:   stateTxProvider,
 		l1EventProcessors: l1EventProcessors,
-		flushIdManager:    flushIdManager,
 	}
 }
 
 // ProcessBlockRangeSingleDbTx process the L1 events and stores the information in the db reusing same DbTx
-func (s *BlockRangeProcess) ProcessBlockRangeSingleDbTx(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64, storeBlocks syncinterfaces.ProcessBlockRangeL1BlocksMode, dbTx pgx.Tx) error {
-	return s.internalProcessBlockRange(ctx, blocks, order, finalizedBlockNumber, storeBlocks, &dbTx)
+func (s *BlockRangeProcess) ProcessBlockRangeSingleDbTx(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order,
+	finalizedBlockNumber uint64, storeBlocks syncinterfaces.ProcessBlockRangeL1BlocksMode, dbTx stateTxType) error {
+	txProvider := NewReuseStateTxProvider(s.stateTxProvider, dbTx)
+	return s.internalProcessBlockRange(ctx, blocks, order, finalizedBlockNumber, storeBlocks, txProvider)
 }
 
 // ProcessBlockRange process the L1 events and stores the information in the db
 func (s *BlockRangeProcess) ProcessBlockRange(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64) error {
-	return s.internalProcessBlockRange(ctx, blocks, order, finalizedBlockNumber, syncinterfaces.StoreL1Blocks, nil)
+	return s.internalProcessBlockRange(ctx, blocks, order, finalizedBlockNumber, syncinterfaces.StoreL1Blocks, s.stateTxProvider)
 }
 
 func isBlockFinalized(blockNumber uint64, finalizedBlockNumber uint64) bool {
@@ -60,7 +59,7 @@ func isBlockFinalized(blockNumber uint64, finalizedBlockNumber uint64) bool {
 }
 
 // ProcessBlockRange process the L1 events and stores the information in the db
-func (s *BlockRangeProcess) addBlock(ctx context.Context, block *etherman.Block, isFinalized bool, dbTx pgx.Tx) error {
+func (s *BlockRangeProcess) addBlock(ctx context.Context, block *etherman.Block, isFinalized bool, dbTx stateTxType) error {
 	b := pgstorage.L1Block{
 		BlockNumber: block.BlockNumber,
 		BlockHash:   block.BlockHash,
@@ -70,56 +69,35 @@ func (s *BlockRangeProcess) addBlock(ctx context.Context, block *etherman.Block,
 		Checked:     isFinalized,
 	}
 	// Add block information
-	return s.state.AddBlock(ctx, &b, dbTx)
+	return s.storage.AddBlock(ctx, &b, dbTx)
 }
 
-func (s *BlockRangeProcess) beginStateTransactionIfNeed(ctx context.Context, dbTxExt *pgx.Tx) (pgx.Tx, error) {
-	if dbTxExt == nil {
-		log.Debugf("Starting dbTx")
-		return s.state.BeginStateTransaction(ctx)
-	}
-	return *dbTxExt, nil
-}
+func (s *BlockRangeProcess) rollback(ctx context.Context, err error, dbTx stateTxType) error {
 
-func (s *BlockRangeProcess) rollbackIfNeed(ctx context.Context, err error, dbTx pgx.Tx, dbTxExt *pgx.Tx) error {
-	if dbTxExt == nil {
-		// Rollback db transaction
-		rollbackErr := dbTx.Rollback(ctx)
-		if rollbackErr != nil {
-			if !errors.Is(rollbackErr, pgx.ErrTxClosed) {
-				log.Errorf("error rolling back state. RollbackErr: %s, Error : %v", rollbackErr.Error(), err)
-				return rollbackErr
-			} else {
-				log.Debugf("error rolling back state because is already closed. RollbackErr: %s, Error : %v", rollbackErr.Error(), err)
-				return err
-			}
-		}
-		return err
-	}
-	return err
-}
-
-func (s *BlockRangeProcess) commitIfNeed(ctx context.Context, dbTx pgx.Tx, dbTxExt *pgx.Tx) error {
-	if dbTxExt == nil {
-		// Commit db transaction
-		err := dbTx.Commit(ctx)
-		if err != nil {
+	// Rollback db transaction
+	rollbackErr := dbTx.Rollback(ctx)
+	if rollbackErr != nil {
+		if !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			log.Errorf("error rolling back state. RollbackErr: %s, Error : %v", rollbackErr.Error(), err)
+			return rollbackErr
+		} else {
+			log.Debugf("error rolling back state because is already closed. RollbackErr: %s, Error : %v", rollbackErr.Error(), err)
 			return err
 		}
 	}
-	return nil
+	return err
+
 }
 
 // ProcessBlockRange process the L1 events and stores the information in the db
 func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order,
 	finalizedBlockNumber uint64,
 	storeBlocksMode syncinterfaces.ProcessBlockRangeL1BlocksMode,
-	dbTxExt *pgx.Tx) error {
-
+	txProvider stateTxProvider) error {
 	// New info has to be included into the db using the state
 	for i := range blocks {
 		// Begin db transaction
-		dbTx, err := s.beginStateTransactionIfNeed(ctx, dbTxExt)
+		dbTx, err := txProvider.BeginTransaction(ctx)
 		if err != nil {
 			errExt := fmt.Errorf("error beginStateTransaction. BlockNumber: %d, Error: %w", blocks[i].BlockNumber, err)
 			return errExt
@@ -127,10 +105,10 @@ func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, block
 		// Process event received from l1
 		err = s.processBlock(ctx, blocks, i, dbTx, order, storeBlocksMode, finalizedBlockNumber)
 		if err != nil {
-			return s.rollbackIfNeed(ctx, err, dbTx, dbTxExt)
+			return s.rollback(ctx, err, dbTx)
 		}
 
-		err = s.commitIfNeed(ctx, dbTx, dbTxExt)
+		err = dbTx.Commit(ctx)
 		if err != nil {
 			log.Errorf("error committing state. BlockNumber: %d, Error: %v", blocks[i].BlockNumber, err)
 			return err
@@ -140,7 +118,7 @@ func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, block
 	return nil
 }
 
-func (s *BlockRangeProcess) processBlock(ctx context.Context, blocks []etherman.Block, blockIndex int, dbTx pgx.Tx, order map[common.Hash][]etherman.Order, storeBlock syncinterfaces.ProcessBlockRangeL1BlocksMode, finalizedBlockNumber uint64) error {
+func (s *BlockRangeProcess) processBlock(ctx context.Context, blocks []etherman.Block, blockIndex int, dbTx stateTxType, order map[common.Hash][]etherman.Order, storeBlock syncinterfaces.ProcessBlockRangeL1BlocksMode, finalizedBlockNumber uint64) error {
 	var err error
 	if storeBlock == syncinterfaces.StoreL1Blocks {
 		err = s.addBlock(ctx, &blocks[blockIndex], isBlockFinalized(blocks[blockIndex].BlockNumber, finalizedBlockNumber), dbTx)
@@ -157,20 +135,13 @@ func (s *BlockRangeProcess) processBlock(ctx context.Context, blocks []etherman.
 			return err
 		}
 	}
-	if s.flushIdManager != nil {
-		log.Debug("Checking FlushID to commit L1 data to db")
-		err = s.flushIdManager.CheckFlushID(dbTx)
-		if err != nil {
-			log.Errorf("error checking flushID. BlockNumber: %d, Error: %v", blocks[blockIndex].BlockNumber, err)
-			return err
-		}
-	}
+
 	return nil
 }
 
-func (s *BlockRangeProcess) processElement(ctx context.Context, element etherman.Order, blocks []etherman.Block, i int, dbTx pgx.Tx) error {
+func (s *BlockRangeProcess) processElement(ctx context.Context, element etherman.Order, blocks []etherman.Block, i int, dbTx stateTxType) error {
 	batchSequence := l1event_orders.GetSequenceFromL1EventOrder(element.Name, &blocks[i], element.Pos)
-	forkId := state.FORKID_ZERO
+	forkId := entities.FORKID_ZERO
 	if s.stateForkId != nil {
 		if batchSequence != nil {
 			forkId = s.stateForkId.GetForkIDByBatchNumber(ctx, batchSequence.FromBatchNumber, dbTx)

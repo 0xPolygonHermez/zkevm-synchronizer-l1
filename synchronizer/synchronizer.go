@@ -9,9 +9,8 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/storage/pgstorage"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage/pgstorage"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/jackc/pgx/v4"
 )
 
 var (
@@ -49,7 +48,7 @@ type SynchronizerL1InfoTreeQuerier interface {
 	// if not found returns ErrNotFound
 	GetL1InfoRootPerIndex(ctx context.Context, L1InfoTreeIndex uint32) (common.Hash, error)
 	GetL1InfoTreeLeaves(ctx context.Context, indexLeaves []uint32) (map[uint32]L1InfoTreeLeaf, error)
-	GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]L1InfoTreeLeaf, error)
+	GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash) ([]L1InfoTreeLeaf, error)
 }
 
 type SequencedBatches struct {
@@ -110,12 +109,13 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 		log.Error("Error creating etherman", err)
 		return nil, err
 	}
-
-	forkidState := state.NewForkIdState(storage)
-	sync, err := NewSynchronizerImpl(ctx, storage, etherman, forkidState, config.Synchronizer)
+	state := state.NewState(storage)
+	//l1checker := l1_check_block.NewL1CheckBlockFeature(config.Synchronizer.L1BlockCheck, storage, forkidState)
+	sync, err := NewSynchronizerImpl(ctx, storage, state, etherman, config.Synchronizer)
 	if err != nil {
 		log.Error("Error creating synchronizer", err)
 		return nil, err
 	}
-	return sync, nil
+	syncAdapter := NewSynchronizerAdapter(NewSyncrhronizerQueries(state, storage, ctx), sync)
+	return syncAdapter, nil
 }

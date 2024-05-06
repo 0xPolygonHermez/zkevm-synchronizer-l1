@@ -7,7 +7,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
-	storage "github.com/0xPolygonHermez/zkevm-synchronizer-l1/storage"
+	storage "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage"
 	syncconfig "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/config"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"

@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	commonsync "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1_check_block"
 	mock_l1_check_block "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1_check_block/mocks"
@@ -48,7 +48,7 @@ func newTestData(t *testing.T) *testData {
 
 func TestCheckL1BlockHashNoBlocksOnDB(t *testing.T) {
 	data := newTestData(t)
-	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, uint64(0), nil).Return(nil, state.ErrNotFound)
+	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, uint64(0), nil).Return(nil, entities.ErrNotFound)
 	res := data.sut.Step(data.ctx)
 	require.NoError(t, res)
 }
@@ -102,7 +102,7 @@ func TestCheckL1BlockHashMatchHashUpdateCheckMarkOnDB(t *testing.T) {
 	}
 	data.mockL1Client.EXPECT().HeaderByNumber(data.ctx, big.NewInt(int64(data.stateBlock.BlockNumber))).Return(l1Block, nil)
 	data.mockState.EXPECT().UpdateCheckedBlockByNumber(data.ctx, data.stateBlock.BlockNumber, true, nil).Return(nil)
-	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, mock.Anything, nil).Return(nil, state.ErrNotFound)
+	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, mock.Anything, nil).Return(nil, entities.ErrNotFound)
 
 	res := data.sut.Step(data.ctx)
 	require.NoError(t, res)

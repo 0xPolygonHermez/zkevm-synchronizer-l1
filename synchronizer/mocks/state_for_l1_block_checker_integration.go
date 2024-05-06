@@ -5,7 +5,8 @@ package mock_synchronizer
 import (
 	context "context"
 
-	l1_check_block "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1_check_block"
+	entities "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
+
 	mock "github.com/stretchr/testify/mock"
 
 	pgx "github.com/jackc/pgx/v4"
@@ -25,23 +26,23 @@ func (_m *StateForL1BlockCheckerIntegration) EXPECT() *StateForL1BlockCheckerInt
 }
 
 // GetPreviousBlockToBlockNumber provides a mock function with given fields: ctx, blockNumber, dbTx
-func (_m *StateForL1BlockCheckerIntegration) GetPreviousBlockToBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*l1_check_block.L1Block, error) {
+func (_m *StateForL1BlockCheckerIntegration) GetPreviousBlockToBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*entities.L1Block, error) {
 	ret := _m.Called(ctx, blockNumber, dbTx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetPreviousBlockToBlockNumber")
 	}
 
-	var r0 *l1_check_block.L1Block
+	var r0 *entities.L1Block
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (*l1_check_block.L1Block, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (*entities.L1Block, error)); ok {
 		return rf(ctx, blockNumber, dbTx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) *l1_check_block.L1Block); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) *entities.L1Block); ok {
 		r0 = rf(ctx, blockNumber, dbTx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*l1_check_block.L1Block)
+			r0 = ret.Get(0).(*entities.L1Block)
 		}
 	}
 
@@ -74,12 +75,12 @@ func (_c *StateForL1BlockCheckerIntegration_GetPreviousBlockToBlockNumber_Call) 
 	return _c
 }
 
-func (_c *StateForL1BlockCheckerIntegration_GetPreviousBlockToBlockNumber_Call) Return(_a0 *l1_check_block.L1Block, _a1 error) *StateForL1BlockCheckerIntegration_GetPreviousBlockToBlockNumber_Call {
+func (_c *StateForL1BlockCheckerIntegration_GetPreviousBlockToBlockNumber_Call) Return(_a0 *entities.L1Block, _a1 error) *StateForL1BlockCheckerIntegration_GetPreviousBlockToBlockNumber_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *StateForL1BlockCheckerIntegration_GetPreviousBlockToBlockNumber_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) (*l1_check_block.L1Block, error)) *StateForL1BlockCheckerIntegration_GetPreviousBlockToBlockNumber_Call {
+func (_c *StateForL1BlockCheckerIntegration_GetPreviousBlockToBlockNumber_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) (*entities.L1Block, error)) *StateForL1BlockCheckerIntegration_GetPreviousBlockToBlockNumber_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -5,11 +5,11 @@ package mock_synchronizer
 import (
 	context "context"
 
+	entities "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
+
 	etherman "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 
 	mock "github.com/stretchr/testify/mock"
-
-	pgx "github.com/jackc/pgx/v4"
 
 	time "time"
 )
@@ -28,7 +28,7 @@ func (_m *PreviousProcessor) EXPECT() *PreviousProcessor_Expecter {
 }
 
 // Process provides a mock function with given fields: ctx, order, l1Block, dbTx
-func (_m *PreviousProcessor) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx pgx.Tx) error {
+func (_m *PreviousProcessor) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx entities.Tx) error {
 	ret := _m.Called(ctx, order, l1Block, dbTx)
 
 	if len(ret) == 0 {
@@ -36,7 +36,7 @@ func (_m *PreviousProcessor) Process(ctx context.Context, order etherman.Order, 
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, etherman.Order, *etherman.Block, pgx.Tx) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, etherman.Order, *etherman.Block, entities.Tx) error); ok {
 		r0 = rf(ctx, order, l1Block, dbTx)
 	} else {
 		r0 = ret.Error(0)
@@ -54,14 +54,14 @@ type PreviousProcessor_Process_Call struct {
 //   - ctx context.Context
 //   - order etherman.Order
 //   - l1Block *etherman.Block
-//   - dbTx pgx.Tx
+//   - dbTx entities.Tx
 func (_e *PreviousProcessor_Expecter) Process(ctx interface{}, order interface{}, l1Block interface{}, dbTx interface{}) *PreviousProcessor_Process_Call {
 	return &PreviousProcessor_Process_Call{Call: _e.mock.On("Process", ctx, order, l1Block, dbTx)}
 }
 
-func (_c *PreviousProcessor_Process_Call) Run(run func(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx pgx.Tx)) *PreviousProcessor_Process_Call {
+func (_c *PreviousProcessor_Process_Call) Run(run func(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx entities.Tx)) *PreviousProcessor_Process_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(etherman.Order), args[2].(*etherman.Block), args[3].(pgx.Tx))
+		run(args[0].(context.Context), args[1].(etherman.Order), args[2].(*etherman.Block), args[3].(entities.Tx))
 	})
 	return _c
 }
@@ -71,13 +71,13 @@ func (_c *PreviousProcessor_Process_Call) Return(_a0 error) *PreviousProcessor_P
 	return _c
 }
 
-func (_c *PreviousProcessor_Process_Call) RunAndReturn(run func(context.Context, etherman.Order, *etherman.Block, pgx.Tx) error) *PreviousProcessor_Process_Call {
+func (_c *PreviousProcessor_Process_Call) RunAndReturn(run func(context.Context, etherman.Order, *etherman.Block, entities.Tx) error) *PreviousProcessor_Process_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ProcessSequenceBatches provides a mock function with given fields: ctx, sequencedBatches, blockNumber, l1BlockTimestamp, dbTx
-func (_m *PreviousProcessor) ProcessSequenceBatches(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, l1BlockTimestamp time.Time, dbTx pgx.Tx) error {
+func (_m *PreviousProcessor) ProcessSequenceBatches(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, l1BlockTimestamp time.Time, dbTx entities.Tx) error {
 	ret := _m.Called(ctx, sequencedBatches, blockNumber, l1BlockTimestamp, dbTx)
 
 	if len(ret) == 0 {
@@ -85,7 +85,7 @@ func (_m *PreviousProcessor) ProcessSequenceBatches(ctx context.Context, sequenc
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []etherman.SequencedBatch, uint64, time.Time, pgx.Tx) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []etherman.SequencedBatch, uint64, time.Time, entities.Tx) error); ok {
 		r0 = rf(ctx, sequencedBatches, blockNumber, l1BlockTimestamp, dbTx)
 	} else {
 		r0 = ret.Error(0)
@@ -104,14 +104,14 @@ type PreviousProcessor_ProcessSequenceBatches_Call struct {
 //   - sequencedBatches []etherman.SequencedBatch
 //   - blockNumber uint64
 //   - l1BlockTimestamp time.Time
-//   - dbTx pgx.Tx
+//   - dbTx entities.Tx
 func (_e *PreviousProcessor_Expecter) ProcessSequenceBatches(ctx interface{}, sequencedBatches interface{}, blockNumber interface{}, l1BlockTimestamp interface{}, dbTx interface{}) *PreviousProcessor_ProcessSequenceBatches_Call {
 	return &PreviousProcessor_ProcessSequenceBatches_Call{Call: _e.mock.On("ProcessSequenceBatches", ctx, sequencedBatches, blockNumber, l1BlockTimestamp, dbTx)}
 }
 
-func (_c *PreviousProcessor_ProcessSequenceBatches_Call) Run(run func(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, l1BlockTimestamp time.Time, dbTx pgx.Tx)) *PreviousProcessor_ProcessSequenceBatches_Call {
+func (_c *PreviousProcessor_ProcessSequenceBatches_Call) Run(run func(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, l1BlockTimestamp time.Time, dbTx entities.Tx)) *PreviousProcessor_ProcessSequenceBatches_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]etherman.SequencedBatch), args[2].(uint64), args[3].(time.Time), args[4].(pgx.Tx))
+		run(args[0].(context.Context), args[1].([]etherman.SequencedBatch), args[2].(uint64), args[3].(time.Time), args[4].(entities.Tx))
 	})
 	return _c
 }
@@ -121,7 +121,7 @@ func (_c *PreviousProcessor_ProcessSequenceBatches_Call) Return(_a0 error) *Prev
 	return _c
 }
 
-func (_c *PreviousProcessor_ProcessSequenceBatches_Call) RunAndReturn(run func(context.Context, []etherman.SequencedBatch, uint64, time.Time, pgx.Tx) error) *PreviousProcessor_ProcessSequenceBatches_Call {
+func (_c *PreviousProcessor_ProcessSequenceBatches_Call) RunAndReturn(run func(context.Context, []etherman.SequencedBatch, uint64, time.Time, entities.Tx) error) *PreviousProcessor_ProcessSequenceBatches_Call {
 	_c.Call.Return(run)
 	return _c
 }

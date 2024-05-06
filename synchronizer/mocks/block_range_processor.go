@@ -7,11 +7,11 @@ import (
 
 	common "github.com/ethereum/go-ethereum/common"
 
+	entities "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
+
 	etherman "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 
 	mock "github.com/stretchr/testify/mock"
-
-	pgx "github.com/jackc/pgx/v4"
 
 	syncinterfaces "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
 )
@@ -79,7 +79,7 @@ func (_c *BlockRangeProcessor_ProcessBlockRange_Call) RunAndReturn(run func(cont
 }
 
 // ProcessBlockRangeSingleDbTx provides a mock function with given fields: ctx, blocks, order, finalizedBlockNumber, storeBlocks, dbTx
-func (_m *BlockRangeProcessor) ProcessBlockRangeSingleDbTx(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64, storeBlocks syncinterfaces.ProcessBlockRangeL1BlocksMode, dbTx pgx.Tx) error {
+func (_m *BlockRangeProcessor) ProcessBlockRangeSingleDbTx(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64, storeBlocks syncinterfaces.ProcessBlockRangeL1BlocksMode, dbTx entities.Tx) error {
 	ret := _m.Called(ctx, blocks, order, finalizedBlockNumber, storeBlocks, dbTx)
 
 	if len(ret) == 0 {
@@ -87,7 +87,7 @@ func (_m *BlockRangeProcessor) ProcessBlockRangeSingleDbTx(ctx context.Context, 
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []etherman.Block, map[common.Hash][]etherman.Order, uint64, syncinterfaces.ProcessBlockRangeL1BlocksMode, pgx.Tx) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []etherman.Block, map[common.Hash][]etherman.Order, uint64, syncinterfaces.ProcessBlockRangeL1BlocksMode, entities.Tx) error); ok {
 		r0 = rf(ctx, blocks, order, finalizedBlockNumber, storeBlocks, dbTx)
 	} else {
 		r0 = ret.Error(0)
@@ -107,14 +107,14 @@ type BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call struct {
 //   - order map[common.Hash][]etherman.Order
 //   - finalizedBlockNumber uint64
 //   - storeBlocks syncinterfaces.ProcessBlockRangeL1BlocksMode
-//   - dbTx pgx.Tx
+//   - dbTx entities.Tx
 func (_e *BlockRangeProcessor_Expecter) ProcessBlockRangeSingleDbTx(ctx interface{}, blocks interface{}, order interface{}, finalizedBlockNumber interface{}, storeBlocks interface{}, dbTx interface{}) *BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call {
 	return &BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call{Call: _e.mock.On("ProcessBlockRangeSingleDbTx", ctx, blocks, order, finalizedBlockNumber, storeBlocks, dbTx)}
 }
 
-func (_c *BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call) Run(run func(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64, storeBlocks syncinterfaces.ProcessBlockRangeL1BlocksMode, dbTx pgx.Tx)) *BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call {
+func (_c *BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call) Run(run func(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64, storeBlocks syncinterfaces.ProcessBlockRangeL1BlocksMode, dbTx entities.Tx)) *BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]etherman.Block), args[2].(map[common.Hash][]etherman.Order), args[3].(uint64), args[4].(syncinterfaces.ProcessBlockRangeL1BlocksMode), args[5].(pgx.Tx))
+		run(args[0].(context.Context), args[1].([]etherman.Block), args[2].(map[common.Hash][]etherman.Order), args[3].(uint64), args[4].(syncinterfaces.ProcessBlockRangeL1BlocksMode), args[5].(entities.Tx))
 	})
 	return _c
 }
@@ -124,7 +124,7 @@ func (_c *BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call) Return(_a0 error
 	return _c
 }
 
-func (_c *BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call) RunAndReturn(run func(context.Context, []etherman.Block, map[common.Hash][]etherman.Order, uint64, syncinterfaces.ProcessBlockRangeL1BlocksMode, pgx.Tx) error) *BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call {
+func (_c *BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call) RunAndReturn(run func(context.Context, []etherman.Block, map[common.Hash][]etherman.Order, uint64, syncinterfaces.ProcessBlockRangeL1BlocksMode, entities.Tx) error) *BlockRangeProcessor_ProcessBlockRangeSingleDbTx_Call {
 	_c.Call.Return(run)
 	return _c
 }

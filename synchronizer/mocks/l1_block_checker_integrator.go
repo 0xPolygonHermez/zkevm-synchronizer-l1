@@ -5,7 +5,8 @@ package mock_synchronizer
 import (
 	context "context"
 
-	l1_check_block "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1_check_block"
+	entities "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
+
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -23,27 +24,27 @@ func (_m *L1BlockCheckerIntegrator) EXPECT() *L1BlockCheckerIntegrator_Expecter 
 }
 
 // CheckReorgWrapper provides a mock function with given fields: ctx, reorgFirstBlockOk, errReportedByReorgFunc
-func (_m *L1BlockCheckerIntegrator) CheckReorgWrapper(ctx context.Context, reorgFirstBlockOk *l1_check_block.L1Block, errReportedByReorgFunc error) (*l1_check_block.L1Block, error) {
+func (_m *L1BlockCheckerIntegrator) CheckReorgWrapper(ctx context.Context, reorgFirstBlockOk *entities.L1Block, errReportedByReorgFunc error) (*entities.L1Block, error) {
 	ret := _m.Called(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CheckReorgWrapper")
 	}
 
-	var r0 *l1_check_block.L1Block
+	var r0 *entities.L1Block
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *l1_check_block.L1Block, error) (*l1_check_block.L1Block, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *entities.L1Block, error) (*entities.L1Block, error)); ok {
 		return rf(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *l1_check_block.L1Block, error) *l1_check_block.L1Block); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *entities.L1Block, error) *entities.L1Block); ok {
 		r0 = rf(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*l1_check_block.L1Block)
+			r0 = ret.Get(0).(*entities.L1Block)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *l1_check_block.L1Block, error) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *entities.L1Block, error) error); ok {
 		r1 = rf(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
 	} else {
 		r1 = ret.Error(1)
@@ -59,25 +60,25 @@ type L1BlockCheckerIntegrator_CheckReorgWrapper_Call struct {
 
 // CheckReorgWrapper is a helper method to define mock.On call
 //   - ctx context.Context
-//   - reorgFirstBlockOk *l1_check_block.L1Block
+//   - reorgFirstBlockOk *entities.L1Block
 //   - errReportedByReorgFunc error
 func (_e *L1BlockCheckerIntegrator_Expecter) CheckReorgWrapper(ctx interface{}, reorgFirstBlockOk interface{}, errReportedByReorgFunc interface{}) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
 	return &L1BlockCheckerIntegrator_CheckReorgWrapper_Call{Call: _e.mock.On("CheckReorgWrapper", ctx, reorgFirstBlockOk, errReportedByReorgFunc)}
 }
 
-func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) Run(run func(ctx context.Context, reorgFirstBlockOk *l1_check_block.L1Block, errReportedByReorgFunc error)) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
+func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) Run(run func(ctx context.Context, reorgFirstBlockOk *entities.L1Block, errReportedByReorgFunc error)) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*l1_check_block.L1Block), args[2].(error))
+		run(args[0].(context.Context), args[1].(*entities.L1Block), args[2].(error))
 	})
 	return _c
 }
 
-func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) Return(_a0 *l1_check_block.L1Block, _a1 error) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
+func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) Return(_a0 *entities.L1Block, _a1 error) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) RunAndReturn(run func(context.Context, *l1_check_block.L1Block, error) (*l1_check_block.L1Block, error)) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
+func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) RunAndReturn(run func(context.Context, *entities.L1Block, error) (*entities.L1Block, error)) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
 	_c.Call.Return(run)
 	return _c
 }

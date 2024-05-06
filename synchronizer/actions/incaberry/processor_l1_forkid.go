@@ -6,13 +6,12 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
-	"github.com/jackc/pgx/v4"
 )
 
 type stateForkIdInterface interface {
-	AddForkID(ctx context.Context, newForkID state.ForkIDInterval, dbTx pgx.Tx) error
+	AddForkID(ctx context.Context, newForkID entities.ForkIDInterval, dbTx entities.Tx) error
 }
 
 // ProcessorForkId implements L1EventProcessor
@@ -33,12 +32,12 @@ func NewProcessorForkId(stateForkId stateForkIdInterface) *ProcessorForkId {
 }
 
 // Process process event
-func (p *ProcessorForkId) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx pgx.Tx) error {
+func (p *ProcessorForkId) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx entities.Tx) error {
 	return p.processForkID(ctx, l1Block.ForkIDs[order.Pos], l1Block.BlockNumber, dbTx)
 }
 
-func (s *ProcessorForkId) processForkID(ctx context.Context, forkID etherman.ForkID, blockNumber uint64, dbTx pgx.Tx) error {
-	fID := state.ForkIDInterval{
+func (s *ProcessorForkId) processForkID(ctx context.Context, forkID etherman.ForkID, blockNumber uint64, dbTx entities.Tx) error {
+	fID := entities.ForkIDInterval{
 		FromBatchNumber: forkID.BatchNumber + 1,
 		ToBatchNumber:   math.MaxUint64,
 		ForkId:          forkID.ForkID,

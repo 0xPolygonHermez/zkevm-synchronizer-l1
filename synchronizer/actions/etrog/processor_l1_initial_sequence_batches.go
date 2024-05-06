@@ -7,9 +7,8 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/storage/pgstorage"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
-	"github.com/jackc/pgx/v4"
 )
 
 // ProcessorL1InitialSequenceBatches implements L1EventProcessor
@@ -29,7 +28,7 @@ func NewProcessorL1InitialSequenceBatches(state stateProcessSequenceBatches) *Pr
 }
 
 // Process process event
-func (g *ProcessorL1InitialSequenceBatches) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx pgx.Tx) error {
+func (g *ProcessorL1InitialSequenceBatches) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx entities.Tx) error {
 	if l1Block == nil || len(l1Block.SequencedBatches) <= order.Pos {
 		return actions.ErrInvalidParams
 	}
@@ -38,7 +37,7 @@ func (g *ProcessorL1InitialSequenceBatches) Process(ctx context.Context, order e
 }
 
 // ProcessSequenceBatches process sequence of batches
-func (p *ProcessorL1InitialSequenceBatches) ProcessSequenceBatches(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, dbTx pgx.Tx) error {
+func (p *ProcessorL1InitialSequenceBatches) ProcessSequenceBatches(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, dbTx entities.Tx) error {
 	if len(sequencedBatches) == 0 {
 		log.Warn("Empty sequencedBatches array detected, ignoring...")
 		return nil
@@ -50,7 +49,7 @@ func (p *ProcessorL1InitialSequenceBatches) ProcessSequenceBatches(ctx context.C
 	l1inforoot := sequencedBatches[0].PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot
 	l1BlockTimestamp := time.Unix(int64(sequencedBatches[0].PolygonRollupBaseEtrogBatchData.ForcedTimestamp), 0)
 
-	seq := pgstorage.SequencedBatches{
+	seq := entities.SequencedBatches{
 		FromBatchNumber: sequencedBatches[0].BatchNumber,
 		ToBatchNumber:   sequencedBatches[len(sequencedBatches)-1].BatchNumber,
 		L1BlockNumber:   blockNumber,

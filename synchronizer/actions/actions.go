@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
-	"github.com/jackc/pgx/v4"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 )
 
 var (
@@ -23,5 +23,5 @@ type L1EventProcessor interface {
 	// SupportedEvents list of events that support (typically one)
 	SupportedEvents() []etherman.EventOrder
 	// Process a incomming event
-	Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx pgx.Tx) error
+	Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx entities.Tx) error
 }

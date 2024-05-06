@@ -159,18 +159,25 @@ generate-code-from-proto: ## Generates code from proto files
 	cd proto/src/proto/executor/v1 && protoc --proto_path=. --go_out=../../../../../state/runtime/executor --go-grpc_out=../../../../../state/runtime/executor --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative executor.proto
 	cd proto/src/proto/aggregator/v1 && protoc --proto_path=. --proto_path=../../../../include --go_out=../../../../../aggregator/prover --go-grpc_out=../../../../../aggregator/prover --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative aggregator.proto
 
+.PHONY: generate-mocks
+generate-mocks:
+	(cd test; make generate-mocks)
+
+.PHONY: clean-mocks
+clean-mocks:
+	(cd test; make clean-mocks)
 
 .PHONY: unittest
-unittest: ## Runs the unittest
+unittest: generate-mocks ## Runs the unittest
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage_unittest.out  -coverpkg ./... -timeout 70s ./... 
 
 .PHONY: unittest-report
-unittest-report: ## Runs the unittest and generate json report
+unittest-report: generate-mocks ## Runs the unittest and generate json report
 	rm report.json || true
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage_unittest.out  -coverpkg ./... -timeout 70s ./... -json > report_unittest.json
 
 .PHONY: test-db
-test-db: ## Runs the tests-db
+test-db:  ## Runs the tests-db
 	(cd test; make run-dbs)
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./storage/... 
 	(cd test; make stop)

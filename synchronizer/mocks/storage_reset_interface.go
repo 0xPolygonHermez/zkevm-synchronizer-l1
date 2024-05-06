@@ -5,7 +5,7 @@ package mock_synchronizer
 import (
 	context "context"
 
-	pgx "github.com/jackc/pgx/v4"
+	entities "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -23,7 +23,7 @@ func (_m *StorageResetInterface) EXPECT() *StorageResetInterface_Expecter {
 }
 
 // Reset provides a mock function with given fields: ctx, blockNumber, dbTx
-func (_m *StorageResetInterface) Reset(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) error {
+func (_m *StorageResetInterface) Reset(ctx context.Context, blockNumber uint64, dbTx entities.Tx) error {
 	ret := _m.Called(ctx, blockNumber, dbTx)
 
 	if len(ret) == 0 {
@@ -31,7 +31,7 @@ func (_m *StorageResetInterface) Reset(ctx context.Context, blockNumber uint64, 
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) error); ok {
 		r0 = rf(ctx, blockNumber, dbTx)
 	} else {
 		r0 = ret.Error(0)
@@ -48,14 +48,14 @@ type StorageResetInterface_Reset_Call struct {
 // Reset is a helper method to define mock.On call
 //   - ctx context.Context
 //   - blockNumber uint64
-//   - dbTx pgx.Tx
+//   - dbTx entities.Tx
 func (_e *StorageResetInterface_Expecter) Reset(ctx interface{}, blockNumber interface{}, dbTx interface{}) *StorageResetInterface_Reset_Call {
 	return &StorageResetInterface_Reset_Call{Call: _e.mock.On("Reset", ctx, blockNumber, dbTx)}
 }
 
-func (_c *StorageResetInterface_Reset_Call) Run(run func(ctx context.Context, blockNumber uint64, dbTx pgx.Tx)) *StorageResetInterface_Reset_Call {
+func (_c *StorageResetInterface_Reset_Call) Run(run func(ctx context.Context, blockNumber uint64, dbTx entities.Tx)) *StorageResetInterface_Reset_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(pgx.Tx))
+		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
 	})
 	return _c
 }
@@ -65,7 +65,7 @@ func (_c *StorageResetInterface_Reset_Call) Return(_a0 error) *StorageResetInter
 	return _c
 }
 
-func (_c *StorageResetInterface_Reset_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) error) *StorageResetInterface_Reset_Call {
+func (_c *StorageResetInterface_Reset_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) error) *StorageResetInterface_Reset_Call {
 	_c.Call.Return(run)
 	return _c
 }

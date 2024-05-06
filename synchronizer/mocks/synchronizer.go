@@ -9,8 +9,6 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	pgx "github.com/jackc/pgx/v4"
-
 	synchronizer "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer"
 )
 
@@ -145,9 +143,9 @@ func (_c *Synchronizer_GetL1InfoTreeLeaves_Call) RunAndReturn(run func(context.C
 	return _c
 }
 
-// GetLeafsByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot, dbTx
-func (_m *Synchronizer) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]synchronizer.L1InfoTreeLeaf, error) {
-	ret := _m.Called(ctx, l1InfoRoot, dbTx)
+// GetLeafsByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot
+func (_m *Synchronizer) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash) ([]synchronizer.L1InfoTreeLeaf, error) {
+	ret := _m.Called(ctx, l1InfoRoot)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetLeafsByL1InfoRoot")
@@ -155,19 +153,19 @@ func (_m *Synchronizer) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot com
 
 	var r0 []synchronizer.L1InfoTreeLeaf
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, pgx.Tx) ([]synchronizer.L1InfoTreeLeaf, error)); ok {
-		return rf(ctx, l1InfoRoot, dbTx)
+	if rf, ok := ret.Get(0).(func(context.Context, common.Hash) ([]synchronizer.L1InfoTreeLeaf, error)); ok {
+		return rf(ctx, l1InfoRoot)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, pgx.Tx) []synchronizer.L1InfoTreeLeaf); ok {
-		r0 = rf(ctx, l1InfoRoot, dbTx)
+	if rf, ok := ret.Get(0).(func(context.Context, common.Hash) []synchronizer.L1InfoTreeLeaf); ok {
+		r0 = rf(ctx, l1InfoRoot)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]synchronizer.L1InfoTreeLeaf)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, common.Hash, pgx.Tx) error); ok {
-		r1 = rf(ctx, l1InfoRoot, dbTx)
+	if rf, ok := ret.Get(1).(func(context.Context, common.Hash) error); ok {
+		r1 = rf(ctx, l1InfoRoot)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -183,14 +181,13 @@ type Synchronizer_GetLeafsByL1InfoRoot_Call struct {
 // GetLeafsByL1InfoRoot is a helper method to define mock.On call
 //   - ctx context.Context
 //   - l1InfoRoot common.Hash
-//   - dbTx pgx.Tx
-func (_e *Synchronizer_Expecter) GetLeafsByL1InfoRoot(ctx interface{}, l1InfoRoot interface{}, dbTx interface{}) *Synchronizer_GetLeafsByL1InfoRoot_Call {
-	return &Synchronizer_GetLeafsByL1InfoRoot_Call{Call: _e.mock.On("GetLeafsByL1InfoRoot", ctx, l1InfoRoot, dbTx)}
+func (_e *Synchronizer_Expecter) GetLeafsByL1InfoRoot(ctx interface{}, l1InfoRoot interface{}) *Synchronizer_GetLeafsByL1InfoRoot_Call {
+	return &Synchronizer_GetLeafsByL1InfoRoot_Call{Call: _e.mock.On("GetLeafsByL1InfoRoot", ctx, l1InfoRoot)}
 }
 
-func (_c *Synchronizer_GetLeafsByL1InfoRoot_Call) Run(run func(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx)) *Synchronizer_GetLeafsByL1InfoRoot_Call {
+func (_c *Synchronizer_GetLeafsByL1InfoRoot_Call) Run(run func(ctx context.Context, l1InfoRoot common.Hash)) *Synchronizer_GetLeafsByL1InfoRoot_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(common.Hash), args[2].(pgx.Tx))
+		run(args[0].(context.Context), args[1].(common.Hash))
 	})
 	return _c
 }
@@ -200,7 +197,7 @@ func (_c *Synchronizer_GetLeafsByL1InfoRoot_Call) Return(_a0 []synchronizer.L1In
 	return _c
 }
 
-func (_c *Synchronizer_GetLeafsByL1InfoRoot_Call) RunAndReturn(run func(context.Context, common.Hash, pgx.Tx) ([]synchronizer.L1InfoTreeLeaf, error)) *Synchronizer_GetLeafsByL1InfoRoot_Call {
+func (_c *Synchronizer_GetLeafsByL1InfoRoot_Call) RunAndReturn(run func(context.Context, common.Hash) ([]synchronizer.L1InfoTreeLeaf, error)) *Synchronizer_GetLeafsByL1InfoRoot_Call {
 	_c.Call.Return(run)
 	return _c
 }

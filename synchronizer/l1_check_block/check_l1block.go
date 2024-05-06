@@ -8,10 +8,9 @@ import (
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/jackc/pgx/v4"
 )
 
 // This object check old L1block to double-check that the L1block hash is correct
@@ -25,8 +24,8 @@ type L1Requester interface {
 
 // StateInterfacer is an interface for the state
 type StateInterfacer interface {
-	GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx) (*L1Block, error)
-	UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx pgx.Tx) error
+	GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx stateTxType) (*L1Block, error)
+	UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx stateTxType) error
 }
 
 // SafeL1BlockNumberFetcher is an interface for fetching the  L1 block number reference point (safe, finalized,...)
@@ -59,7 +58,7 @@ func (p *CheckL1BlockHash) Name() string {
 // Step is a method that checks the L1 block hash, run until all blocks are checked and returns
 func (p *CheckL1BlockHash) Step(ctx context.Context) error {
 	stateBlock, err := p.State.GetFirstUncheckedBlock(ctx, uint64(0), nil)
-	if errors.Is(err, state.ErrNotFound) {
+	if errors.Is(err, entities.ErrNotFound) {
 		log.Debugf("%s: No unchecked blocks to check", p.Name())
 		return nil
 	}
@@ -95,7 +94,7 @@ func (p *CheckL1BlockHash) doAllBlocks(ctx context.Context, firstStateBlock L1Bl
 		}
 		numBlocksChecked++
 		stateBlock, err = p.State.GetFirstUncheckedBlock(ctx, lastStateBlockNumber, nil)
-		if errors.Is(err, state.ErrNotFound) {
+		if errors.Is(err, entities.ErrNotFound) {
 			diff := time.Since(startTime)
 			log.Infof("%s: checked all blocks (%d) (using as safe Block Point(%s): %d) time:%s", p.Name(), numBlocksChecked, p.SafeBlockNumberFetcher.Description(), safeBlockNumber, diff)
 			return nil

@@ -5,7 +5,7 @@ package mock_synchronizer
 import (
 	context "context"
 
-	pgx "github.com/jackc/pgx/v4"
+	entities "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -23,7 +23,7 @@ func (_m *StateForkIdQuerier) EXPECT() *StateForkIdQuerier_Expecter {
 }
 
 // GetForkIDByBatchNumber provides a mock function with given fields: ctx, batchNumber, dbTx
-func (_m *StateForkIdQuerier) GetForkIDByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) uint64 {
+func (_m *StateForkIdQuerier) GetForkIDByBatchNumber(ctx context.Context, batchNumber uint64, dbTx entities.Tx) uint64 {
 	ret := _m.Called(ctx, batchNumber, dbTx)
 
 	if len(ret) == 0 {
@@ -31,7 +31,7 @@ func (_m *StateForkIdQuerier) GetForkIDByBatchNumber(ctx context.Context, batchN
 	}
 
 	var r0 uint64
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) uint64); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) uint64); ok {
 		r0 = rf(ctx, batchNumber, dbTx)
 	} else {
 		r0 = ret.Get(0).(uint64)
@@ -48,14 +48,14 @@ type StateForkIdQuerier_GetForkIDByBatchNumber_Call struct {
 // GetForkIDByBatchNumber is a helper method to define mock.On call
 //   - ctx context.Context
 //   - batchNumber uint64
-//   - dbTx pgx.Tx
+//   - dbTx entities.Tx
 func (_e *StateForkIdQuerier_Expecter) GetForkIDByBatchNumber(ctx interface{}, batchNumber interface{}, dbTx interface{}) *StateForkIdQuerier_GetForkIDByBatchNumber_Call {
 	return &StateForkIdQuerier_GetForkIDByBatchNumber_Call{Call: _e.mock.On("GetForkIDByBatchNumber", ctx, batchNumber, dbTx)}
 }
 
-func (_c *StateForkIdQuerier_GetForkIDByBatchNumber_Call) Run(run func(ctx context.Context, batchNumber uint64, dbTx pgx.Tx)) *StateForkIdQuerier_GetForkIDByBatchNumber_Call {
+func (_c *StateForkIdQuerier_GetForkIDByBatchNumber_Call) Run(run func(ctx context.Context, batchNumber uint64, dbTx entities.Tx)) *StateForkIdQuerier_GetForkIDByBatchNumber_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(pgx.Tx))
+		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
 	})
 	return _c
 }
@@ -65,13 +65,13 @@ func (_c *StateForkIdQuerier_GetForkIDByBatchNumber_Call) Return(_a0 uint64) *St
 	return _c
 }
 
-func (_c *StateForkIdQuerier_GetForkIDByBatchNumber_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) uint64) *StateForkIdQuerier_GetForkIDByBatchNumber_Call {
+func (_c *StateForkIdQuerier_GetForkIDByBatchNumber_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) uint64) *StateForkIdQuerier_GetForkIDByBatchNumber_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetForkIDByBlockNumber provides a mock function with given fields: ctx, blockNumber, dbTx
-func (_m *StateForkIdQuerier) GetForkIDByBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) uint64 {
+func (_m *StateForkIdQuerier) GetForkIDByBlockNumber(ctx context.Context, blockNumber uint64, dbTx entities.Tx) uint64 {
 	ret := _m.Called(ctx, blockNumber, dbTx)
 
 	if len(ret) == 0 {
@@ -79,7 +79,7 @@ func (_m *StateForkIdQuerier) GetForkIDByBlockNumber(ctx context.Context, blockN
 	}
 
 	var r0 uint64
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) uint64); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) uint64); ok {
 		r0 = rf(ctx, blockNumber, dbTx)
 	} else {
 		r0 = ret.Get(0).(uint64)
@@ -96,14 +96,14 @@ type StateForkIdQuerier_GetForkIDByBlockNumber_Call struct {
 // GetForkIDByBlockNumber is a helper method to define mock.On call
 //   - ctx context.Context
 //   - blockNumber uint64
-//   - dbTx pgx.Tx
+//   - dbTx entities.Tx
 func (_e *StateForkIdQuerier_Expecter) GetForkIDByBlockNumber(ctx interface{}, blockNumber interface{}, dbTx interface{}) *StateForkIdQuerier_GetForkIDByBlockNumber_Call {
 	return &StateForkIdQuerier_GetForkIDByBlockNumber_Call{Call: _e.mock.On("GetForkIDByBlockNumber", ctx, blockNumber, dbTx)}
 }
 
-func (_c *StateForkIdQuerier_GetForkIDByBlockNumber_Call) Run(run func(ctx context.Context, blockNumber uint64, dbTx pgx.Tx)) *StateForkIdQuerier_GetForkIDByBlockNumber_Call {
+func (_c *StateForkIdQuerier_GetForkIDByBlockNumber_Call) Run(run func(ctx context.Context, blockNumber uint64, dbTx entities.Tx)) *StateForkIdQuerier_GetForkIDByBlockNumber_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(pgx.Tx))
+		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
 	})
 	return _c
 }
@@ -113,7 +113,7 @@ func (_c *StateForkIdQuerier_GetForkIDByBlockNumber_Call) Return(_a0 uint64) *St
 	return _c
 }
 
-func (_c *StateForkIdQuerier_GetForkIDByBlockNumber_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) uint64) *StateForkIdQuerier_GetForkIDByBlockNumber_Call {
+func (_c *StateForkIdQuerier_GetForkIDByBlockNumber_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) uint64) *StateForkIdQuerier_GetForkIDByBlockNumber_Call {
 	_c.Call.Return(run)
 	return _c
 }

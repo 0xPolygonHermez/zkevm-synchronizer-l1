@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
-	"github.com/jackc/pgx/v4"
 )
 
 var (
@@ -55,7 +55,7 @@ func (p *L1EventProcessors) Get(forkId actions.ForkIdType, event etherman.EventO
 }
 
 // Process execute the event for the forkId and event
-func (p *L1EventProcessors) Process(ctx context.Context, forkId actions.ForkIdType, order etherman.Order, block *etherman.Block, dbTx pgx.Tx) error {
+func (p *L1EventProcessors) Process(ctx context.Context, forkId actions.ForkIdType, order etherman.Order, block *etherman.Block, dbTx entities.Tx) error {
 	processor := p.Get(forkId, order.Name)
 	if processor == nil {
 		var strBlockNumber string
