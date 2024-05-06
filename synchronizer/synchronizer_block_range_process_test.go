@@ -17,7 +17,7 @@ import (
 
 type testProcessBlockRangeData struct {
 	mockState            *mock_synchronizer.StorageInterface
-	mockTransactions     *mock_synchronizer.StateInterface
+	mockTransactions     *mock_synchronizer.StateTxProvider
 	mockForkId           *mock_synchronizer.StateForkIdQuerier
 	mockL1EventProcessor *mock_synchronizer.L1EventProcessorManager
 	DbTx                 *mock_entities.Tx
@@ -29,7 +29,7 @@ func newTestProcessBlockRangeData(t *testing.T) *testProcessBlockRangeData {
 	mockState := mock_synchronizer.NewStorageInterface(t)
 	mockForkId := mock_synchronizer.NewStateForkIdQuerier(t)
 	mockL1EventProcessor := mock_synchronizer.NewL1EventProcessorManager(t)
-	mockTransactions := mock_synchronizer.NewStateInterface(t)
+	mockTransactions := mock_synchronizer.NewStateTxProvider(t)
 	DbTx := mock_entities.NewTx(t)
 	sut := synchronizer.NewBlockRangeProcessLegacy(mockState, mockForkId, mockTransactions, mockL1EventProcessor)
 	ctx := context.TODO()
