@@ -25,13 +25,23 @@ type CheckReorgManager struct {
 	GenesisBlockNumber  uint64
 }
 
-func (s *CheckReorgManager) checkReorg(latestBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, error) {
+func NewCheckReorgManager(ctx context.Context, etherMan syncinterfaces.EthermanFullInterface, state stateInterface, asyncL1BlockChecker l1_check_block.L1BlockCheckerIntegrator, genesisBlockNumber uint64) *CheckReorgManager {
+	return &CheckReorgManager{
+		asyncL1BlockChecker: asyncL1BlockChecker,
+		ctx:                 ctx,
+		etherMan:            etherMan,
+		state:               state,
+		GenesisBlockNumber:  genesisBlockNumber,
+	}
+}
+
+func (s *CheckReorgManager) CheckReorg(latestBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, error) {
 	if latestBlock == nil {
 		err := fmt.Errorf("lastEthBlockSynced is nil calling checkReorgAndExecuteReset")
 		log.Errorf("%s, it never have to happens", err.Error())
 		return nil, err
 	}
-	block, errReturnedReorgFunction := s.newCheckReorg(latestBlock, syncedBlock)
+	block, errReturnedReorgFunction := s.NewCheckReorg(latestBlock, syncedBlock)
 	if s.asyncL1BlockChecker != nil {
 		return s.asyncL1BlockChecker.CheckReorgWrapper(s.ctx, block, errReturnedReorgFunction)
 	}
@@ -47,7 +57,7 @@ must be reverted. Then, check the previous ethereum block synced, get block info
 hash and has parent. This operation has to be done until a match is found.
 */
 
-func (s *CheckReorgManager) newCheckReorg(latestStoredBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, error) {
+func (s *CheckReorgManager) NewCheckReorg(latestStoredBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, error) {
 	// This function only needs to worry about reorgs if some of the reorganized blocks contained rollup info.
 	latestStoredEthBlock := *latestStoredBlock
 	reorgedBlock := *latestStoredBlock

@@ -141,10 +141,11 @@ func (s *L1SequentialSync) SyncBlocksSequential(ctx context.Context, lastEthBloc
 			}
 		}
 
-		// if lastKnownBlock.Cmp(new(big.Int).SetUint64(toBlock)) < 1 {
-		// 	waitDuration = s.cfg.SyncInterval.Duration
-		// 	break
-		// }
+		//if lastKnownBlock.Cmp(new(big.Int).SetUint64(toBlock)) < 1 {
+		if lastKnownBlock < toBlock {
+			//  	waitDuration = s.cfg.SyncInterval.Duration
+			break
+		}
 
 		fromBlock = lastEthBlockSynced.BlockNumber
 		toBlock = toBlock + s.SyncChunkSize
