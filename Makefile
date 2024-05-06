@@ -179,13 +179,13 @@ unittest-report: generate-mocks ## Runs the unittest and generate json report
 .PHONY: test-db
 test-db: generate-mocks ## Runs the tests-db
 	(cd test; make run-dbs)
-	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./storage/... 
+	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./state/... 
 	(cd test; make stop)
 
 .PHONY: test-db-report
 test-db-report: generate-mocks ## Runs the tests-db generate json report
 	(cd test; make run-dbs)
-	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./storage/... -json | tee report_db.json
+	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./state/... -json | tee report_db.json
 	(cd test; make stop)
 
 
