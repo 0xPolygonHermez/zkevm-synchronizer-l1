@@ -65,6 +65,26 @@ type SynchronizerSequencedBatchesQuerier interface {
 	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64) (*SequencedBatches, error)
 }
 
+type VirtualBatch struct {
+	BatchNumber             uint64
+	ForkID                  uint64
+	BatchL2Data             []byte
+	VlogTxHash              common.Hash // Hash of tx inside L1Block that emit this log
+	Coinbase                common.Address
+	SequencerAddr           common.Address
+	SequenceFromBatchNumber uint64 // Linked to sync.sequenced_batches table
+	BlockNumber             uint64 // Linked to sync.block table
+	L1InfoRoot              *common.Hash
+	ReceivedAt              time.Time
+	BatchTimestamp          *time.Time // This is optional depend on ForkID
+	ExtraInfo               *string
+}
+
+type SynchronizerVirtualBatchesQuerier interface {
+	GetVirtualBatchByBatchNumber(ctx context.Context, batchNumber uint64) (*VirtualBatch, error)
+	GetLastestVirtualBatchNumber(ctx context.Context) (uint64, error)
+}
+
 // SynchronizerReorgSupporter is an interface that give support to the reorgs detected on L1
 type SynchronizerReorgSupporter interface {
 	// SetCallbackOnReorgDone sets a callback that will be called when the reorg is done

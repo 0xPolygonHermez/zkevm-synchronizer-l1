@@ -20,6 +20,7 @@ type stateSyncQueries interface {
 type storageSyncQueries interface {
 	syncinterfaces.StorageBlockReaderInterface
 	syncinterfaces.StorageSequenceBatchesInterface
+	syncinterfaces.StorageVirtualBatchInterface
 }
 
 type SyncrhronizerQueries struct {
@@ -80,13 +81,19 @@ func (s *SyncrhronizerQueries) GetSequenceByBatchNumber(ctx context.Context, bat
 	return &res, err
 }
 
-/*
-func convertStorageBlock(block *pgstorage.L1Block) *L1Block {
-	return &L1Block{
-		BlockNumber: block.BlockNumber,
-		BlockHash:   block.BlockHash,
-		ParentHash:  block.ParentHash,
-		ReceivedAt:  block.ReceivedAt,
+func (s *SyncrhronizerQueries) GetVirtualBatchByBatchNumber(ctx context.Context, batchNumber uint64) (*VirtualBatch, error) {
+	virtualBatch, err := s.storage.GetVirtualBatchByBatchNumber(ctx, batchNumber, nil)
+	if virtualBatch == nil {
+		return nil, err
 	}
+	res := VirtualBatch(*virtualBatch)
+	return &res, err
 }
-*/
+
+func (s *SyncrhronizerQueries) GetLastestVirtualBatchNumber(ctx context.Context) (uint64, error) {
+	lastBatchNumber, err := s.storage.GetLastestVirtualBatchNumber(ctx, nil, nil)
+	if err != nil {
+		return 0, err
+	}
+	return lastBatchNumber, nil
+}

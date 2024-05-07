@@ -46,6 +46,60 @@ func (p *PostgresStorage) GetVirtualBatchByBatchNumber(ctx context.Context, batc
 	return scanVirtualBatch(row, fmt.Sprintf("GetVirtualBatchByBatchNumber %d", batchNumber))
 }
 
+func (p *PostgresStorage) GetLastestVirtualBatchNumber(ctx context.Context, constrains *VirtualBatchConstraints, dbTx dbTxType) (uint64, error) {
+	whereClause := ""
+	if constrains != nil {
+		whereClause = constrains.WhereClause()
+		if whereClause != "" {
+			whereClause = "WHERE " + whereClause
+		}
+	}
+	sql := "SELECT batch_num FROM sync.virtual_batch ORDER BY batch_num " + whereClause + " DESC LIMIT 1"
+	e := p.getExecQuerier(getPgTx(dbTx))
+	row := e.QueryRow(ctx, sql)
+	var batchNumber uint64
+	err := row.Scan(&batchNumber)
+	err = translatePgxError(err, "GetLastestVirtualBatchNumber")
+	if err != nil {
+		return 0, err
+	}
+	return batchNumber, nil
+}
+
+// VirtualBatchConstraints is a struct that contains the constraints to filter the virtual batches.
+// is ready to add constraints to the query.
+type VirtualBatchConstraints struct {
+	batchNumberEqual *uint64
+	batchNumberGt    *uint64
+	batchNumberLt    *uint64
+}
+
+func (c *VirtualBatchConstraints) BatchNumberEqual(batchNumber uint64) {
+	c.batchNumberEqual = &batchNumber
+}
+
+func (c *VirtualBatchConstraints) BatchNumberGt(batchNumber uint64) {
+	c.batchNumberGt = &batchNumber
+}
+
+func (c *VirtualBatchConstraints) BatchNumberLt(batchNumber uint64) {
+	c.batchNumberLt = &batchNumber
+}
+
+func (c *VirtualBatchConstraints) WhereClause() string {
+	res := ""
+	if c.batchNumberEqual != nil {
+		res += fmt.Sprintf("batch_num = %d ", *c.batchNumberEqual)
+	}
+	if c.batchNumberGt != nil {
+		res += fmt.Sprintf("batch_num>%d ", *c.batchNumberEqual)
+	}
+	if c.batchNumberLt != nil {
+		res += fmt.Sprintf("batch_num<%d ", *c.batchNumberEqual)
+	}
+	return res
+}
+
 func scanVirtualBatch(row pgx.Row, contextDescription string) (*VirtualBatch, error) {
 	virtualBatch := &VirtualBatch{}
 	var l1InfoRootStr *string

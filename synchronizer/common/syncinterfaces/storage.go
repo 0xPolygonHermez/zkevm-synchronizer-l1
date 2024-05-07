@@ -36,6 +36,11 @@ type StorageL1InfoTreeInterface interface {
 	GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx stateTxType) ([]pgstorage.L1InfoTreeLeaf, error)
 }
 
+type StorageVirtualBatchInterface interface {
+	GetVirtualBatchByBatchNumber(ctx context.Context, batchNumber uint64, dbTx stateTxType) (*pgstorage.VirtualBatch, error)
+	GetLastestVirtualBatchNumber(ctx context.Context, constrains *pgstorage.VirtualBatchConstraints, dbTx stateTxType) (uint64, error)
+}
+
 type StorageTransactionInterface interface {
 	//Rollback(ctx context.Context, dbTx stateTxType) error
 	//BeginDBTransaction(ctx context.Context) (stateTxType, error)
