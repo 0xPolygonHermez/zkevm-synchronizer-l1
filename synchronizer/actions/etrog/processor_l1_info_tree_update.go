@@ -5,12 +5,8 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
 )
-
-type L1InfoTreeLeaf = entities.L1InfoTreeLeaf
-type stateTxType = entities.Tx
 
 // stateProcessorL1InfoTreeInterface interface required from state
 type stateProcessorL1InfoTreeInterface interface {
@@ -33,7 +29,7 @@ func NewProcessorL1InfoTreeUpdate(state stateProcessorL1InfoTreeInterface) *Proc
 }
 
 // Process process event
-func (p *ProcessorL1InfoTreeUpdate) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx stateTxType) error {
+func (p *ProcessorL1InfoTreeUpdate) Process(ctx context.Context, forkId ForkIdType, order etherman.Order, l1Block *etherman.Block, dbTx stateTxType) error {
 	l1InfoTree := l1Block.L1InfoTree[order.Pos]
 	leaf := L1InfoTreeLeaf{
 		BlockNumber:       l1InfoTree.BlockNumber,

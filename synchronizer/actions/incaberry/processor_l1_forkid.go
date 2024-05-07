@@ -32,7 +32,7 @@ func NewProcessorForkId(stateForkId stateForkIdInterface) *ProcessorForkId {
 }
 
 // Process process event
-func (p *ProcessorForkId) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx entities.Tx) error {
+func (p *ProcessorForkId) Process(ctx context.Context, forkId actions.ForkIdType, order etherman.Order, l1Block *etherman.Block, dbTx entities.Tx) error {
 	return p.processForkID(ctx, l1Block.ForkIDs[order.Pos], l1Block.BlockNumber, dbTx)
 }
 

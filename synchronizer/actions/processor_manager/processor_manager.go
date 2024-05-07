@@ -66,5 +66,5 @@ func (p *L1EventProcessors) Process(ctx context.Context, forkId actions.ForkIdTy
 		}
 		return fmt.Errorf("can't process blocknumber:%s event:%s, forkid:%d because: %w", strBlockNumber, order.Name, forkId, ErrCantProcessThisEvent)
 	}
-	return processor.Process(ctx, order, block, dbTx)
+	return processor.Process(ctx, forkId, order, block, dbTx)
 }

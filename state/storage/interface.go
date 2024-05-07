@@ -10,6 +10,8 @@ import (
 type L1Block = entities.L1Block
 type L1InfoTreeLeaf = entities.L1InfoTreeLeaf
 type ForkIDInterval = entities.ForkIDInterval
+type VirtualBatch = entities.VirtualBatch
+type SequencedBatches = entities.SequencedBatches
 type storageTxType = entities.Tx
 
 type BlockStorer interface {
@@ -36,6 +38,16 @@ type l1infoTreeStorer interface {
 	GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx storageTxType) ([]L1InfoTreeLeaf, error)
 }
 
+type sequencedBatchStorer interface {
+	AddSequencedBatches(ctx context.Context, sequence *SequencedBatches, dbTx storageTxType) error
+	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) (*SequencedBatches, error)
+}
+
+type virtualBatchStorer interface {
+	AddVirtualBatch(ctx context.Context, virtualBatch *VirtualBatch, dbTx storageTxType) error
+	GetVirtualBatchByBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) (*VirtualBatch, error)
+}
+
 type txStorer interface {
 	BeginTransaction(ctx context.Context) (storageTxType, error)
 }
@@ -45,4 +57,6 @@ type Storer interface {
 	BlockStorer
 	forkidStorer
 	l1infoTreeStorer
+	virtualBatchStorer
+	sequencedBatchStorer
 }

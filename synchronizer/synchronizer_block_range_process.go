@@ -5,11 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	zkevm_synchronizer_l1 "github.com/0xPolygonHermez/zkevm-synchronizer-l1"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage/pgstorage"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1event_orders"
@@ -60,16 +58,9 @@ func isBlockFinalized(blockNumber uint64, finalizedBlockNumber uint64) bool {
 
 // ProcessBlockRange process the L1 events and stores the information in the db
 func (s *BlockRangeProcess) addBlock(ctx context.Context, block *etherman.Block, isFinalized bool, dbTx stateTxType) error {
-	b := pgstorage.L1Block{
-		BlockNumber: block.BlockNumber,
-		BlockHash:   block.BlockHash,
-		ParentHash:  block.ParentHash,
-		ReceivedAt:  block.ReceivedAt,
-		SyncVersion: zkevm_synchronizer_l1.Version,
-		Checked:     isFinalized,
-	}
+	b := entities.NewL1BlockFromEthermanBlock(block, isFinalized)
 	// Add block information
-	return s.storage.AddBlock(ctx, &b, dbTx)
+	return s.storage.AddBlock(ctx, b, dbTx)
 }
 
 func (s *BlockRangeProcess) rollback(ctx context.Context, err error, dbTx stateTxType) error {

@@ -11,6 +11,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func initDbForTest(t *testing.T) *pgstorage.PostgresStorage {
+	dbConfig := getStorageConfig()
+	err := pgstorage.ResetDB(dbConfig)
+	require.NoError(t, err)
+	storage, err := pgstorage.NewPostgresStorage(dbConfig)
+	require.NoError(t, err)
+	return storage
+}
+
 func TestQueries(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
@@ -32,7 +41,7 @@ func TestQueries(t *testing.T) {
 		Timestamp:       time.Now(),
 		L1InfoRoot:      common.Hash{},
 	}
-	err = storage.AddSequencedBatches(context.Background(), sb, dbTx)
+	err = storage.AddSequencedBatches(context.Background(), &sb, dbTx)
 	require.NoError(t, err)
 	data, err := storage.GetSequenceByBatchNumber(context.Background(), uint64(102), dbTx)
 	require.NoError(t, err)

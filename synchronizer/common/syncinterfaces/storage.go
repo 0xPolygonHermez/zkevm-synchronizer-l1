@@ -44,7 +44,7 @@ type StorageTransactionInterface interface {
 }
 
 type StorageSequenceBatchesInterface interface {
-	AddSequencedBatches(ctx context.Context, sequence pgstorage.SequencedBatches, dbTx stateTxType) error
+	AddSequencedBatches(ctx context.Context, sequence *pgstorage.SequencedBatches, dbTx stateTxType) error
 	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx stateTxType) (*pgstorage.SequencedBatches, error)
 }
 

@@ -50,11 +50,22 @@ type SequencedBatch struct {
 	Coinbase      common.Address
 	// Struct used in preEtrog forks
 	*oldpolygonzkevm.PolygonZkEVMBatchData
-	// Struct used in Etrog
+	// Struct used in Etrog + Elderberry
 	*polygonzkevm.PolygonRollupBaseEtrogBatchData
 	// Struct used in Elderberry
 	*SequencedBatchElderberryData
 }
+
+func (s *SequencedBatch) BatchL2Data() []byte {
+	if s.PolygonZkEVMBatchData != nil {
+		return s.PolygonZkEVMBatchData.Transactions
+	}
+	if s.PolygonRollupBaseEtrogBatchData != nil {
+		return s.PolygonRollupBaseEtrogBatchData.Transactions
+	}
+	return nil
+}
+
 
 // UpdateEtrogSequence represents the first etrog sequence
 type UpdateEtrogSequence struct {

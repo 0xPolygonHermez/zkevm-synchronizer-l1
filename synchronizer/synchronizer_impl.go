@@ -59,10 +59,10 @@ func NewSynchronizerImpl(
 
 	builder := processor_manager.NewL1EventProcessorsBuilder()
 	builder.Register(etrog.NewProcessorL1InfoTreeUpdate(state))
-	etrogSequenceBatchesProcessor := etrog.NewProcessorL1SequenceBatches(storage)
+	etrogSequenceBatchesProcessor := etrog.NewProcessorL1SequenceBatches(state)
 	builder.Register(etrogSequenceBatchesProcessor)
 	builder.Register(incaberry.NewProcessorForkId(state))
-	builder.Register(etrog.NewProcessorL1InitialSequenceBatches(storage))
+	builder.Register(etrog.NewProcessorL1InitialSequenceBatches(state))
 	builder.Register(elderberry.NewProcessorL1SequenceBatchesElderberry(etrogSequenceBatchesProcessor))
 	sync.l1EventProcessors = builder.Build()
 

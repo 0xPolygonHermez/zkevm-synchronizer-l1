@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/model"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -14,6 +15,10 @@ type StateTxProvider interface {
 type StateForkidQuerier interface {
 	GetForkIDByBatchNumber(ctx context.Context, batchNumber uint64, dbTx stateTxType) uint64
 	GetForkIDByBlockNumber(ctx context.Context, blockNumber uint64, dbTx stateTxType) uint64
+}
+
+type stateOnSequencedBatchesManager interface {
+	OnSequencedBatchesOnL1(ctx context.Context, seq model.SequenceOfBatches, dbTx stateTxType) error
 }
 
 type StateInterface interface {
@@ -28,4 +33,5 @@ type StateInterface interface {
 
 	StateForkidQuerier
 	StateTxProvider
+	stateOnSequencedBatchesManager
 }
