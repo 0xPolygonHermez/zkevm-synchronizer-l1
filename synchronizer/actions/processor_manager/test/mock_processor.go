@@ -27,6 +27,6 @@ func (p *ProcessorStub) SupportedForkIds() []actions.ForkIdType {
 	return p.supportedForkIds
 }
 
-func (p *ProcessorStub) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx entities.Tx) error {
+func (p *ProcessorStub) Process(ctx context.Context, forkId actions.ForkIdType, order etherman.Order, l1Block *etherman.Block, dbTx entities.Tx) error {
 	return p.responseProcess
 }

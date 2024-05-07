@@ -18,7 +18,8 @@ func TestAddVirtualBatch(t *testing.T) {
 	require.NoError(t, err)
 
 	defer func() { _ = dbTx.Commit(ctx) }()
-	storage.AddBlock(ctx, &pgstorage.L1Block{BlockNumber: 123}, dbTx)
+	err = storage.AddBlock(ctx, &pgstorage.L1Block{BlockNumber: 123}, dbTx)
+	require.NoError(t, err)
 
 	err = storage.AddSequencedBatches(ctx, &pgstorage.SequencedBatches{FromBatchNumber: 100, ToBatchNumber: 300, L1BlockNumber: 123}, dbTx)
 	require.NoError(t, err)
@@ -41,7 +42,8 @@ func TestAddVirtualBatchDuplicated(t *testing.T) {
 	require.NoError(t, err)
 
 	defer func() { _ = dbTx.Commit(ctx) }()
-	storage.AddBlock(ctx, &pgstorage.L1Block{BlockNumber: 123}, dbTx)
+	err = storage.AddBlock(ctx, &pgstorage.L1Block{BlockNumber: 123}, dbTx)
+	require.NoError(t, err)
 
 	err = storage.AddSequencedBatches(ctx, &pgstorage.SequencedBatches{FromBatchNumber: 100, ToBatchNumber: 300, L1BlockNumber: 123}, dbTx)
 	require.NoError(t, err)
@@ -59,7 +61,8 @@ func TestAddVirtualBatchMissingSequence(t *testing.T) {
 	require.NoError(t, err)
 
 	defer func() { _ = dbTx.Commit(ctx) }()
-	storage.AddBlock(ctx, &pgstorage.L1Block{BlockNumber: 123}, dbTx)
+	err = storage.AddBlock(ctx, &pgstorage.L1Block{BlockNumber: 123}, dbTx)
+	require.NoError(t, err)
 
 	virtualBatch := pgstorage.VirtualBatch{BatchNumber: 300, BlockNumber: 123, SequenceFromBatchNumber: 100}
 	err = storage.AddVirtualBatch(ctx, &virtualBatch, dbTx)
@@ -74,8 +77,9 @@ func TestGetVirtualBatch(t *testing.T) {
 	require.NoError(t, err)
 
 	defer func() { _ = dbTx.Commit(ctx) }()
-	storage.AddBlock(ctx, &pgstorage.L1Block{BlockNumber: 123,
+	err = storage.AddBlock(ctx, &pgstorage.L1Block{BlockNumber: 123,
 		ReceivedAt: time.Date(2023, 12, 14, 14, 30, 45, 0, time.Local)}, dbTx)
+	require.NoError(t, err)
 
 	err = storage.AddSequencedBatches(ctx, &pgstorage.SequencedBatches{FromBatchNumber: 100, ToBatchNumber: 300, L1BlockNumber: 123}, dbTx)
 	require.NoError(t, err)

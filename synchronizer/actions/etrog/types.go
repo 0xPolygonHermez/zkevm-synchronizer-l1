@@ -8,7 +8,6 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
 )
 
-type l1Block = entities.L1Block
 type L1InfoTreeLeaf = entities.L1InfoTreeLeaf
 type stateTxType = entities.Tx
 type ForkIdType = actions.ForkIdType

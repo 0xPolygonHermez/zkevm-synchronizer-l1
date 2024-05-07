@@ -16,7 +16,8 @@ func TestAddSequence(t *testing.T) {
 	require.NoError(t, err)
 
 	defer func() { _ = dbTx.Commit(ctx) }()
-	storage.AddBlock(ctx, &pgstorage.L1Block{BlockNumber: 123}, dbTx)
+	err = storage.AddBlock(ctx, &pgstorage.L1Block{BlockNumber: 123}, dbTx)
+	require.NoError(t, err)
 
 	seq := &pgstorage.SequencedBatches{
 		FromBatchNumber: 100,
