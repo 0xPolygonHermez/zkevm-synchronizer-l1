@@ -2,10 +2,6 @@ package pgstorage
 
 import (
 	"context"
-	"errors"
-
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
-	"github.com/jackc/pgx/v4"
 )
 
 // AddForkID adds a new forkID to the storage
@@ -13,6 +9,7 @@ func (p *PostgresStorage) AddForkID(ctx context.Context, forkID ForkIDInterval, 
 	const addForkIDSQL = "INSERT INTO sync.fork_id (from_batch_num, to_batch_num, fork_id, version, block_num) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (fork_id) DO UPDATE SET block_num = $5 WHERE sync.fork_id.fork_id = $3;"
 	e := p.getExecQuerier(getPgTx(dbTx))
 	_, err := e.Exec(ctx, addForkIDSQL, forkID.FromBatchNumber, forkID.ToBatchNumber, forkID.ForkId, forkID.Version, forkID.BlockNumber)
+	err = translatePgxError(err, "AddForkID")
 	return err
 }
 
@@ -22,10 +19,8 @@ func (p *PostgresStorage) GetForkIDs(ctx context.Context, dbTx dbTxType) ([]Fork
 	q := p.getExecQuerier(getPgTx(dbTx))
 
 	rows, err := q.Query(ctx, getForkIDsSQL)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, entities.ErrNotFound
-	} else if err != nil {
-		return nil, err
+	if err != nil {
+		return nil, translatePgxError(err, "GetForkIDs")
 	}
 	defer rows.Close()
 
@@ -52,7 +47,7 @@ func (p *PostgresStorage) UpdateForkID(ctx context.Context, forkID ForkIDInterva
 	const updateForkIDSQL = "UPDATE sync.fork_id SET to_batch_num = $1 WHERE fork_id = $2"
 	e := p.getExecQuerier(getPgTx(dbTx))
 	if _, err := e.Exec(ctx, updateForkIDSQL, forkID.ToBatchNumber, forkID.ForkId); err != nil {
-		return err
+		return translatePgxError(err, "UpdateForkID")
 	}
 	return nil
 }

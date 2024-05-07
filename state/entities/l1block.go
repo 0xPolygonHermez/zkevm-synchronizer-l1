@@ -19,6 +19,10 @@ type L1Block struct {
 	SyncVersion string
 }
 
+func (b *L1Block) Key() uint64 {
+	return b.BlockNumber
+}
+
 func (b *L1Block) String() string {
 	if b == nil {
 		return "nil"

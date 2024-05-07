@@ -10,6 +10,7 @@ import (
 )
 
 func TestAddSequence(t *testing.T) {
+	skipDatabaseTestIfNeeded(t)
 	storage := initDbForTest(t)
 	ctx := context.TODO()
 	dbTx, err := storage.BeginTransaction(ctx)

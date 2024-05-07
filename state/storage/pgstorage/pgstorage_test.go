@@ -21,9 +21,7 @@ func initDbForTest(t *testing.T) *pgstorage.PostgresStorage {
 }
 
 func TestQueries(t *testing.T) {
-	if testing.Short() {
-		t.Skip()
-	}
+	skipDatabaseTestIfNeeded(t)
 	dbConfig := getStorageConfig()
 	err := pgstorage.ResetDB(dbConfig)
 	require.NoError(t, err)
@@ -49,9 +47,7 @@ func TestQueries(t *testing.T) {
 }
 
 func TestBlockAddAndGets(t *testing.T) {
-	if testing.Short() {
-		t.Skip()
-	}
+	skipDatabaseTestIfNeeded(t)
 	ctx := context.TODO()
 	dbConfig := getStorageConfig()
 	err := pgstorage.ResetDB(dbConfig)
@@ -104,6 +100,12 @@ func TestBlockAddAndGets(t *testing.T) {
 			require.Equal(t, testCase.queryPreviousBlock.String(), prevBlock.String(), "GetPreviousBlock")
 		}
 
+	}
+}
+
+func skipDatabaseTestIfNeeded(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping database test in short mode")
 	}
 }
 

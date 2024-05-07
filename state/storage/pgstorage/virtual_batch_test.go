@@ -12,6 +12,7 @@ import (
 )
 
 func TestAddVirtualBatch(t *testing.T) {
+	skipDatabaseTestIfNeeded(t)
 	storage := initDbForTest(t)
 	ctx := context.TODO()
 	dbTx, err := storage.BeginTransaction(ctx)
@@ -36,6 +37,7 @@ func TestAddVirtualBatch(t *testing.T) {
 }
 
 func TestAddVirtualBatchDuplicated(t *testing.T) {
+	skipDatabaseTestIfNeeded(t)
 	storage := initDbForTest(t)
 	ctx := context.TODO()
 	dbTx, err := storage.BeginTransaction(ctx)
@@ -55,6 +57,7 @@ func TestAddVirtualBatchDuplicated(t *testing.T) {
 }
 
 func TestAddVirtualBatchMissingSequence(t *testing.T) {
+	skipDatabaseTestIfNeeded(t)
 	storage := initDbForTest(t)
 	ctx := context.TODO()
 	dbTx, err := storage.BeginTransaction(ctx)
@@ -71,6 +74,7 @@ func TestAddVirtualBatchMissingSequence(t *testing.T) {
 }
 
 func TestGetVirtualBatch(t *testing.T) {
+	skipDatabaseTestIfNeeded(t)
 	storage := initDbForTest(t)
 	ctx := context.TODO()
 	dbTx, err := storage.BeginTransaction(ctx)
@@ -93,6 +97,7 @@ func TestGetVirtualBatch(t *testing.T) {
 }
 
 func TestGetVirtualBatchNotFound(t *testing.T) {
+	skipDatabaseTestIfNeeded(t)
 	storage := initDbForTest(t)
 	ctx := context.TODO()
 	dbTx, err := storage.BeginTransaction(ctx)
