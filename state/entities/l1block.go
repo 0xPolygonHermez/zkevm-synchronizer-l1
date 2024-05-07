@@ -16,6 +16,7 @@ type L1Block struct {
 	ParentHash  common.Hash
 	ReceivedAt  time.Time
 	Checked     bool // The block is safe (have past the safe point, e.g. Finalized in L1)
+	HasEvents   bool // This block have events from the rollup
 	SyncVersion string
 }
 
@@ -39,5 +40,6 @@ func NewL1BlockFromEthermanBlock(block *etherman.Block, isFinalized bool) *L1Blo
 		ReceivedAt:  block.ReceivedAt,
 		SyncVersion: zkevm_synchronizer_l1.Version,
 		Checked:     isFinalized,
+		HasEvents:   block.HasEvents(),
 	}
 }

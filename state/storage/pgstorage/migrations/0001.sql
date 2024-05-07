@@ -18,6 +18,7 @@ CREATE TABLE sync.block
     parent_hash VARCHAR(66),
     received_at TIMESTAMP WITH TIME ZONE NOT NULL,
 	checked BOOLEAN NOT NULL DEFAULT FALSE,
+	has_events BOOLEAN NOT NULL DEFAULT FALSE,
 	sync_version VARCHAR(128)
 );
 

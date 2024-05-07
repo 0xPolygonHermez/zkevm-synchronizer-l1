@@ -47,15 +47,12 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 		l1inforoot = *sequencedBatches[0].L1InfoRoot
 	}
 	seq := SequenceOfBatches{}
-	seq.Sequence = SequencedBatches{
-		FromBatchNumber: sequencedBatches[0].BatchNumber,
-		ToBatchNumber:   sequencedBatches[len(sequencedBatches)-1].BatchNumber,
-		L1BlockNumber:   blockNumber,
-		Timestamp:       l1BlockTimestamp,
-		L1InfoRoot:      l1inforoot,
-		ForkID:          uint64(forkId),
-		Source:          string(etherman.SequenceBatchesOrder),
-	}
+	seq.Sequence = *entities.NewSequencedBatches(
+		sequencedBatches[0].BatchNumber, sequencedBatches[len(sequencedBatches)-1].BatchNumber,
+		blockNumber, uint64(forkId),
+		l1BlockTimestamp, time.Now(),
+		l1inforoot, string(etherman.SequenceBatchesOrder))
+
 	for _, sequencedBatch := range sequencedBatches {
 		virtualBatch := entities.NewVirtualBatchFromL1(blockNumber, seq.Sequence.FromBatchNumber,
 			seq.Sequence.ForkID, sequencedBatch)

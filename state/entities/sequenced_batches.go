@@ -20,3 +20,17 @@ type SequencedBatches struct {
 func (s *SequencedBatches) Key() uint64 {
 	return s.FromBatchNumber
 }
+
+func NewSequencedBatches(fromBatchNumber, toBatchNumber, l1BlockNumber, forkID uint64,
+	timestamp time.Time, receivedAt time.Time, l1InfoRoot common.Hash, source string) *SequencedBatches {
+	return &SequencedBatches{
+		FromBatchNumber: fromBatchNumber,
+		ToBatchNumber:   toBatchNumber,
+		L1BlockNumber:   l1BlockNumber,
+		ForkID:          forkID,
+		Timestamp:       timestamp,
+		ReceivedAt:      receivedAt,
+		L1InfoRoot:      l1InfoRoot,
+		Source:          source,
+	}
+}

@@ -24,6 +24,11 @@ type Block struct {
 	GlobalExitRoots, L1InfoTree []GlobalExitRoot
 }
 
+func (b *Block) HasEvents() bool {
+	return len(b.ForcedBatches) > 0 || len(b.SequencedBatches) > 0 || b.UpdateEtrogSequence.BatchNumber > 0 ||
+		len(b.VerifiedBatches) > 0 || len(b.SequencedForceBatches) > 0 || len(b.ForkIDs) > 0 || len(b.GlobalExitRoots) > 0 || len(b.L1InfoTree) > 0
+}
+
 // GlobalExitRoot struct
 type GlobalExitRoot struct {
 	BlockNumber       uint64
@@ -65,7 +70,6 @@ func (s *SequencedBatch) BatchL2Data() []byte {
 	}
 	return nil
 }
-
 
 // UpdateEtrogSequence represents the first etrog sequence
 type UpdateEtrogSequence struct {
