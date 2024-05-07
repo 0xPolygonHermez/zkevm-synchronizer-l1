@@ -12,7 +12,7 @@ type storageTxType = entities.Tx
 type stateTxType = entities.Tx
 
 type Keyer interface {
-	comparable
+	IsEqual(other interface{}) bool
 	Key() uint64
 }
 
@@ -29,9 +29,10 @@ func SetStorageHelper[T Keyer](ctx context.Context, obj T, tx storageTxType,
 		if errRead != nil {
 			return err
 		}
-		if objRead == obj {
+		if obj.IsEqual(objRead) {
 			return nil
 		}
+
 		return fmt.Errorf("element %d already exists but is different: %w", obj.Key(), err)
 	}
 	return err

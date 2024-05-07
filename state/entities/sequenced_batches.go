@@ -17,6 +17,17 @@ type SequencedBatches struct {
 	Source          string
 }
 
+func (s *SequencedBatches) IsEqual(o interface{}) bool {
+	other, ok := o.(*SequencedBatches)
+	if !ok {
+		return false
+	}
+	if s == other {
+		return true
+	}
+	return *s == *other
+}
+
 func (s *SequencedBatches) Key() uint64 {
 	return s.FromBatchNumber
 }

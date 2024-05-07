@@ -27,6 +27,17 @@ type BatchExtraInfo struct {
 	Description string
 }
 
+func (s *VirtualBatch) IsEqual(o interface{}) bool {
+	other, ok := o.(*VirtualBatch)
+	if !ok {
+		return false
+	}
+	if s == other {
+		return true
+	}
+	return s.String() == other.String()
+}
+
 func (b *VirtualBatch) Key() uint64 {
 	return b.BatchNumber
 }
