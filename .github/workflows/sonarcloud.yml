@@ -1,0 +1,77 @@
+name: SonarCloud analysis
+
+on:
+  push:
+    branches:
+      - develop
+      - update-external-dependencies
+      - 'release/**'
+      - 'feature/**'
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21.x
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Unittest
+        run: make unittest-report
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unittest-results
+          path: ./coverage_unittest.out
+          retention-days: 5
+  test_db:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21.x
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Test Database
+        run: make test-db-report
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: testdb-results
+          path: ./coverage_db.out
+          retention-days: 5
+  sonarcloud_analysis:
+    name: SonarCloud
+    needs: [unittest, test_db]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21.x
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download unitTest results
+        uses: actions/download-artifact@v4
+        with:
+          name: unittest-results
+      - name: Download testDB results
+        uses: actions/download-artifact@v4
+        with:
+          name:  testdb-results
+          
+        
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

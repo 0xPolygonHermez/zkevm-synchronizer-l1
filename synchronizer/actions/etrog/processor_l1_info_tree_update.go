@@ -5,15 +5,12 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
-
-	"github.com/jackc/pgx/v4"
 )
 
 // stateProcessorL1InfoTreeInterface interface required from state
 type stateProcessorL1InfoTreeInterface interface {
-	AddL1InfoTreeLeaf(ctx context.Context, L1InfoTreeLeaf *state.L1InfoTreeLeaf, dbTx pgx.Tx) (*state.L1InfoTreeLeaf, error)
+	AddL1InfoTreeLeafAndAssignIndex(ctx context.Context, exitRoot *L1InfoTreeLeaf, dbTx stateTxType) (*L1InfoTreeLeaf, error)
 }
 
 // ProcessorL1InfoTreeUpdate implements L1EventProcessor for GlobalExitRootsOrder
@@ -32,9 +29,9 @@ func NewProcessorL1InfoTreeUpdate(state stateProcessorL1InfoTreeInterface) *Proc
 }
 
 // Process process event
-func (p *ProcessorL1InfoTreeUpdate) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx pgx.Tx) error {
+func (p *ProcessorL1InfoTreeUpdate) Process(ctx context.Context, forkId ForkIdType, order etherman.Order, l1Block *etherman.Block, dbTx stateTxType) error {
 	l1InfoTree := l1Block.L1InfoTree[order.Pos]
-	leaf := state.L1InfoTreeLeaf{
+	leaf := L1InfoTreeLeaf{
 		BlockNumber:       l1InfoTree.BlockNumber,
 		MainnetExitRoot:   l1InfoTree.MainnetExitRoot,
 		RollupExitRoot:    l1InfoTree.RollupExitRoot,
@@ -43,7 +40,7 @@ func (p *ProcessorL1InfoTreeUpdate) Process(ctx context.Context, order etherman.
 		PreviousBlockHash: l1InfoTree.PreviousBlockHash,
 	}
 
-	entry, err := p.state.AddL1InfoTreeLeaf(ctx, &leaf, dbTx)
+	entry, err := p.state.AddL1InfoTreeLeafAndAssignIndex(ctx, &leaf, dbTx)
 	if err != nil {
 		log.Errorf("error storing the l1InfoTree(etrog). BlockNumber: %d, error: %v", l1Block.BlockNumber, err)
 		return err

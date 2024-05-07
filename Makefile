@@ -99,7 +99,7 @@ install-linter: ## Installs the linter
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.54.2
 
 .PHONY: lint
-lint: ## Runs the linter
+lint: generate-mocks ## Runs the linter
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/golangci-lint run --timeout=5m
 
 $(VENV_PYTHON):
@@ -159,9 +159,34 @@ generate-code-from-proto: ## Generates code from proto files
 	cd proto/src/proto/executor/v1 && protoc --proto_path=. --go_out=../../../../../state/runtime/executor --go-grpc_out=../../../../../state/runtime/executor --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative executor.proto
 	cd proto/src/proto/aggregator/v1 && protoc --proto_path=. --proto_path=../../../../include --go_out=../../../../../aggregator/prover --go-grpc_out=../../../../../aggregator/prover --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative aggregator.proto
 
-.PHONY: test
-test: ## Runs the tests
-	trap '$(STOP)' EXIT; MallocNanoZone=0 go test -count=1 -short -race  -covermode=atomic -coverprofile=./coverage.out  -coverpkg ./... -timeout 70s ./...
+.PHONY: generate-mocks
+generate-mocks:
+	(cd test; make generate-mocks)
+
+.PHONY: clean-mocks
+clean-mocks:
+	(cd test; make clean-mocks)
+
+.PHONY: unittest
+unittest: generate-mocks ## Runs the unittest
+	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage_unittest.out  -coverpkg ./... -timeout 70s ./... 
+
+.PHONY: unittest-report
+unittest-report: generate-mocks ## Runs the unittest and generate json report
+	rm report.json || true
+	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage_unittest.out  -coverpkg ./... -timeout 70s ./... -json > report_unittest.json
+
+.PHONY: test-db
+test-db: generate-mocks ## Runs the tests-db
+	(cd test; make run-dbs)
+	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./state/... 
+	(cd test; make stop)
+
+.PHONY: test-db-report
+test-db-report: generate-mocks ## Runs the tests-db generate json report
+	(cd test; make run-dbs)
+	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./state/... -json | tee report_db.json
+	(cd test; make stop)
 
 
 ## Help display.

@@ -8,8 +8,8 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
-	"github.com/jackc/pgx/v4"
 )
 
 var (
@@ -19,8 +19,8 @@ var (
 
 // PreviousProcessor is the interface that the previous processor (Etrog)
 type PreviousProcessor interface {
-	Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx pgx.Tx) error
-	ProcessSequenceBatches(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, l1BlockTimestamp time.Time, dbTx pgx.Tx) error
+	Process(ctx context.Context, forkId actions.ForkIdType, order etherman.Order, l1Block *etherman.Block, dbTx entities.Tx) error
+	ProcessSequenceBatches(ctx context.Context, forkId actions.ForkIdType, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, l1BlockTimestamp time.Time, dbTx entities.Tx) error
 }
 
 // ProcessorL1SequenceBatchesElderberry is the processor for SequenceBatches for Elderberry
@@ -40,7 +40,7 @@ func NewProcessorL1SequenceBatchesElderberry(previousProcessor PreviousProcessor
 }
 
 // Process process event
-func (g *ProcessorL1SequenceBatchesElderberry) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx pgx.Tx) error {
+func (g *ProcessorL1SequenceBatchesElderberry) Process(ctx context.Context, forkId actions.ForkIdType, order etherman.Order, l1Block *etherman.Block, dbTx entities.Tx) error {
 	if l1Block == nil || len(l1Block.SequencedBatches) <= order.Pos {
 		return actions.ErrInvalidParams
 	}
@@ -57,7 +57,7 @@ func (g *ProcessorL1SequenceBatchesElderberry) Process(ctx context.Context, orde
 	}
 
 	// We known that the MaxSequenceTimestamp is the same for all the batches so we can use the first one
-	err := g.previousProcessor.ProcessSequenceBatches(ctx, l1Block.SequencedBatches[order.Pos], l1Block.BlockNumber, time.Unix(int64(sbatch.SequencedBatchElderberryData.MaxSequenceTimestamp), 0), dbTx)
+	err := g.previousProcessor.ProcessSequenceBatches(ctx, forkId, l1Block.SequencedBatches[order.Pos], l1Block.BlockNumber, time.Unix(int64(sbatch.SequencedBatchElderberryData.MaxSequenceTimestamp), 0), dbTx)
 	// The last L2block timestamp must match MaxSequenceTimestamp
 	if err != nil {
 		return err

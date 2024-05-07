@@ -7,18 +7,15 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/elderberry"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/etrog"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/incaberry"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/processor_manager"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
 	syncconfig "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/config"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/jackc/pgx/v4"
 )
 
 // SynchronizerImpl connects L1 and L2
@@ -26,61 +23,50 @@ type SynchronizerImpl struct {
 	etherMan EthermanInterface
 	// TODO: remove
 
-	storage        StorageInterface
+	storage        syncinterfaces.StorageInterface
+	state          syncinterfaces.StateInterface
 	ctx            context.Context
 	cancelCtx      context.CancelFunc
 	genBlockNumber uint64
 	cfg            syncconfig.Config
 	networkID      uint
-	// TODO: remove
-	//chExitRootEvent chan *etherman.GlobalExitRoot
-	// TODO: remove
-	//chSynced chan uint
-	// TODO: remove
-	synced bool
+	synced         bool
 
 	l1EventProcessors   *processor_manager.L1EventProcessors
 	blockRangeProcessor syncinterfaces.BlockRangeProcessor
-	l1InfoTreeManager   *state.L1InfoTreeState
-	ForkIdState         *state.ForkIdState
 }
 
 // NewSynchronizer creates and initializes an instance of Synchronizer
 func NewSynchronizerImpl(
 	ctx context.Context,
-	storage StorageInterface,
+	storage syncinterfaces.StorageInterface,
+	state syncinterfaces.StateInterface,
 	ethMan EthermanInterface,
-	StateForkIds StateForkIdQuerier,
 	cfg syncconfig.Config) (*SynchronizerImpl, error) {
 	ctx, cancel := context.WithCancel(ctx)
-	// TODO: ??? GetNetworkID
 	networkID := uint(0)
 
 	sync := SynchronizerImpl{
 		storage:        storage,
+		state:          state,
 		etherMan:       ethMan,
 		ctx:            ctx,
 		cancelCtx:      cancel,
 		genBlockNumber: cfg.GenesisBlockNumber,
 		cfg:            cfg,
 		networkID:      networkID,
-		//chExitRootEvent:  chExitRootEvent,
-		//chSynced: chSynced,
-		//zkEVMClient:      zkEVMClient,
-		//l1RollupExitRoot: ger.ExitRoots[1],
 	}
-	sync.l1InfoTreeManager = state.NewL1InfoTreeManager(storage)
-	sync.ForkIdState = state.NewForkIdState(storage)
+
 	builder := processor_manager.NewL1EventProcessorsBuilder()
-	builder.Register(etrog.NewProcessorL1InfoTreeUpdate(sync.l1InfoTreeManager))
-	etrogSequenceBatchesProcessor := etrog.NewProcessorL1SequenceBatches(storage)
+	builder.Register(etrog.NewProcessorL1InfoTreeUpdate(state))
+	etrogSequenceBatchesProcessor := etrog.NewProcessorL1SequenceBatches(state)
 	builder.Register(etrogSequenceBatchesProcessor)
-	builder.Register(incaberry.NewProcessorForkId(sync.ForkIdState))
-	builder.Register(etrog.NewProcessorL1InitialSequenceBatches(storage))
+	builder.Register(incaberry.NewProcessorForkId(state))
+	builder.Register(etrog.NewProcessorL1InitialSequenceBatches(state))
 	builder.Register(elderberry.NewProcessorL1SequenceBatchesElderberry(etrogSequenceBatchesProcessor))
 	sync.l1EventProcessors = builder.Build()
 
-	sync.blockRangeProcessor = NewBlockRangeProcessLegacy(storage, StateForkIds, sync.l1EventProcessors, nil)
+	sync.blockRangeProcessor = NewBlockRangeProcessLegacy(storage, state, state, sync.l1EventProcessors)
 	if cfg.GenesisBlockNumber == 0 {
 		firstBlock, err := ethMan.GetL1BlockUpgradeLxLy(ctx, nil)
 		if err != nil {
@@ -101,79 +87,9 @@ func (s *SynchronizerImpl) IsSynced() bool {
 	return s.synced
 }
 
-func (s *SynchronizerImpl) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]L1InfoTreeLeaf, error) {
-	leaves, err := s.l1InfoTreeManager.GetLeafsByL1InfoRoot(ctx, l1InfoRoot, dbTx)
-	if err != nil {
-		log.Error("error getting leaves by L1InfoRoot. Error: ", err)
-		return nil, err
-	}
-	var res []L1InfoTreeLeaf
-	for _, leaf := range leaves {
-		tmp := L1InfoTreeLeaf(leaf)
-		res = append(res, tmp)
-	}
-	return res, nil
-}
-
-func (s *SynchronizerImpl) GetL1InfoRootPerIndex(ctx context.Context, L1InfoTreeIndex uint32) (common.Hash, error) {
-	root, err := s.l1InfoTreeManager.GetL1InfoRootPerLeafIndex(ctx, L1InfoTreeIndex, nil)
-	if errors.Is(err, state.ErrNotFound) {
-		return common.Hash{}, ErrNotFound
-	}
-	return root, err
-}
-
-func (s *SynchronizerImpl) GetL1InfoTreeLeaves(ctx context.Context, indexLeaves []uint32) (map[uint32]L1InfoTreeLeaf, error) {
-	leaves, err := s.l1InfoTreeManager.GetL1InfoTreeLeaves(ctx, indexLeaves, nil)
-	if err != nil {
-		return nil, err
-	}
-	// Convert type state.L1InfoTreeLeaf to type L1InfoTreeLeaf
-	returnLeaves := make(map[uint32]L1InfoTreeLeaf)
-	for _, idx := range indexLeaves {
-		returnLeaves[idx] = L1InfoTreeLeaf(leaves[idx])
-	}
-	return returnLeaves, nil
-}
-
-func (s *SynchronizerImpl) GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64) (*SequencedBatches, error) {
-	sequence, err := s.storage.GetSequenceByBatchNumber(ctx, batchNumber, nil)
-	if sequence == nil {
-		return nil, err
-	}
-	res := SequencedBatches(*sequence)
-	return &res, err
-}
-
-func convertStorageBlock(block *pgstorage.L1Block) *L1Block {
-	return &L1Block{
-		BlockNumber: block.BlockNumber,
-		BlockHash:   block.BlockHash,
-		ParentHash:  block.ParentHash,
-		ReceivedAt:  block.ReceivedAt,
-	}
-}
-
-func (s *SynchronizerImpl) getLastBlockFromStorage(ctx context.Context, dbTx pgx.Tx) (*L1Block, error) {
-	lastBlockSynced, err := s.storage.GetLastBlock(s.ctx, dbTx)
-	if err != nil {
-		return nil, err
-	}
-	if lastBlockSynced == nil {
-		return nil, nil
-	}
-	return convertStorageBlock(lastBlockSynced), nil
-}
-
-func (s *SynchronizerImpl) getPreviousBlockFromStorage(ctx context.Context, offset uint64, dbTx pgx.Tx) (*L1Block, error) {
-	dbBlock, err := s.storage.GetPreviousBlock(s.ctx, offset, dbTx)
-	if err != nil {
-		return nil, err
-	}
-	if dbBlock == nil {
-		return nil, nil
-	}
-	return convertStorageBlock(dbBlock), nil
+func (s *SynchronizerImpl) SetCallbackOnReorgDone(callback func(newFirstL1BlockNumberValid uint64)) {
+	//TODO: Implement this function
+	log.Fatal("Not implemented")
 }
 
 // Sync function will read the last state synced and will continue from that point.
@@ -186,11 +102,11 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 
 	forks, _ := s.etherMan.GetForks(s.ctx, s.genBlockNumber, s.genBlockNumber-10)
 	log.Info(forks)
-	lastBlockSynced, err := s.getLastBlockFromStorage(s.ctx, nil)
+	lastBlockSynced, err := s.storage.GetLastBlock(s.ctx, nil)
 	if err != nil {
-		if errors.Is(err, pgstorage.ErrNotFound) {
+		if errors.Is(err, entities.ErrNotFound) {
 			//log.Infof("networkID: %d, error getting the latest ethereum block. No data stored. Setting genesis block. Error: %v", s.networkID, err)
-			lastBlockSynced = &L1Block{
+			lastBlockSynced = &entities.L1Block{
 				BlockNumber: max(0, s.genBlockNumber-1),
 			}
 			log.Infof("networkID: %d, error getting the latest block. No data stored. Using starting block: %d ",
@@ -215,7 +131,7 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 			var isSynced bool
 			if lastBlockSynced, isSynced, err = s.syncBlocks(lastBlockSynced); err != nil {
 				log.Warnf("networkID: %d, error syncing blocks: %v", s.networkID, err)
-				lastBlockSynced, err = s.getLastBlockFromStorage(s.ctx, nil)
+				lastBlockSynced, err = s.storage.GetLastBlock(s.ctx, nil)
 				if err != nil {
 					log.Fatalf("networkID: %d, error getting lastBlockSynced to resume the synchronization... Error: ", s.networkID, err)
 				}
@@ -310,8 +226,14 @@ func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, bool,
 		if err != nil {
 			return lastBlockSynced, false, err
 		}
+		// Check the latest finalized block in L1
+		finalizedBlockNumber, err := s.etherMan.GetFinalizedBlockNumber(s.ctx)
+		if err != nil {
+			log.Errorf("error getting finalized block number in L1. Error: %v", err)
+			return lastBlockSynced, false, err
+		}
 		blocks := convertArrayEthermanBlocks(ethBlocks)
-		err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, ethBlocks, order)
+		err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, ethBlocks, order, finalizedBlockNumber)
 		if err != nil {
 			return lastBlockSynced, false, err
 		}
@@ -344,7 +266,7 @@ func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, bool,
 				ParentHash:  fb.ParentHash(),
 				ReceivedAt:  time.Unix(int64(fb.Time()), 0),
 			}
-			err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, []etherman.Block{b}, order)
+			err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, []etherman.Block{b}, order, finalizedBlockNumber)
 			if err != nil {
 				return lastBlockSynced, false, err
 			}
@@ -359,7 +281,7 @@ func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, bool,
 // This function allows reset the state until an specific ethereum block
 func (s *SynchronizerImpl) resetState(blockNumber uint64) error {
 	log.Infof("NetworkID: %d. Reverting synchronization to block: %d", s.networkID, blockNumber)
-	dbTx, err := s.storage.BeginDBTransaction(s.ctx)
+	dbTx, err := s.state.BeginTransaction(s.ctx)
 	if err != nil {
 		log.Errorf("networkID: %d, Error starting a db transaction to reset the state. Error: %v", s.networkID, err)
 		return err
@@ -367,7 +289,7 @@ func (s *SynchronizerImpl) resetState(blockNumber uint64) error {
 	err = s.storage.Reset(s.ctx, blockNumber, dbTx)
 	if err != nil {
 		log.Errorf("networkID: %d, error resetting the state. Error: %v", s.networkID, err)
-		rollbackErr := s.storage.Rollback(s.ctx, dbTx)
+		rollbackErr := dbTx.Rollback(s.ctx)
 		if rollbackErr != nil {
 			log.Errorf("networkID: %d, error rolling back state to store block. BlockNumber: %d, rollbackErr: %v, error : %s",
 				s.networkID, blockNumber, rollbackErr, err.Error())
@@ -376,10 +298,10 @@ func (s *SynchronizerImpl) resetState(blockNumber uint64) error {
 		return err
 	}
 
-	err = s.storage.Commit(s.ctx, dbTx)
+	err = dbTx.Commit(s.ctx)
 	if err != nil {
 		log.Errorf("networkID: %d, error committing the resetted state. Error: %v", s.networkID, err)
-		rollbackErr := s.storage.Rollback(s.ctx, dbTx)
+		rollbackErr := dbTx.Rollback(s.ctx)
 		if rollbackErr != nil {
 			log.Errorf("networkID: %d, error rolling back state to store block. BlockNumber: %d, rollbackErr: %v, error : %s",
 				s.networkID, blockNumber, rollbackErr, err.Error())
@@ -427,16 +349,16 @@ func (s *SynchronizerImpl) checkReorg(latestBlock *L1Block) (*L1Block, error) {
 			depth++
 			log.Info("NetworkID: ", s.networkID, ", REORG: Looking for the latest correct block. Depth: ", depth)
 			// Reorg detected. Getting previous block
-			dbTx, err := s.storage.BeginDBTransaction(s.ctx)
+			dbTx, err := s.state.BeginTransaction(s.ctx)
 			if err != nil {
 				log.Errorf("networkID: %d, error creating db transaction to get previous blocks. Error: %v", s.networkID, err)
 				return nil, err
 			}
-			latestBlock, err = s.getPreviousBlockFromStorage(s.ctx, depth, dbTx)
-			errC := s.storage.Commit(s.ctx, dbTx)
+			latestBlock, err = s.storage.GetPreviousBlock(s.ctx, depth, dbTx)
+			errC := dbTx.Commit(s.ctx)
 			if errC != nil {
 				log.Errorf("networkID: %d, error committing dbTx, err: %v", s.networkID, errC)
-				rollbackErr := s.storage.Rollback(s.ctx, dbTx)
+				rollbackErr := dbTx.Rollback(s.ctx)
 				if rollbackErr != nil {
 					log.Errorf("networkID: %d, error rolling back state. RollbackErr: %v, err: %s",
 						s.networkID, rollbackErr, errC.Error())
@@ -444,7 +366,7 @@ func (s *SynchronizerImpl) checkReorg(latestBlock *L1Block) (*L1Block, error) {
 				}
 				return nil, errC
 			}
-			if errors.Is(err, pgstorage.ErrStorageNotFound) {
+			if errors.Is(err, entities.ErrStorageNotFound) {
 				log.Warnf("networkID: %d, error checking reorg: previous block not found in db: %v", s.networkID, err)
 				return &L1Block{}, nil
 			} else if err != nil {

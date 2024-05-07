@@ -1,19 +1,12 @@
 package synchronizer
 
 import (
-	"time"
-
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 )
 
-// L1Block struct
-type L1Block struct {
-	BlockNumber uint64
-	BlockHash   common.Hash
-	ParentHash  common.Hash
-	ReceivedAt  time.Time
-}
+type L1Block = entities.L1Block
+type stateTxType = entities.Tx
 
 func convertEthermanBlock(block *etherman.Block) *L1Block {
 	if block == nil {

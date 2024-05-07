@@ -22,3 +22,6 @@ go.work
 
 dist/
 .vscode/
+*.out
+*.json
+mocks/

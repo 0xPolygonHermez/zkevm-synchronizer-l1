@@ -1,0 +1,25 @@
+name: Test Database
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - update-external-dependencies
+      - 'release/**'
+      - 'feature/**'
+jobs:
+  test_db:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21.x
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Test Database
+        run: make test-db

@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/config"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/db/pgstorage"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage/pgstorage"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/jackc/pgx/v4"
 )
 
 var (
@@ -49,18 +48,48 @@ type SynchronizerL1InfoTreeQuerier interface {
 	// if not found returns ErrNotFound
 	GetL1InfoRootPerIndex(ctx context.Context, L1InfoTreeIndex uint32) (common.Hash, error)
 	GetL1InfoTreeLeaves(ctx context.Context, indexLeaves []uint32) (map[uint32]L1InfoTreeLeaf, error)
-	GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]L1InfoTreeLeaf, error)
+	GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash) ([]L1InfoTreeLeaf, error)
 }
 
 type SequencedBatches struct {
 	FromBatchNumber uint64
 	ToBatchNumber   uint64
 	L1BlockNumber   uint64
+	ForkID          uint64
 	Timestamp       time.Time
+	ReceivedAt      time.Time
 	L1InfoRoot      common.Hash
+	Source          string
 }
 type SynchronizerSequencedBatchesQuerier interface {
 	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64) (*SequencedBatches, error)
+}
+
+type VirtualBatch struct {
+	BatchNumber             uint64
+	ForkID                  uint64
+	BatchL2Data             []byte
+	VlogTxHash              common.Hash // Hash of tx inside L1Block that emit this log
+	Coinbase                common.Address
+	SequencerAddr           common.Address
+	SequenceFromBatchNumber uint64 // Linked to sync.sequenced_batches table
+	BlockNumber             uint64 // Linked to sync.block table
+	L1InfoRoot              *common.Hash
+	ReceivedAt              time.Time
+	BatchTimestamp          *time.Time // This is optional depend on ForkID
+	ExtraInfo               *string
+}
+
+type SynchronizerVirtualBatchesQuerier interface {
+	GetVirtualBatchByBatchNumber(ctx context.Context, batchNumber uint64) (*VirtualBatch, error)
+	GetLastestVirtualBatchNumber(ctx context.Context) (uint64, error)
+}
+
+// SynchronizerReorgSupporter is an interface that give support to the reorgs detected on L1
+type SynchronizerReorgSupporter interface {
+	// SetCallbackOnReorgDone sets a callback that will be called when the reorg is done
+	// to disable it you can set nil
+	SetCallbackOnReorgDone(callback func(newFirstL1BlockNumberValid uint64))
 }
 
 type Synchronizer interface {
@@ -68,6 +97,7 @@ type Synchronizer interface {
 	SynchornizerStatusQuerier
 	SynchronizerL1InfoTreeQuerier
 	SynchronizerSequencedBatchesQuerier
+	SynchronizerReorgSupporter
 }
 
 func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Synchronizer, error) {
@@ -102,12 +132,13 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 		log.Error("Error creating etherman", err)
 		return nil, err
 	}
-
-	forkidState := state.NewForkIdState(storage)
-	sync, err := NewSynchronizerImpl(ctx, storage, etherman, forkidState, config.Synchronizer)
+	state := state.NewState(storage)
+	//l1checker := l1_check_block.NewL1CheckBlockFeature(config.Synchronizer.L1BlockCheck, storage, forkidState)
+	sync, err := NewSynchronizerImpl(ctx, storage, state, etherman, config.Synchronizer)
 	if err != nil {
 		log.Error("Error creating synchronizer", err)
 		return nil, err
 	}
-	return sync, nil
+	syncAdapter := NewSynchronizerAdapter(NewSyncrhronizerQueries(state, storage, ctx), sync)
+	return syncAdapter, nil
 }

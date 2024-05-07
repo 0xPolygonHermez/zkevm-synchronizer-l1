@@ -6,9 +6,11 @@ import (
 	"fmt"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
-	"github.com/jackc/pgx/v4"
 )
+
+type dbTxType = entities.Tx
 
 var (
 	// ErrCantProcessThisEvent is used when the object is not found
@@ -52,7 +54,7 @@ func (p *L1EventProcessors) Get(forkId actions.ForkIdType, event etherman.EventO
 }
 
 // Process execute the event for the forkId and event
-func (p *L1EventProcessors) Process(ctx context.Context, forkId actions.ForkIdType, order etherman.Order, block *etherman.Block, dbTx pgx.Tx) error {
+func (p *L1EventProcessors) Process(ctx context.Context, forkId actions.ForkIdType, order etherman.Order, block *etherman.Block, dbTx dbTxType) error {
 	processor := p.Get(forkId, order.Name)
 	if processor == nil {
 		var strBlockNumber string
@@ -63,5 +65,5 @@ func (p *L1EventProcessors) Process(ctx context.Context, forkId actions.ForkIdTy
 		}
 		return fmt.Errorf("can't process blocknumber:%s event:%s, forkid:%d because: %w", strBlockNumber, order.Name, forkId, ErrCantProcessThisEvent)
 	}
-	return processor.Process(ctx, order, block, dbTx)
+	return processor.Process(ctx, 0, order, block, dbTx)
 }
