@@ -98,6 +98,7 @@ type Synchronizer interface {
 	SynchronizerL1InfoTreeQuerier
 	SynchronizerSequencedBatchesQuerier
 	SynchronizerReorgSupporter
+	SynchronizerVirtualBatchesQuerier
 }
 
 func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Synchronizer, error) {
