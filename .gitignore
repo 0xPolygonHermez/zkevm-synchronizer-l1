@@ -24,4 +24,3 @@ dist/
 .vscode/
 *.out
 *.json
-mocks/
