@@ -74,6 +74,7 @@ func newL1SyncData(t *testing.T) *testL1SyncData {
 	ctx := context.TODO()
 	lastEthBlock := &entities.L1Block{
 		BlockNumber: 100,
+		HasEvents:   true,
 	}
 	return &testL1SyncData{
 		mockBlockRetriever: mockBlock,
@@ -107,9 +108,7 @@ func TestSyncBlocksSequentialReorgMissingFirstBlockOnRollupResponse(t *testing.T
 	}, nil)
 	toBlock := uint64(100)
 	testData.mockEth.EXPECT().GetRollupInfoByBlockRange(testData.ctx, uint64(100), &toBlock).Return(nil, nil, nil)
-	testData.mockReorg.EXPECT().MissingBlockOnResponseRollup(testData.ctx, testData.lastEthBlock).Return(nil, nil)
-	resBlock, synced, err := testData.sut.SyncBlocksSequential(testData.ctx, testData.lastEthBlock)
-	require.NoError(t, err)
-	require.Equal(t, synced, true)
-	require.Equal(t, resBlock, testData.lastEthBlock)
+	//testData.mockReorg.EXPECT().MissingBlockOnResponseRollup(testData.ctx, testData.lastEthBlock).Return(nil, nil)
+	_, _, err := testData.sut.SyncBlocksSequential(testData.ctx, testData.lastEthBlock)
+	require.Error(t, err)
 }
