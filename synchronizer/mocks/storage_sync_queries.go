@@ -237,9 +237,9 @@ func (_c *storageSyncQueries_GetLastestVirtualBatchNumber_Call) RunAndReturn(run
 	return _c
 }
 
-// GetPreviousBlock provides a mock function with given fields: ctx, offset, dbTx
-func (_m *storageSyncQueries) GetPreviousBlock(ctx context.Context, offset uint64, dbTx entities.Tx) (*entities.L1Block, error) {
-	ret := _m.Called(ctx, offset, dbTx)
+// GetPreviousBlock provides a mock function with given fields: ctx, offset, fromBlockNumber, dbTx
+func (_m *storageSyncQueries) GetPreviousBlock(ctx context.Context, offset uint64, fromBlockNumber *uint64, dbTx entities.Tx) (*entities.L1Block, error) {
+	ret := _m.Called(ctx, offset, fromBlockNumber, dbTx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetPreviousBlock")
@@ -247,19 +247,19 @@ func (_m *storageSyncQueries) GetPreviousBlock(ctx context.Context, offset uint6
 
 	var r0 *entities.L1Block
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) (*entities.L1Block, error)); ok {
-		return rf(ctx, offset, dbTx)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64, entities.Tx) (*entities.L1Block, error)); ok {
+		return rf(ctx, offset, fromBlockNumber, dbTx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) *entities.L1Block); ok {
-		r0 = rf(ctx, offset, dbTx)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64, entities.Tx) *entities.L1Block); ok {
+		r0 = rf(ctx, offset, fromBlockNumber, dbTx)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*entities.L1Block)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, entities.Tx) error); ok {
-		r1 = rf(ctx, offset, dbTx)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, *uint64, entities.Tx) error); ok {
+		r1 = rf(ctx, offset, fromBlockNumber, dbTx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -275,14 +275,15 @@ type storageSyncQueries_GetPreviousBlock_Call struct {
 // GetPreviousBlock is a helper method to define mock.On call
 //   - ctx context.Context
 //   - offset uint64
+//   - fromBlockNumber *uint64
 //   - dbTx entities.Tx
-func (_e *storageSyncQueries_Expecter) GetPreviousBlock(ctx interface{}, offset interface{}, dbTx interface{}) *storageSyncQueries_GetPreviousBlock_Call {
-	return &storageSyncQueries_GetPreviousBlock_Call{Call: _e.mock.On("GetPreviousBlock", ctx, offset, dbTx)}
+func (_e *storageSyncQueries_Expecter) GetPreviousBlock(ctx interface{}, offset interface{}, fromBlockNumber interface{}, dbTx interface{}) *storageSyncQueries_GetPreviousBlock_Call {
+	return &storageSyncQueries_GetPreviousBlock_Call{Call: _e.mock.On("GetPreviousBlock", ctx, offset, fromBlockNumber, dbTx)}
 }
 
-func (_c *storageSyncQueries_GetPreviousBlock_Call) Run(run func(ctx context.Context, offset uint64, dbTx entities.Tx)) *storageSyncQueries_GetPreviousBlock_Call {
+func (_c *storageSyncQueries_GetPreviousBlock_Call) Run(run func(ctx context.Context, offset uint64, fromBlockNumber *uint64, dbTx entities.Tx)) *storageSyncQueries_GetPreviousBlock_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
+		run(args[0].(context.Context), args[1].(uint64), args[2].(*uint64), args[3].(entities.Tx))
 	})
 	return _c
 }
@@ -292,7 +293,7 @@ func (_c *storageSyncQueries_GetPreviousBlock_Call) Return(_a0 *entities.L1Block
 	return _c
 }
 
-func (_c *storageSyncQueries_GetPreviousBlock_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) (*entities.L1Block, error)) *storageSyncQueries_GetPreviousBlock_Call {
+func (_c *storageSyncQueries_GetPreviousBlock_Call) RunAndReturn(run func(context.Context, uint64, *uint64, entities.Tx) (*entities.L1Block, error)) *storageSyncQueries_GetPreviousBlock_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -30,8 +30,15 @@ func (p *PostgresStorage) GetBlockByNumber(ctx context.Context, blockNumber uint
 }
 
 // GetPreviousBlock gets the offset previous L1 block respect to latest.
-func (p *PostgresStorage) GetPreviousBlock(ctx context.Context, offset uint64, dbTx dbTxType) (*L1Block, error) {
-	const getPreviousBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at,checked,has_events,sync_version FROM sync.block ORDER BY block_num DESC LIMIT 1 OFFSET $1"
+// 0 is latest or fromBlockNumber
+// 1 is the previous block to latest or to fromBlockNumber
+// so on...
+func (p *PostgresStorage) GetPreviousBlock(ctx context.Context, offset uint64, fromBlockNumber *uint64, dbTx dbTxType) (*L1Block, error) {
+	whereClause := ""
+	if fromBlockNumber != nil {
+		whereClause = "WHERE block_num <= " + fmt.Sprintf("%d", *fromBlockNumber)
+	}
+	getPreviousBlockSQL := "SELECT block_num, block_hash, parent_hash, received_at,checked,has_events,sync_version FROM sync.block " + whereClause + " ORDER BY block_num DESC LIMIT 1 OFFSET $1"
 	return p.queryBlock(ctx, fmt.Sprintf("GetPreviousBlock %d", offset), getPreviousBlockSQL, dbTx, offset)
 }
 

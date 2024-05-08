@@ -1,8 +1,5 @@
 package model
 
-//go:generate bash -c "rm -Rf mocks"
-//go:generate mockery --all --case snake --dir . --output ./mocks --outpkg mock_model --disable-version-string --with-expecter
-
 import (
 	"context"
 	"errors"

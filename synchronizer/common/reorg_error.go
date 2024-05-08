@@ -4,8 +4,7 @@ import "fmt"
 
 // ReorgError is an error that is raised when a reorg is detected
 type ReorgError struct {
-	// BlockNumber is the block number that caused the reorg
-	BlockNumber uint64
+	BlockNumber uint64 // BlockNumber is the block number that caused the reorg (discrepancy)
 	Err         error
 }
 

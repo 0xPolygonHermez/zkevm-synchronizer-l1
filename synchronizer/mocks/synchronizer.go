@@ -143,6 +143,62 @@ func (_c *Synchronizer_GetL1InfoTreeLeaves_Call) RunAndReturn(run func(context.C
 	return _c
 }
 
+// GetLastestVirtualBatchNumber provides a mock function with given fields: ctx
+func (_m *Synchronizer) GetLastestVirtualBatchNumber(ctx context.Context) (uint64, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLastestVirtualBatchNumber")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Synchronizer_GetLastestVirtualBatchNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLastestVirtualBatchNumber'
+type Synchronizer_GetLastestVirtualBatchNumber_Call struct {
+	*mock.Call
+}
+
+// GetLastestVirtualBatchNumber is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *Synchronizer_Expecter) GetLastestVirtualBatchNumber(ctx interface{}) *Synchronizer_GetLastestVirtualBatchNumber_Call {
+	return &Synchronizer_GetLastestVirtualBatchNumber_Call{Call: _e.mock.On("GetLastestVirtualBatchNumber", ctx)}
+}
+
+func (_c *Synchronizer_GetLastestVirtualBatchNumber_Call) Run(run func(ctx context.Context)) *Synchronizer_GetLastestVirtualBatchNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *Synchronizer_GetLastestVirtualBatchNumber_Call) Return(_a0 uint64, _a1 error) *Synchronizer_GetLastestVirtualBatchNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Synchronizer_GetLastestVirtualBatchNumber_Call) RunAndReturn(run func(context.Context) (uint64, error)) *Synchronizer_GetLastestVirtualBatchNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLeafsByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot
 func (_m *Synchronizer) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash) ([]synchronizer.L1InfoTreeLeaf, error) {
 	ret := _m.Called(ctx, l1InfoRoot)
@@ -257,6 +313,65 @@ func (_c *Synchronizer_GetSequenceByBatchNumber_Call) Return(_a0 *synchronizer.S
 }
 
 func (_c *Synchronizer_GetSequenceByBatchNumber_Call) RunAndReturn(run func(context.Context, uint64) (*synchronizer.SequencedBatches, error)) *Synchronizer_GetSequenceByBatchNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetVirtualBatchByBatchNumber provides a mock function with given fields: ctx, batchNumber
+func (_m *Synchronizer) GetVirtualBatchByBatchNumber(ctx context.Context, batchNumber uint64) (*synchronizer.VirtualBatch, error) {
+	ret := _m.Called(ctx, batchNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetVirtualBatchByBatchNumber")
+	}
+
+	var r0 *synchronizer.VirtualBatch
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) (*synchronizer.VirtualBatch, error)); ok {
+		return rf(ctx, batchNumber)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) *synchronizer.VirtualBatch); ok {
+		r0 = rf(ctx, batchNumber)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*synchronizer.VirtualBatch)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = rf(ctx, batchNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Synchronizer_GetVirtualBatchByBatchNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetVirtualBatchByBatchNumber'
+type Synchronizer_GetVirtualBatchByBatchNumber_Call struct {
+	*mock.Call
+}
+
+// GetVirtualBatchByBatchNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - batchNumber uint64
+func (_e *Synchronizer_Expecter) GetVirtualBatchByBatchNumber(ctx interface{}, batchNumber interface{}) *Synchronizer_GetVirtualBatchByBatchNumber_Call {
+	return &Synchronizer_GetVirtualBatchByBatchNumber_Call{Call: _e.mock.On("GetVirtualBatchByBatchNumber", ctx, batchNumber)}
+}
+
+func (_c *Synchronizer_GetVirtualBatchByBatchNumber_Call) Run(run func(ctx context.Context, batchNumber uint64)) *Synchronizer_GetVirtualBatchByBatchNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64))
+	})
+	return _c
+}
+
+func (_c *Synchronizer_GetVirtualBatchByBatchNumber_Call) Return(_a0 *synchronizer.VirtualBatch, _a1 error) *Synchronizer_GetVirtualBatchByBatchNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Synchronizer_GetVirtualBatchByBatchNumber_Call) RunAndReturn(run func(context.Context, uint64) (*synchronizer.VirtualBatch, error)) *Synchronizer_GetVirtualBatchByBatchNumber_Call {
 	_c.Call.Return(run)
 	return _c
 }

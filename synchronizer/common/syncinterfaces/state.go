@@ -34,4 +34,5 @@ type StateInterface interface {
 	StateForkidQuerier
 	StateTxProvider
 	stateOnSequencedBatchesManager
+	StorageBlockReaderInterface
 }

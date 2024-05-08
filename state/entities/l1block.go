@@ -43,3 +43,7 @@ func NewL1BlockFromEthermanBlock(block *etherman.Block, isFinalized bool) *L1Blo
 		HasEvents:   block.HasEvents(),
 	}
 }
+
+func IsBlockFinalized(blockNumber uint64, finalizedBlockNumber uint64) bool {
+	return blockNumber <= finalizedBlockNumber
+}

@@ -249,9 +249,9 @@ func (_c *BlockStorer_GetLastBlock_Call) RunAndReturn(run func(context.Context, 
 	return _c
 }
 
-// GetPreviousBlock provides a mock function with given fields: ctx, offset, dbTx
-func (_m *BlockStorer) GetPreviousBlock(ctx context.Context, offset uint64, dbTx entities.Tx) (*entities.L1Block, error) {
-	ret := _m.Called(ctx, offset, dbTx)
+// GetPreviousBlock provides a mock function with given fields: ctx, offset, fromBlockNumber, dbTx
+func (_m *BlockStorer) GetPreviousBlock(ctx context.Context, offset uint64, fromBlockNumber *uint64, dbTx entities.Tx) (*entities.L1Block, error) {
+	ret := _m.Called(ctx, offset, fromBlockNumber, dbTx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetPreviousBlock")
@@ -259,19 +259,19 @@ func (_m *BlockStorer) GetPreviousBlock(ctx context.Context, offset uint64, dbTx
 
 	var r0 *entities.L1Block
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) (*entities.L1Block, error)); ok {
-		return rf(ctx, offset, dbTx)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64, entities.Tx) (*entities.L1Block, error)); ok {
+		return rf(ctx, offset, fromBlockNumber, dbTx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) *entities.L1Block); ok {
-		r0 = rf(ctx, offset, dbTx)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64, entities.Tx) *entities.L1Block); ok {
+		r0 = rf(ctx, offset, fromBlockNumber, dbTx)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*entities.L1Block)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, entities.Tx) error); ok {
-		r1 = rf(ctx, offset, dbTx)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, *uint64, entities.Tx) error); ok {
+		r1 = rf(ctx, offset, fromBlockNumber, dbTx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -287,14 +287,15 @@ type BlockStorer_GetPreviousBlock_Call struct {
 // GetPreviousBlock is a helper method to define mock.On call
 //   - ctx context.Context
 //   - offset uint64
+//   - fromBlockNumber *uint64
 //   - dbTx entities.Tx
-func (_e *BlockStorer_Expecter) GetPreviousBlock(ctx interface{}, offset interface{}, dbTx interface{}) *BlockStorer_GetPreviousBlock_Call {
-	return &BlockStorer_GetPreviousBlock_Call{Call: _e.mock.On("GetPreviousBlock", ctx, offset, dbTx)}
+func (_e *BlockStorer_Expecter) GetPreviousBlock(ctx interface{}, offset interface{}, fromBlockNumber interface{}, dbTx interface{}) *BlockStorer_GetPreviousBlock_Call {
+	return &BlockStorer_GetPreviousBlock_Call{Call: _e.mock.On("GetPreviousBlock", ctx, offset, fromBlockNumber, dbTx)}
 }
 
-func (_c *BlockStorer_GetPreviousBlock_Call) Run(run func(ctx context.Context, offset uint64, dbTx entities.Tx)) *BlockStorer_GetPreviousBlock_Call {
+func (_c *BlockStorer_GetPreviousBlock_Call) Run(run func(ctx context.Context, offset uint64, fromBlockNumber *uint64, dbTx entities.Tx)) *BlockStorer_GetPreviousBlock_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
+		run(args[0].(context.Context), args[1].(uint64), args[2].(*uint64), args[3].(entities.Tx))
 	})
 	return _c
 }
@@ -304,7 +305,7 @@ func (_c *BlockStorer_GetPreviousBlock_Call) Return(_a0 *entities.L1Block, _a1 e
 	return _c
 }
 
-func (_c *BlockStorer_GetPreviousBlock_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) (*entities.L1Block, error)) *BlockStorer_GetPreviousBlock_Call {
+func (_c *BlockStorer_GetPreviousBlock_Call) RunAndReturn(run func(context.Context, uint64, *uint64, entities.Tx) (*entities.L1Block, error)) *BlockStorer_GetPreviousBlock_Call {
 	_c.Call.Return(run)
 	return _c
 }

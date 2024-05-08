@@ -23,34 +23,41 @@ func (_m *L1BlockCheckerIntegrator) EXPECT() *L1BlockCheckerIntegrator_Expecter 
 	return &L1BlockCheckerIntegrator_Expecter{mock: &_m.Mock}
 }
 
-// CheckReorgWrapper provides a mock function with given fields: ctx, reorgFirstBlockOk, errReportedByReorgFunc
-func (_m *L1BlockCheckerIntegrator) CheckReorgWrapper(ctx context.Context, reorgFirstBlockOk *entities.L1Block, errReportedByReorgFunc error) (*entities.L1Block, error) {
-	ret := _m.Called(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
+// CheckReorgWrapper provides a mock function with given fields: ctx, reorgFirstBlockOk, badBlockNumber, errReportedByReorgFunc
+func (_m *L1BlockCheckerIntegrator) CheckReorgWrapper(ctx context.Context, reorgFirstBlockOk *entities.L1Block, badBlockNumber uint64, errReportedByReorgFunc error) (*entities.L1Block, uint64, error) {
+	ret := _m.Called(ctx, reorgFirstBlockOk, badBlockNumber, errReportedByReorgFunc)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CheckReorgWrapper")
 	}
 
 	var r0 *entities.L1Block
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *entities.L1Block, error) (*entities.L1Block, error)); ok {
-		return rf(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
+	var r1 uint64
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, *entities.L1Block, uint64, error) (*entities.L1Block, uint64, error)); ok {
+		return rf(ctx, reorgFirstBlockOk, badBlockNumber, errReportedByReorgFunc)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *entities.L1Block, error) *entities.L1Block); ok {
-		r0 = rf(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
+	if rf, ok := ret.Get(0).(func(context.Context, *entities.L1Block, uint64, error) *entities.L1Block); ok {
+		r0 = rf(ctx, reorgFirstBlockOk, badBlockNumber, errReportedByReorgFunc)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*entities.L1Block)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *entities.L1Block, error) error); ok {
-		r1 = rf(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
+	if rf, ok := ret.Get(1).(func(context.Context, *entities.L1Block, uint64, error) uint64); ok {
+		r1 = rf(ctx, reorgFirstBlockOk, badBlockNumber, errReportedByReorgFunc)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(uint64)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, *entities.L1Block, uint64, error) error); ok {
+		r2 = rf(ctx, reorgFirstBlockOk, badBlockNumber, errReportedByReorgFunc)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // L1BlockCheckerIntegrator_CheckReorgWrapper_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CheckReorgWrapper'
@@ -61,24 +68,25 @@ type L1BlockCheckerIntegrator_CheckReorgWrapper_Call struct {
 // CheckReorgWrapper is a helper method to define mock.On call
 //   - ctx context.Context
 //   - reorgFirstBlockOk *entities.L1Block
+//   - badBlockNumber uint64
 //   - errReportedByReorgFunc error
-func (_e *L1BlockCheckerIntegrator_Expecter) CheckReorgWrapper(ctx interface{}, reorgFirstBlockOk interface{}, errReportedByReorgFunc interface{}) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
-	return &L1BlockCheckerIntegrator_CheckReorgWrapper_Call{Call: _e.mock.On("CheckReorgWrapper", ctx, reorgFirstBlockOk, errReportedByReorgFunc)}
+func (_e *L1BlockCheckerIntegrator_Expecter) CheckReorgWrapper(ctx interface{}, reorgFirstBlockOk interface{}, badBlockNumber interface{}, errReportedByReorgFunc interface{}) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
+	return &L1BlockCheckerIntegrator_CheckReorgWrapper_Call{Call: _e.mock.On("CheckReorgWrapper", ctx, reorgFirstBlockOk, badBlockNumber, errReportedByReorgFunc)}
 }
 
-func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) Run(run func(ctx context.Context, reorgFirstBlockOk *entities.L1Block, errReportedByReorgFunc error)) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
+func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) Run(run func(ctx context.Context, reorgFirstBlockOk *entities.L1Block, badBlockNumber uint64, errReportedByReorgFunc error)) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*entities.L1Block), args[2].(error))
+		run(args[0].(context.Context), args[1].(*entities.L1Block), args[2].(uint64), args[3].(error))
 	})
 	return _c
 }
 
-func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) Return(_a0 *entities.L1Block, _a1 error) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) Return(_a0 *entities.L1Block, _a1 uint64, _a2 error) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
+	_c.Call.Return(_a0, _a1, _a2)
 	return _c
 }
 
-func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) RunAndReturn(run func(context.Context, *entities.L1Block, error) (*entities.L1Block, error)) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
+func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) RunAndReturn(run func(context.Context, *entities.L1Block, uint64, error) (*entities.L1Block, uint64, error)) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -53,7 +53,7 @@ func (s *BlockRangeProcess) ProcessBlockRange(ctx context.Context, blocks []ethe
 }
 
 func isBlockFinalized(blockNumber uint64, finalizedBlockNumber uint64) bool {
-	return blockNumber <= finalizedBlockNumber
+	return entities.IsBlockFinalized(blockNumber, finalizedBlockNumber)
 }
 
 // ProcessBlockRange process the L1 events and stores the information in the db

@@ -15,7 +15,7 @@ type StorageBlockWriterInterface interface {
 type StorageBlockReaderInterface interface {
 	GetLastBlock(ctx context.Context, dbTx stateTxType) (*entities.L1Block, error)
 	AddBlock(ctx context.Context, block *entities.L1Block, dbTx stateTxType) error
-	GetPreviousBlock(ctx context.Context, offset uint64, dbTx stateTxType) (*entities.L1Block, error)
+	GetPreviousBlock(ctx context.Context, offset uint64, fromBlockNumber *uint64, dbTx stateTxType) (*entities.L1Block, error)
 }
 
 type StorageResetInterface interface {
