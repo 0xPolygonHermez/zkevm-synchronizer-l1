@@ -99,51 +99,12 @@ install-linter: ## Installs the linter
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.54.2
 
 .PHONY: lint
-lint: generate-mocks ## Runs the linter
+lint:  ## Runs the linter
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/golangci-lint run --timeout=5m
 
-$(VENV_PYTHON):
-	rm -rf $(VENV)
-	$(SYSTEM_PYTHON) -m venv $(VENV)
 
-venv: $(VENV_PYTHON)
 
-# https://stackoverflow.com/questions/24736146/how-to-use-virtualenv-in-makefile
-.PHONY: install-config-doc-gen
-$(GENERATE_SCHEMA_DOC): $(VENV_PYTHON)
-	$(PYTHON) -m pip install --upgrade pip
-	$(PYTHON) -m pip install json-schema-for-humans==0.47
 
-.PHONY: config-doc-gen
-config-doc-gen: config-doc-node config-doc-custom_network ## Generate config file's json-schema for node and custom_network and documentation
-
-.PHONY: config-doc-node
-config-doc-node: $(GENERATE_SCHEMA_DOC) ## Generate config file's json-schema for node and documentation
-	go run ./cmd generate-json-schema --config-file=node --output=$(GENERATE_DOC_PATH)node-config-schema.json
-	$(GENERATE_SCHEMA_DOC) --config show_breadcrumbs=true \
-		--config footer_show_time=false \
-		--config expand_buttons=true \
-		--config custom_template_path=$(GENERATE_DOC_TEMPLATES_PATH)/js/base.html \
-		$(GENERATE_DOC_PATH)node-config-schema.json \
-		$(GENERATE_DOC_PATH)node-config-doc.html
-	$(GENERATE_SCHEMA_DOC)  --config custom_template_path=$(GENERATE_DOC_TEMPLATES_PATH)/md/base.md \
-		--config footer_show_time=false \
-		$(GENERATE_DOC_PATH)node-config-schema.json \
-		$(GENERATE_DOC_PATH)node-config-doc.md
-
-.PHONY: config-doc-custom_network
-config-doc-custom_network: $(GENERATE_SCHEMA_DOC) ## Generate config file's json-schema for custom_network and documentation
-	go run ./cmd generate-json-schema --config-file=custom_network --output=$(GENERATE_DOC_PATH)custom_network-config-schema.json
-	$(GENERATE_SCHEMA_DOC) --config show_breadcrumbs=true --config footer_show_time=false \
-		--config expand_buttons=true \
-		--config custom_template_path=$(GENERATE_DOC_TEMPLATES_PATH)/js/base.html \
-		$(GENERATE_DOC_PATH)custom_network-config-schema.json \
-		$(GENERATE_DOC_PATH)custom_network-config-doc.html
-	$(GENERATE_SCHEMA_DOC)  --config custom_template_path=$(GENERATE_DOC_TEMPLATES_PATH)/md/base.md \
-		--config footer_show_time=false \
-		--config example_format=JSON \
-		$(GENERATE_DOC_PATH)custom_network-config-schema.json \
-		$(GENERATE_DOC_PATH)custom_network-config-doc.md
 
 .PHONY: update-external-dependencies
 update-external-dependencies: ## Updates external dependencies like images, test vectors or proto files
@@ -168,22 +129,22 @@ clean-mocks:
 	(cd test; make clean-mocks)
 
 .PHONY: unittest
-unittest: generate-mocks ## Runs the unittest
+unittest:  ## Runs the unittest
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage_unittest.out  -coverpkg ./... -timeout 70s ./... 
 
 .PHONY: unittest-report
-unittest-report: generate-mocks ## Runs the unittest and generate json report
+unittest-report:  ## Runs the unittest and generate json report
 	rm report.json || true
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -short -race -failfast -covermode=atomic -coverprofile=./coverage_unittest.out  -coverpkg ./... -timeout 70s ./... -json > report_unittest.json
 
 .PHONY: test-db
-test-db: generate-mocks ## Runs the tests-db
+test-db:  ## Runs the tests-db
 	(cd test; make run-dbs)
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./state/... 
 	(cd test; make stop)
 
 .PHONY: test-db-report
-test-db-report: generate-mocks ## Runs the tests-db generate json report
+test-db-report: ## Runs the tests-db generate json report
 	(cd test; make run-dbs)
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test  -race -failfast -covermode=atomic  -coverprofile=./coverage_db.out -timeout 180s ./state/... -json | tee report_db.json
 	(cd test; make stop)

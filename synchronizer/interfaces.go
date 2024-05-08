@@ -1,5 +1,8 @@
 package synchronizer
 
+//go:generate bash -c "rm -Rf mocks"
+//go:generate mockery --all --case snake --dir . --output ./mocks --outpkg mock_synchronizer --disable-version-string --with-expecter
+//go:generate mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../synchronizer/mocks --structname=DbTxMock --filename=mock_dbtx.go --outpkg mock_synchronizer --disable-version-string --with-expecter
 import (
 	"context"
 	"math/big"
