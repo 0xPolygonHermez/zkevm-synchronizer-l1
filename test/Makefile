@@ -114,12 +114,13 @@ clean-mocks:
 COMMON_MOCKERY_PARAMS=--disable-version-string --with-expecter
 .PHONY: generate-mocks
 generate-mocks: clean-mocks install-mockery
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/ --output ../synchronizer/mocks --outpkg mock_synchronizer ${COMMON_MOCKERY_PARAMS}
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../synchronizer/mocks --structname=DbTxMock --filename=mock_dbtx.go --outpkg mock_synchronizer ${COMMON_MOCKERY_PARAMS}
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../state/ --output ../state/mocks --outpkg mock_state ${COMMON_MOCKERY_PARAMS}
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/l1_check_block --output ../synchronizer/l1_check_block/mocks --outpkg mock_l1_check_block ${COMMON_MOCKERY_PARAMS}
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../state/entities --output ../state/entities/mocks --outpkg mock_entities ${COMMON_MOCKERY_PARAMS}
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../state/model --output ../state/model/mocks --outpkg mock_model ${COMMON_MOCKERY_PARAMS}
+	go generate ../...
+	#export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/ --output ../synchronizer/mocks --outpkg mock_synchronizer ${COMMON_MOCKERY_PARAMS}
+	#export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../synchronizer/mocks --structname=DbTxMock --filename=mock_dbtx.go --outpkg mock_synchronizer ${COMMON_MOCKERY_PARAMS}
+	#export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../state/ --output ../state/mocks --outpkg mock_state ${COMMON_MOCKERY_PARAMS}
+	#export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/l1_check_block --output ../synchronizer/l1_check_block/mocks --outpkg mock_l1_check_block ${COMMON_MOCKERY_PARAMS}
+	#export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../state/entities --output ../state/entities/mocks --outpkg mock_entities ${COMMON_MOCKERY_PARAMS}
+	#export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../state/model --output ../state/model/mocks --outpkg mock_model ${COMMON_MOCKERY_PARAMS}
 	
 
 ## Help display.
