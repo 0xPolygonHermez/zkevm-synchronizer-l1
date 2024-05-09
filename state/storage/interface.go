@@ -16,6 +16,7 @@ type storageTxType = entities.Tx
 
 type BlockStorer interface {
 	AddBlock(ctx context.Context, block *L1Block, dbTx storageTxType) error
+	UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx storageTxType) error
 	GetLastBlock(ctx context.Context, dbTx storageTxType) (*L1Block, error)
 	GetBlockByNumber(ctx context.Context, blockNumber uint64, dbTx storageTxType) (*L1Block, error)
 	GetPreviousBlock(ctx context.Context, offset uint64, fromBlockNumber *uint64, dbTx storageTxType) (*L1Block, error)

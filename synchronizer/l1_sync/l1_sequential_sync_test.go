@@ -67,7 +67,7 @@ func newL1SyncData(t *testing.T) *testL1SyncData {
 	mockState := mock_l1sync.NewStateL1SeqInterface(t)
 	mockBlockProcessor := mock_l1sync.NewBlockRangeProcessor(t)
 	mockReorg := mock_l1sync.NewReorgManager(t)
-	sut := l1sync.NewL1SequentialSync(mockBlock, mockEth, mockState, mockBlockProcessor, mockReorg, l1sync.L1SequentialSyncConfig{
+	sut := l1sync.NewL1SequentialSync(mockBlock, mockEth, mockState, mockBlockProcessor, mockReorg, nil, l1sync.L1SequentialSyncConfig{
 		SyncChunkSize:      100,
 		GenesisBlockNumber: 123,
 	})

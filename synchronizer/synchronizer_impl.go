@@ -78,16 +78,18 @@ func NewSynchronizerImpl(
 		log.Infof("First block from the blockchain: %d (ETROG)", firstBlock)
 		sync.genBlockNumber = firstBlock
 	}
-	//TODO: Add blockRetriever
-	// TODO: Add Reorg object
+	finalizedBlockNumberFetcher := l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.FinalizedBlockNumber, 0)
 	reorgManager := l1sync.NewCheckReorgManager(ctx, ethMan, state, nil, sync.genBlockNumber)
 	blocksRetriever := l1sync.NewBlockPointsRetriever(
-		l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.FinalizedBlockNumber, 0),
+		finalizedBlockNumberFetcher,
 		l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.SafeBlockNumber, 0),
 		ethMan,
 	)
+	checkl1blocks := l1_check_block.NewCheckL1BlockHash(ethMan, storage, finalizedBlockNumberFetcher)
 
-	sync.l1Sync = l1sync.NewL1SequentialSync(blocksRetriever, ethMan, state, sync.blockRangeProcessor, reorgManager,
+	sync.l1Sync = l1sync.NewL1SequentialSync(blocksRetriever, ethMan, state,
+		sync.blockRangeProcessor, reorgManager,
+		checkl1blocks,
 		l1sync.L1SequentialSyncConfig{
 			SyncChunkSize:                 cfg.SyncChunkSize,
 			GenesisBlockNumber:            sync.genBlockNumber,

@@ -17,6 +17,19 @@ func (p *PostgresStorage) AddBlock(ctx context.Context, block *L1Block, dbTx dbT
 	return translatePgxError(err, fmt.Sprintf("AddBlock %d", block.Key()))
 }
 
+// UpdateCheckedBlockByNumber update checked flag for a block
+func (p *PostgresStorage) UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx dbTxType) error {
+	const query = `
+    UPDATE sync.block
+       SET checked = $1 WHERE block_num = $2`
+
+	e := p.getExecQuerier(getPgTx(dbTx))
+	_, err := e.Exec(ctx, query, newCheckedStatus, blockNumber)
+	return err
+}
+
+// -- READ FUNCTIONS ---------------------------------
+
 // GetLastBlock returns the last L1 block.
 func (p *PostgresStorage) GetLastBlock(ctx context.Context, dbTx dbTxType) (*L1Block, error) {
 	const getLastBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at,checked, has_events,sync_version FROM sync.block ORDER BY block_num DESC LIMIT 1"
@@ -44,7 +57,7 @@ func (p *PostgresStorage) GetPreviousBlock(ctx context.Context, offset uint64, f
 
 // GetFirstUncheckedBlock returns the first L1 block that has not been checked from a given block number.
 func (p *PostgresStorage) GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx dbTxType) (*L1Block, error) {
-	const getLastBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at, has_events,checked FROM sync.block  WHERE block_num>=$1 AND  checked=false ORDER BY block_num LIMIT 1"
+	const getLastBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at,checked,has_events,sync_version FROM sync.block  WHERE block_num>=$1 AND  checked=false ORDER BY block_num LIMIT 1"
 	return p.queryBlock(ctx, "GetFirstUncheckedBlock", getLastBlockSQL, dbTx, fromBlockNumber)
 }
 
@@ -53,6 +66,7 @@ func (p *PostgresStorage) GetUncheckedBlocks(ctx context.Context, fromBlockNumbe
 	const getUncheckedBlocksSQL = "SELECT block_num, block_hash, parent_hash, received_at,has_events, checked FROM sync.block WHERE block_num>=$1 AND block_num<=$2 AND checked=false ORDER BY block_num"
 	return p.queryBlocks(ctx, "GetUncheckedBlocks", getUncheckedBlocksSQL, getPgTx(dbTx), fromBlockNumber, toBlockNumber)
 }
+
 func (p *PostgresStorage) queryBlocks(ctx context.Context, desc string, sql string, dbTx pgx.Tx, args ...interface{}) (*[]L1Block, error) {
 	q := p.getExecQuerier(dbTx)
 	rows, err := q.Query(ctx, sql, args...)

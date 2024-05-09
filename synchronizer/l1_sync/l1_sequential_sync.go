@@ -40,6 +40,9 @@ type ReorgManager interface {
 	CheckReorg(latestBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, uint64, error)
 }
 
+type BlockChecker interface {
+	Step(ctx context.Context) error
+}
 type L1SequentialSync struct {
 	blockPointsRetriever BlockPointsRetriever
 	etherMan             EthermanInterface
@@ -48,6 +51,7 @@ type L1SequentialSync struct {
 	blockRangeProcessor BlockRangeProcessor
 	reorgManager        ReorgManager
 	cfg                 L1SequentialSyncConfig
+	blockChecker        BlockChecker
 }
 
 type L1SequentialSyncConfig struct {
@@ -61,6 +65,7 @@ func NewL1SequentialSync(blockPointsRetriever BlockPointsRetriever,
 	state StateL1SeqInterface,
 	blockRangeProcessor BlockRangeProcessor,
 	reorgManager ReorgManager,
+	blockChecker BlockChecker,
 	cfg L1SequentialSyncConfig) *L1SequentialSync {
 	return &L1SequentialSync{
 		blockPointsRetriever: blockPointsRetriever,
@@ -68,6 +73,7 @@ func NewL1SequentialSync(blockPointsRetriever BlockPointsRetriever,
 		state:                state,
 		blockRangeProcessor:  blockRangeProcessor,
 		reorgManager:         reorgManager,
+		blockChecker:         blockChecker,
 		cfg:                  cfg,
 	}
 }
@@ -108,6 +114,14 @@ func (s *BlockPointsRetrieverImplementation) GetL1BlockPoints(ctx context.Contex
 // returns true if the sync is completed
 func (s *L1SequentialSync) SyncBlocksSequential(ctx context.Context, lastEthBlockSynced *stateBlockType) (*stateBlockType, bool, error) {
 	// Call the blockchain to retrieve data
+
+	if s.blockChecker != nil {
+		err := s.blockChecker.Step(ctx)
+		if err != nil {
+			return lastEthBlockSynced, false, err
+		}
+	}
+
 	blockPoints, err := s.blockPointsRetriever.GetL1BlockPoints(ctx)
 	if err != nil {
 		return lastEthBlockSynced, false, err

@@ -70,6 +70,66 @@ func (_c *StorageBlockReaderInterface_AddBlock_Call) RunAndReturn(run func(conte
 	return _c
 }
 
+// GetFirstUncheckedBlock provides a mock function with given fields: ctx, fromBlockNumber, dbTx
+func (_m *StorageBlockReaderInterface) GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx entities.Tx) (*entities.L1Block, error) {
+	ret := _m.Called(ctx, fromBlockNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFirstUncheckedBlock")
+	}
+
+	var r0 *entities.L1Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) (*entities.L1Block, error)); ok {
+		return rf(ctx, fromBlockNumber, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) *entities.L1Block); ok {
+		r0 = rf(ctx, fromBlockNumber, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entities.L1Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, entities.Tx) error); ok {
+		r1 = rf(ctx, fromBlockNumber, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StorageBlockReaderInterface_GetFirstUncheckedBlock_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetFirstUncheckedBlock'
+type StorageBlockReaderInterface_GetFirstUncheckedBlock_Call struct {
+	*mock.Call
+}
+
+// GetFirstUncheckedBlock is a helper method to define mock.On call
+//   - ctx context.Context
+//   - fromBlockNumber uint64
+//   - dbTx entities.Tx
+func (_e *StorageBlockReaderInterface_Expecter) GetFirstUncheckedBlock(ctx interface{}, fromBlockNumber interface{}, dbTx interface{}) *StorageBlockReaderInterface_GetFirstUncheckedBlock_Call {
+	return &StorageBlockReaderInterface_GetFirstUncheckedBlock_Call{Call: _e.mock.On("GetFirstUncheckedBlock", ctx, fromBlockNumber, dbTx)}
+}
+
+func (_c *StorageBlockReaderInterface_GetFirstUncheckedBlock_Call) Run(run func(ctx context.Context, fromBlockNumber uint64, dbTx entities.Tx)) *StorageBlockReaderInterface_GetFirstUncheckedBlock_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *StorageBlockReaderInterface_GetFirstUncheckedBlock_Call) Return(_a0 *entities.L1Block, _a1 error) *StorageBlockReaderInterface_GetFirstUncheckedBlock_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StorageBlockReaderInterface_GetFirstUncheckedBlock_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) (*entities.L1Block, error)) *StorageBlockReaderInterface_GetFirstUncheckedBlock_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLastBlock provides a mock function with given fields: ctx, dbTx
 func (_m *StorageBlockReaderInterface) GetLastBlock(ctx context.Context, dbTx entities.Tx) (*entities.L1Block, error) {
 	ret := _m.Called(ctx, dbTx)

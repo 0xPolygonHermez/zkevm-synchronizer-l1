@@ -371,6 +371,55 @@ func (_c *BlockStorer_GetUncheckedBlocks_Call) RunAndReturn(run func(context.Con
 	return _c
 }
 
+// UpdateCheckedBlockByNumber provides a mock function with given fields: ctx, blockNumber, newCheckedStatus, dbTx
+func (_m *BlockStorer) UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx entities.Tx) error {
+	ret := _m.Called(ctx, blockNumber, newCheckedStatus, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateCheckedBlockByNumber")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, bool, entities.Tx) error); ok {
+		r0 = rf(ctx, blockNumber, newCheckedStatus, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// BlockStorer_UpdateCheckedBlockByNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCheckedBlockByNumber'
+type BlockStorer_UpdateCheckedBlockByNumber_Call struct {
+	*mock.Call
+}
+
+// UpdateCheckedBlockByNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - blockNumber uint64
+//   - newCheckedStatus bool
+//   - dbTx entities.Tx
+func (_e *BlockStorer_Expecter) UpdateCheckedBlockByNumber(ctx interface{}, blockNumber interface{}, newCheckedStatus interface{}, dbTx interface{}) *BlockStorer_UpdateCheckedBlockByNumber_Call {
+	return &BlockStorer_UpdateCheckedBlockByNumber_Call{Call: _e.mock.On("UpdateCheckedBlockByNumber", ctx, blockNumber, newCheckedStatus, dbTx)}
+}
+
+func (_c *BlockStorer_UpdateCheckedBlockByNumber_Call) Run(run func(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx entities.Tx)) *BlockStorer_UpdateCheckedBlockByNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(bool), args[3].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *BlockStorer_UpdateCheckedBlockByNumber_Call) Return(_a0 error) *BlockStorer_UpdateCheckedBlockByNumber_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *BlockStorer_UpdateCheckedBlockByNumber_Call) RunAndReturn(run func(context.Context, uint64, bool, entities.Tx) error) *BlockStorer_UpdateCheckedBlockByNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewBlockStorer creates a new instance of BlockStorer. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewBlockStorer(t interface {
