@@ -26,6 +26,13 @@ func IsReorgError(err error) bool {
 	return ok
 }
 
+func CastReorgError(err error) *ReorgError {
+	if reorgErr, ok := err.(*ReorgError); ok {
+		return reorgErr
+	}
+	return nil
+}
+
 // GetReorgErrorBlockNumber returns the block number that caused the reorg
 func GetReorgErrorBlockNumber(err error) uint64 {
 	if reorgErr, ok := err.(*ReorgError); ok {
@@ -34,8 +41,8 @@ func GetReorgErrorBlockNumber(err error) uint64 {
 	return 0
 }
 
-// GetReorgError returns the error that caused the reorg
-func GetReorgError(err error) error {
+// GetReorgErrorWrappedError returns the wrapped error that caused the reorg
+func GetReorgErrorWrappedError(err error) error {
 	if reorgErr, ok := err.(*ReorgError); ok {
 		return reorgErr.Err
 	}

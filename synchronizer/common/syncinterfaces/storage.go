@@ -18,10 +18,6 @@ type StorageBlockReaderInterface interface {
 	GetPreviousBlock(ctx context.Context, offset uint64, fromBlockNumber *uint64, dbTx stateTxType) (*entities.L1Block, error)
 }
 
-type StorageResetInterface interface {
-	Reset(ctx context.Context, blockNumber uint64, dbTx stateTxType) error
-}
-
 type StorageForkIDInterface interface {
 	AddForkID(ctx context.Context, forkID pgstorage.ForkIDInterval, dbTx stateTxType) error
 	GetForkIDs(ctx context.Context, dbTx stateTxType) ([]pgstorage.ForkIDInterval, error)
@@ -62,7 +58,6 @@ type StorageInterface interface {
 	StorageTransactionInterface
 	StorageBlockWriterInterface
 	StorageBlockReaderInterface
-	StorageResetInterface
 	StorageForkIDInterface
 	StorageL1InfoTreeInterface
 	StorageSequenceBatchesInterface

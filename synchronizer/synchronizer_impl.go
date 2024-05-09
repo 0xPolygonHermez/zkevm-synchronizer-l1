@@ -7,10 +7,12 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/model"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/elderberry"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/etrog"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/incaberry"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/processor_manager"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
 	syncconfig "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/config"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1_check_block"
@@ -87,9 +89,12 @@ func NewSynchronizerImpl(
 
 	sync.l1Sync = l1sync.NewL1SequentialSync(blocksRetriever, ethMan, state, sync.blockRangeProcessor, reorgManager,
 		l1sync.L1SequentialSyncConfig{
-			SyncChunkSize:      cfg.SyncChunkSize,
-			GenesisBlockNumber: sync.genBlockNumber,
+			SyncChunkSize:                 cfg.SyncChunkSize,
+			GenesisBlockNumber:            sync.genBlockNumber,
+			AllowEmptyBlocksAsCheckPoints: true,
 		})
+
+	state.AddOnReorgCallback(sync.OnReorgExecuted)
 	return &sync, nil
 
 }
@@ -104,6 +109,10 @@ func (s *SynchronizerImpl) IsSynced() bool {
 func (s *SynchronizerImpl) SetCallbackOnReorgDone(callback func(newFirstL1BlockNumberValid uint64)) {
 	//TODO: Implement this function
 	log.Fatal("Not implemented")
+}
+
+func (s *SynchronizerImpl) OnReorgExecuted(reorg model.ReorgExecutionResult) {
+	log.Infof("Reorg executed! %s", reorg.String())
 }
 
 // Sync function will read the last state synced and will continue from that point.
@@ -141,9 +150,15 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 			//Sync L1Blocks
 
 			var isSynced bool
-			//if lastBlockSynced, isSynced, err = s.syncBlocks(lastBlockSynced); err != nil {
 			if lastBlockSynced, isSynced, err = s.l1Sync.SyncBlocksSequential(s.ctx, lastBlockSynced); err != nil {
 				log.Warnf("networkID: %d, error syncing blocks: %v", s.networkID, err)
+
+				err = s.executeReorgIfNeeded(common.CastReorgError(err))
+				if err != nil {
+					log.Errorf("networkID: %d, error resetting the state to a previous block. Error: %v", s.networkID, err)
+					continue
+				}
+
 				lastBlockSynced, err = s.storage.GetLastBlock(s.ctx, nil)
 				if err != nil {
 					log.Fatalf("networkID: %d, error getting lastBlockSynced to resume the synchronization... Error: ", s.networkID, err)
@@ -152,48 +167,59 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 					continue
 				}
 			}
-			if !s.synced {
-				// Check latest Block
-				header, err := s.etherMan.HeaderByNumber(s.ctx, nil)
-				if err != nil {
-					log.Warnf("networkID: %d, error getting latest block from. Error: %s", s.networkID, err.Error())
-					continue
+			s.setSyncedStatus(isSynced)
+			if s.synced {
+				log.Infof("NetworkID %d Synced!   lastBlockSynced:%d ", s.networkID, lastBlockSynced.BlockNumber)
+				if returnOnSync {
+					log.Infof("NetworkID: %d, Synchronization finished, returning because returnOnSync=true", s.networkID)
+					return nil
 				}
-				lastKnownBlock := header.Number.Uint64()
-				log.Debugf("NetworkID: %d, lastBlockSynced: %d, lastKnownBlock: %d", s.networkID, lastBlockSynced.BlockNumber, lastKnownBlock)
-				if isSynced && !s.synced {
-					log.Infof("NetworkID %d Synced!  lastL1Block: %d lastBlockSynced:%d ", s.networkID, lastKnownBlock, lastBlockSynced.BlockNumber)
-					waitDuration = s.cfg.SyncInterval.Duration
-					s.synced = true
-					if returnOnSync {
-						log.Infof("NetworkID: %d, Synchronization finished, returning because returnOnSync=true", s.networkID)
-						return nil
-					}
-				}
-				if lastBlockSynced.BlockNumber > lastKnownBlock {
-					if s.networkID == 0 {
-						log.Fatalf("networkID: %d, error: latest Synced BlockNumber (%d) is higher than the latest Proposed block (%d) in the network", s.networkID, lastBlockSynced.BlockNumber, lastKnownBlock)
-					} else {
-						log.Errorf("networkID: %d, error: latest Synced BlockNumber (%d) is higher than the latest Proposed block (%d) in the network", s.networkID, lastBlockSynced.BlockNumber, lastKnownBlock)
-						err = s.resetState(lastKnownBlock)
-						if err != nil {
-							log.Errorf("networkID: %d, error resetting the state to a previous block. Error: %v", s.networkID, err)
-							continue
-						}
-					}
-				}
-			} else {
-				s.synced = isSynced
+				waitDuration = s.cfg.SyncInterval.Duration
 			}
 		}
 	}
+}
+
+func (s *SynchronizerImpl) setSyncedStatus(synced bool) {
+	s.synced = synced
 }
 
 // Stop function stops the synchronizer
 func (s *SynchronizerImpl) Stop() {
 	s.cancelCtx()
 }
+func (s *SynchronizerImpl) executeReorgIfNeeded(reorgError *common.ReorgError) error {
+	if reorgError == nil {
+		return nil
+	}
+	dbTx, err := s.state.BeginTransaction(s.ctx)
+	if err != nil {
+		log.Errorf("networkID: %d, error starting a db transaction to execute reorg. Error: %v", s.networkID, err)
+		return err
+	}
 
+	req := model.ReorgRequest{
+		FirstL1BlockNumberToKeep: reorgError.BlockNumber - 1, // Previous block to last bad block
+		ReasonError:              reorgError.Err,
+	}
+
+	result := s.state.ExecuteReorg(s.ctx, req, dbTx)
+	if !result.IsSuccess() {
+		log.Errorf("networkID: %d, error executing reorg. Error: %v", s.networkID, result.ExecutionError)
+		// I don't care about result of Rollback
+		_ = dbTx.Rollback(s.ctx)
+		return result.ExecutionError
+	}
+	errCommit := dbTx.Commit(s.ctx)
+	if errCommit != nil {
+		log.Errorf("networkID: %d, error committing reorg. Error: %v", s.networkID, errCommit)
+		return errCommit
+	}
+	return nil
+
+}
+
+/*
 // This function allows reset the state until an specific ethereum block
 func (s *SynchronizerImpl) resetState(blockNumber uint64) error {
 	log.Infof("NetworkID: %d. Reverting synchronization to block: %d", s.networkID, blockNumber)
@@ -228,3 +254,4 @@ func (s *SynchronizerImpl) resetState(blockNumber uint64) error {
 
 	return nil
 }
+*/

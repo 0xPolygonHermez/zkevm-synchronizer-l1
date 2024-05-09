@@ -48,6 +48,10 @@ type virtualBatchStorer interface {
 	GetVirtualBatchByBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) (*VirtualBatch, error)
 }
 
+type reorgStorer interface {
+	ResetToL1BlockNumber(ctx context.Context, firstBlockNumberToKeep uint64, dbTx storageTxType) error
+}
+
 type txStorer interface {
 	BeginTransaction(ctx context.Context) (storageTxType, error)
 }
@@ -59,4 +63,5 @@ type Storer interface {
 	l1infoTreeStorer
 	virtualBatchStorer
 	sequencedBatchStorer
+	reorgStorer
 }

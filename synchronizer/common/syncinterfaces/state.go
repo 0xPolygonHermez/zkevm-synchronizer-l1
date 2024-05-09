@@ -21,6 +21,11 @@ type stateOnSequencedBatchesManager interface {
 	OnSequencedBatchesOnL1(ctx context.Context, seq model.SequenceOfBatches, dbTx stateTxType) error
 }
 
+type stateReorgManager interface {
+	AddOnReorgCallback(f model.ReorgCallbackType)
+	ExecuteReorg(ctx context.Context, reorgRequest model.ReorgRequest, dbTx stateTxType) model.ReorgExecutionResult
+}
+
 type StateInterface interface {
 	AddL1InfoTreeLeafAndAssignIndex(ctx context.Context, exitRoot *entities.L1InfoTreeLeaf, dbTx stateTxType) (*entities.L1InfoTreeLeaf, error)
 
@@ -35,4 +40,5 @@ type StateInterface interface {
 	StateTxProvider
 	stateOnSequencedBatchesManager
 	StorageBlockReaderInterface
+	stateReorgManager
 }

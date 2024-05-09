@@ -10,6 +10,7 @@ type State struct {
 	*model.ForkIdState
 	*model.L1InfoTreeState
 	*model.BatchState
+	*model.ReorgState
 	storage.BlockStorer
 }
 
@@ -19,7 +20,10 @@ func NewState(storageImpl storage.Storer) *State {
 		model.NewForkIdState(storageImpl),
 		model.NewL1InfoTreeManager(storageImpl),
 		model.NewBatchState(storageImpl),
+		model.NewReorgState(storageImpl),
 		storageImpl,
 	}
+	// Connect cache invalidation on Reorg
+	res.ReorgState.AddOnReorgCallback(res.L1InfoTreeState.OnReorg)
 	return res
 }

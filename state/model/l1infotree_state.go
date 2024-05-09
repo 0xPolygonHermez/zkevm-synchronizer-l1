@@ -42,6 +42,10 @@ func HashLeaf(leaf *L1InfoTreeLeaf) common.Hash {
 	return l1infotree.HashLeafData(leaf.GlobalExitRoot, leaf.PreviousBlockHash, timestamp)
 }
 
+func (s *L1InfoTreeState) OnReorg(reorg ReorgExecutionResult) {
+	log.Infof("Reorg: clean cache L1InfoTree")
+	s.l1InfoTree = nil
+}
 func (s *L1InfoTreeState) BuildL1InfoTreeCacheIfNeed(ctx context.Context, dbTx stateTxType) error {
 	if s.l1InfoTree != nil {
 		return nil

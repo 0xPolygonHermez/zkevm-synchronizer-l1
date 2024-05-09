@@ -14,6 +14,7 @@ import (
 
 type EthermanInterface interface {
 	GetRollupInfoByBlockRange(ctx context.Context, fromBlock uint64, toBlock *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error)
+	GetL1BlockByNumber(ctx context.Context, blockNumber uint64) (*etherman.Block, error)
 }
 
 type StateL1SeqInterface interface {
@@ -50,8 +51,9 @@ type L1SequentialSync struct {
 }
 
 type L1SequentialSyncConfig struct {
-	SyncChunkSize      uint64
-	GenesisBlockNumber uint64
+	SyncChunkSize                 uint64
+	GenesisBlockNumber            uint64
+	AllowEmptyBlocksAsCheckPoints bool
 }
 
 func NewL1SequentialSync(blockPointsRetriever BlockPointsRetriever,
@@ -101,44 +103,6 @@ func (s *BlockPointsRetrieverImplementation) GetL1BlockPoints(ctx context.Contex
 	}, nil
 }
 
-type IterateBlockRange struct {
-	FromBlock, ToBlock uint64
-	SyncChunkSize      uint64
-	MaximumBlock       uint64
-}
-
-func NewIterateBlockRange(fromBlock, syncChunkSize uint64, maximumBlock uint64) *IterateBlockRange {
-	res := &IterateBlockRange{
-		FromBlock:     fromBlock,
-		ToBlock:       fromBlock,
-		SyncChunkSize: syncChunkSize,
-		MaximumBlock:  maximumBlock,
-	}
-	res = res.NextRange(fromBlock)
-	return res
-}
-func (i *IterateBlockRange) IsLastRange() bool {
-	return i.FromBlock >= i.MaximumBlock
-}
-
-func (i *IterateBlockRange) NextRange(fromBlock uint64) *IterateBlockRange {
-	// The FromBlock is the new block (can be the previous one if no blocks found in the range)
-	i.FromBlock = fromBlock
-	// Extend toBlock by sync chunk size
-	i.ToBlock = i.ToBlock + i.SyncChunkSize
-
-	if i.ToBlock > i.MaximumBlock {
-		i.ToBlock = i.MaximumBlock
-	}
-	if i.FromBlock > i.ToBlock {
-		return nil
-	}
-	return i
-}
-func (i *IterateBlockRange) String() string {
-	return fmt.Sprintf("FromBlock: %d, ToBlock: %d, MaximumBlock: %d", i.FromBlock, i.ToBlock, i.MaximumBlock)
-}
-
 // This function syncs the node from a specific block to the latest
 // returns the last block synced and an error if any
 // returns true if the sync is completed
@@ -153,26 +117,27 @@ func (s *L1SequentialSync) SyncBlocksSequential(ctx context.Context, lastEthBloc
 	if lastEthBlockSynced.BlockNumber > 0 {
 		fromBlock = lastEthBlockSynced.BlockNumber
 	}
-	blockRange := NewIterateBlockRange(fromBlock, s.cfg.SyncChunkSize, blockPoints.L1LastBlockToSync)
+	blockRangeIterator := NewBlockRangeIterator(fromBlock, s.cfg.SyncChunkSize, blockPoints.L1LastBlockToSync)
 
 	for {
-		if blockRange == nil {
+		if blockRangeIterator == nil {
 			log.Debugf("Nothing to do starting from %d to %d. Skipping...", fromBlock, blockPoints.L1LastBlockToSync)
 			return lastEthBlockSynced, true, nil
 		}
-
-		log.Infof("Syncing %s", blockRange.String())
-		lastEthBlockSynced, synced, err := s.iteration(ctx, blockRange.FromBlock, blockRange.ToBlock, blockPoints.L1FinalizedBlockNumber, lastEthBlockSynced)
+		blockRange := blockRangeIterator.GetRange(lastEthBlockSynced.HasEvents && !lastEthBlockSynced.Checked)
+		log.Infof("Syncing %s", blockRangeIterator.String())
+		synced := false
+		lastEthBlockSynced, synced, err = s.iteration(ctx, blockRange, blockPoints.L1FinalizedBlockNumber, lastEthBlockSynced)
 		if err != nil {
 			return lastEthBlockSynced, false, err
 		}
 		if synced {
 			return lastEthBlockSynced, true, nil
 		}
-		if blockRange.IsLastRange() {
+		if blockRangeIterator.IsLastRange() {
 			break
 		}
-		blockRange = blockRange.NextRange(lastEthBlockSynced.BlockNumber)
+		blockRangeIterator = blockRangeIterator.NextRange(lastEthBlockSynced.BlockNumber)
 	}
 	return lastEthBlockSynced, true, nil
 }
@@ -198,47 +163,54 @@ func (s *L1SequentialSync) checkResponseGetRollupInfoByBlockRangeForOverlappedFi
 }
 
 // firstBlockRequestIsOverlapped = means that fromBlock is one that we already have and have events
-func (s *L1SequentialSync) iteration(ctx context.Context, fromBlock, toBlock, finalizedBlockNumber uint64, lastEthBlockSynced *stateBlockType) (*stateBlockType, bool, error) {
+func (s *L1SequentialSync) iteration(ctx context.Context, blockRange BlockRange, finalizedBlockNumber uint64, lastEthBlockSynced *stateBlockType) (*stateBlockType, bool, error) {
 
-	log.Infof("Getting rollup info from block %d to block %d", fromBlock, toBlock)
+	log.Infof("Getting rollup info range: %s finalizedBlock:%d", blockRange.String(), finalizedBlockNumber)
 	// This function returns the rollup information contained in the ethereum blocks and an extra param called order.
 	// Order param is a map that contains the event order to allow the synchronizer store the info in the same order that is readed.
 	// Name can be different in the order struct. For instance: Batches or Name:NewSequencers. This name is an identifier to check
 	// if the next info that must be stored in the db is a new sequencer or a batch. The value pos (position) tells what is the
 	// array index where this value is.
-	firstBlockRequestIsOverlapped := lastEthBlockSynced.HasEvents
-	if !firstBlockRequestIsOverlapped {
-		log.Infof("Request is not overlapped, so is not going to detect reorgs. FromBlock: %d toBlock:%d", fromBlock)
-	}
-	blocks, order, err := s.etherMan.GetRollupInfoByBlockRange(ctx, fromBlock, &toBlock)
+	toBlock := blockRange.ToBlock
+	blocks, order, err := s.etherMan.GetRollupInfoByBlockRange(ctx, blockRange.FromBlock, &toBlock)
 	if err != nil {
 		log.Errorf("error getting rollup info by block range.  Err: %v", err)
 		return lastEthBlockSynced, false, err
 	}
-	if firstBlockRequestIsOverlapped {
-		err = s.checkResponseGetRollupInfoByBlockRangeForOverlappedFirstBlock(blocks, fromBlock)
+	if blockRange.OverlappedFirstBlock {
+		err = s.checkResponseGetRollupInfoByBlockRangeForOverlappedFirstBlock(blocks, blockRange.FromBlock)
 		if err != nil {
 			return lastEthBlockSynced, false, err
 		}
 	}
 
 	var initBlockReceived *etherman.Block
-	if len(blocks) != 0 && firstBlockRequestIsOverlapped {
+	if len(blocks) != 0 && blockRange.OverlappedFirstBlock {
+		// The first block is overlapped, it have been processed we only want
+		// it to check reorgs (compare that have not changed between the previous checkReorg and the call GetRollupInfoByBlockRange)
 		initBlockReceived = &blocks[0]
 		// First position of the array must be deleted
 		blocks = removeBlockElement(blocks, 0)
 	}
-	// Check reorg again to be sure that the chain has not changed between the previous checkReorg and the call GetRollupInfoByBlockRange
-	block, lastBadBlockNumber, err := s.reorgManager.CheckReorg(lastEthBlockSynced, initBlockReceived)
-	if err != nil {
-		log.Errorf("error checking reorgs. Retrying... Err: %v", err)
-		return lastEthBlockSynced, false, fmt.Errorf("error checking reorgs. Err:%w", err)
-	}
-	if block != nil {
-		// In fact block.BlockNumber is the first ok block, so  add 1 to be the first block wrong
-		// maybe doesnt exists
-		err := syncommon.NewReorgError(lastBadBlockNumber, fmt.Errorf("reorg detected. First valid block is %d, lastBadBlock is %d by CheckReorg func", block.BlockNumber, lastBadBlockNumber))
-		return block, false, err
+
+	if !lastEthBlockSynced.Checked || initBlockReceived != nil {
+		// Check reorg again to be sure that the chain has not changed between the previous checkReorg and the call GetRollupInfoByBlockRange
+		log.Debugf("Checking reorgs between lastEthBlockSynced =%d and initBlockReceived: %v", lastEthBlockSynced.BlockNumber, initBlockReceived)
+		block, lastBadBlockNumber, err := s.reorgManager.CheckReorg(lastEthBlockSynced, initBlockReceived)
+		log.Debugf("Checking reorgs between lastEthBlockSynced =%d [AFTER]", lastEthBlockSynced.BlockNumber)
+		if err != nil {
+			log.Errorf("error checking reorgs. Retrying... Err: %v", err)
+			return lastEthBlockSynced, false, fmt.Errorf("error checking reorgs. Err:%w", err)
+		}
+		if block != nil {
+			// In fact block.BlockNumber is the first ok block, so  add 1 to be the first block wrong
+			// maybe doesnt exists
+			err := syncommon.NewReorgError(lastBadBlockNumber, fmt.Errorf("reorg detected. First valid block is %d, lastBadBlock is %d by CheckReorg func", block.BlockNumber, lastBadBlockNumber))
+			return block, false, err
+		}
+	} else {
+		log.Debugf("Skipping reorg check because lastEthBlockSynced %d is checked", lastEthBlockSynced.BlockNumber)
+
 	}
 
 	err = s.blockRangeProcessor.ProcessBlockRange(ctx, blocks, order, finalizedBlockNumber)
@@ -253,8 +225,46 @@ func (s *L1SequentialSync) iteration(ctx context.Context, fromBlock, toBlock, fi
 		for i := range blocks {
 			log.Info("Position: ", i, ". New block. BlockNumber: ", blocks[i].BlockNumber, ". BlockHash: ", blocks[i].BlockHash)
 		}
+	} else {
+		// Decide if create a empty block to move the FromBlock
+		// We can ignore error because if we can't create empty block we can continue extending toBlock
+		emptyBlock, _ := s.CreateBlockWithoutRollupInfoIfNeeded(ctx, blockRange, finalizedBlockNumber)
+		if emptyBlock != nil {
+			log.Infof("Creating empty block  BlockNumber: %d", emptyBlock.BlockNumber)
+			lastEthBlockSynced = emptyBlock
+
+		}
 	}
 	return lastEthBlockSynced, false, nil
+}
+
+// CreateBlockWithoutRollupInfoIfNeeded creates a block without rollup if
+// the condition is that the fromBlock + SyncChunkSize < finalizedBlockNumber
+// because means that the empty block that we can't check the reorg is safe create it
+func (s *L1SequentialSync) CreateBlockWithoutRollupInfoIfNeeded(ctx context.Context, blockRange BlockRange, finalizedBlockNumber uint64) (*stateBlockType, error) {
+	if !s.cfg.AllowEmptyBlocksAsCheckPoints {
+		return nil, nil
+	}
+	proposedBlockNumber := blockRange.FromBlock + s.cfg.SyncChunkSize
+
+	if !blockRange.InsideRange(proposedBlockNumber) {
+		return nil, nil
+	}
+	if entities.IsBlockFinalized(proposedBlockNumber, finalizedBlockNumber) {
+		// Create a block without rollup info
+		emptyBlock, err := s.etherMan.GetL1BlockByNumber(ctx, proposedBlockNumber)
+		if err != nil || emptyBlock == nil {
+			log.Warnf("error getting block %d from the blockchain. Error: %v", proposedBlockNumber, err)
+			return nil, err
+		}
+		err = s.blockRangeProcessor.ProcessBlockRange(ctx, []etherman.Block{*emptyBlock}, nil, finalizedBlockNumber)
+		if err != nil {
+			log.Warnf("error processing the block range. Err: %v", err)
+			return nil, err
+		}
+		return entities.NewL1BlockFromEthermanBlock(emptyBlock, true), nil
+	}
+	return nil, nil
 }
 
 /*

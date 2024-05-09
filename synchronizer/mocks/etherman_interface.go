@@ -203,6 +203,65 @@ func (_c *EthermanInterface_GetForks_Call) RunAndReturn(run func(context.Context
 	return _c
 }
 
+// GetL1BlockByNumber provides a mock function with given fields: ctx, blockNumber
+func (_m *EthermanInterface) GetL1BlockByNumber(ctx context.Context, blockNumber uint64) (*etherman.Block, error) {
+	ret := _m.Called(ctx, blockNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetL1BlockByNumber")
+	}
+
+	var r0 *etherman.Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) (*etherman.Block, error)); ok {
+		return rf(ctx, blockNumber)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) *etherman.Block); ok {
+		r0 = rf(ctx, blockNumber)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*etherman.Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = rf(ctx, blockNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// EthermanInterface_GetL1BlockByNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetL1BlockByNumber'
+type EthermanInterface_GetL1BlockByNumber_Call struct {
+	*mock.Call
+}
+
+// GetL1BlockByNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - blockNumber uint64
+func (_e *EthermanInterface_Expecter) GetL1BlockByNumber(ctx interface{}, blockNumber interface{}) *EthermanInterface_GetL1BlockByNumber_Call {
+	return &EthermanInterface_GetL1BlockByNumber_Call{Call: _e.mock.On("GetL1BlockByNumber", ctx, blockNumber)}
+}
+
+func (_c *EthermanInterface_GetL1BlockByNumber_Call) Run(run func(ctx context.Context, blockNumber uint64)) *EthermanInterface_GetL1BlockByNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64))
+	})
+	return _c
+}
+
+func (_c *EthermanInterface_GetL1BlockByNumber_Call) Return(_a0 *etherman.Block, _a1 error) *EthermanInterface_GetL1BlockByNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *EthermanInterface_GetL1BlockByNumber_Call) RunAndReturn(run func(context.Context, uint64) (*etherman.Block, error)) *EthermanInterface_GetL1BlockByNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetL1BlockUpgradeLxLy provides a mock function with given fields: ctx, genesisBlock
 func (_m *EthermanInterface) GetL1BlockUpgradeLxLy(ctx context.Context, genesisBlock *uint64) (uint64, error) {
 	ret := _m.Called(ctx, genesisBlock)
