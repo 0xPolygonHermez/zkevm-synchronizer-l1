@@ -694,54 +694,6 @@ func (_c *StorageInterface_GetSequenceByBatchNumber_Call) RunAndReturn(run func(
 	return _c
 }
 
-// Reset provides a mock function with given fields: ctx, blockNumber, dbTx
-func (_m *StorageInterface) Reset(ctx context.Context, blockNumber uint64, dbTx entities.Tx) error {
-	ret := _m.Called(ctx, blockNumber, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Reset")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) error); ok {
-		r0 = rf(ctx, blockNumber, dbTx)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// StorageInterface_Reset_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Reset'
-type StorageInterface_Reset_Call struct {
-	*mock.Call
-}
-
-// Reset is a helper method to define mock.On call
-//   - ctx context.Context
-//   - blockNumber uint64
-//   - dbTx entities.Tx
-func (_e *StorageInterface_Expecter) Reset(ctx interface{}, blockNumber interface{}, dbTx interface{}) *StorageInterface_Reset_Call {
-	return &StorageInterface_Reset_Call{Call: _e.mock.On("Reset", ctx, blockNumber, dbTx)}
-}
-
-func (_c *StorageInterface_Reset_Call) Run(run func(ctx context.Context, blockNumber uint64, dbTx entities.Tx)) *StorageInterface_Reset_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
-	})
-	return _c
-}
-
-func (_c *StorageInterface_Reset_Call) Return(_a0 error) *StorageInterface_Reset_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *StorageInterface_Reset_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) error) *StorageInterface_Reset_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // UpdateForkID provides a mock function with given fields: ctx, forkID, dbTx
 func (_m *StorageInterface) UpdateForkID(ctx context.Context, forkID entities.ForkIDInterval, dbTx entities.Tx) error {
 	ret := _m.Called(ctx, forkID, dbTx)

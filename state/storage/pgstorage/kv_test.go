@@ -33,7 +33,7 @@ func TestKVSet(t *testing.T) {
 	value, err := storage.KVGetString(ctx, testKey, dbTx)
 	require.NoError(t, err)
 	require.Equal(t, "fake_value", value)
-	dbTx.Commit(ctx)
+	_ = dbTx.Commit(ctx)
 }
 
 type kvTestStruct struct {
@@ -59,7 +59,7 @@ func TestKVJson(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, data, dataRead)
 
-	dbTx.Commit(ctx)
+	_ = dbTx.Commit(ctx)
 }
 
 func TestKVUint64(t *testing.T) {
@@ -84,5 +84,5 @@ func TestKVUint64(t *testing.T) {
 	_, err = storage.KVGetUint64(ctx, testKey, dbTx)
 	require.Error(t, err)
 
-	dbTx.Commit(ctx)
+	_ = dbTx.Commit(ctx)
 }

@@ -1089,6 +1089,54 @@ func (_c *Storer_GetVirtualBatchByBatchNumber_Call) RunAndReturn(run func(contex
 	return _c
 }
 
+// ResetToL1BlockNumber provides a mock function with given fields: ctx, firstBlockNumberToKeep, dbTx
+func (_m *Storer) ResetToL1BlockNumber(ctx context.Context, firstBlockNumberToKeep uint64, dbTx entities.Tx) error {
+	ret := _m.Called(ctx, firstBlockNumberToKeep, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ResetToL1BlockNumber")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) error); ok {
+		r0 = rf(ctx, firstBlockNumberToKeep, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Storer_ResetToL1BlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResetToL1BlockNumber'
+type Storer_ResetToL1BlockNumber_Call struct {
+	*mock.Call
+}
+
+// ResetToL1BlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - firstBlockNumberToKeep uint64
+//   - dbTx entities.Tx
+func (_e *Storer_Expecter) ResetToL1BlockNumber(ctx interface{}, firstBlockNumberToKeep interface{}, dbTx interface{}) *Storer_ResetToL1BlockNumber_Call {
+	return &Storer_ResetToL1BlockNumber_Call{Call: _e.mock.On("ResetToL1BlockNumber", ctx, firstBlockNumberToKeep, dbTx)}
+}
+
+func (_c *Storer_ResetToL1BlockNumber_Call) Run(run func(ctx context.Context, firstBlockNumberToKeep uint64, dbTx entities.Tx)) *Storer_ResetToL1BlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *Storer_ResetToL1BlockNumber_Call) Return(_a0 error) *Storer_ResetToL1BlockNumber_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Storer_ResetToL1BlockNumber_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) error) *Storer_ResetToL1BlockNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateForkID provides a mock function with given fields: ctx, forkID, dbTx
 func (_m *Storer) UpdateForkID(ctx context.Context, forkID entities.ForkIDInterval, dbTx entities.Tx) error {
 	ret := _m.Called(ctx, forkID, dbTx)
