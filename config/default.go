@@ -15,16 +15,10 @@ const DefaultValues = `
 	MaxConns = 10
 [Synchronizer]
 	SyncInterval = "10s"
-	SyncChunkSize = 1000
-	GenesisBlockNumber = 5157839
-	[Synchronizer.L1BlockCheck]
-		Enable = true
-		L1SafeBlockPoint = "finalized"
-		L1SafeBlockOffset = 0
-		ForceCheckBeforeStart = true
-		PreCheckEnable = true
-		L1PreSafeBlockPoint = "safe"
-		L1PreSafeBlockOffset = 0
+	SyncChunkSize = 500
+	GenesisBlockNumber = 0
+	SyncBlockProtection = "latest"
+	SyncBlockProtectionOffset = -5
 [Etherman]
 	L1URL = "http://localhost:8545"
 	[Etherman.Contracts]

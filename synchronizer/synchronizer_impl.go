@@ -79,10 +79,11 @@ func NewSynchronizerImpl(
 		sync.genBlockNumber = firstBlock
 	}
 	finalizedBlockNumberFetcher := l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.FinalizedBlockNumber, 0)
+	syncPointBlockNumberFecther := l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.SyncBlockProtection), cfg.SyncBlockProtectionOffset)
 	reorgManager := l1sync.NewCheckReorgManager(ctx, ethMan, state, nil, sync.genBlockNumber)
 	blocksRetriever := l1sync.NewBlockPointsRetriever(
 		finalizedBlockNumberFetcher,
-		l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.SafeBlockNumber, 0),
+		syncPointBlockNumberFecther,
 		ethMan,
 	)
 	checkl1blocks := l1_check_block.NewCheckL1BlockHash(ethMan, storage, finalizedBlockNumberFetcher)
