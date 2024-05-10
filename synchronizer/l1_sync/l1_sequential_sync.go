@@ -103,6 +103,10 @@ func (s *BlockPointsRetrieverImplementation) GetL1BlockPoints(ctx context.Contex
 		log.Errorf("error getting finalized block number in L1. Error: %v", err)
 		return BlockPoints{}, err
 	}
+	log.Debugf("Getting block points: syncBlocksProtection: %s = %d, finalizedBlock: %s = %d",
+		s.syncBlockProtection.Description(), lastKnownBlock,
+		s.finalizedBlock.Description(), finalizedBlockNumber)
+
 	return BlockPoints{
 		L1LastBlockToSync:      lastKnownBlock,
 		L1FinalizedBlockNumber: finalizedBlockNumber,
@@ -125,6 +129,9 @@ func (s *L1SequentialSync) SyncBlocksSequential(ctx context.Context, lastEthBloc
 	blockPoints, err := s.blockPointsRetriever.GetL1BlockPoints(ctx)
 	if err != nil {
 		return lastEthBlockSynced, false, err
+	}
+	if blockPoints.L1FinalizedBlockNumber > blockPoints.L1LastBlockToSync {
+		log.Warnf("Finalized block number %d is greater than last block to sync %d", blockPoints.L1FinalizedBlockNumber, blockPoints.L1LastBlockToSync)
 	}
 
 	var fromBlock uint64
