@@ -276,6 +276,66 @@ func (_c *StorageInterface_GetAllL1InfoTreeLeaves_Call) RunAndReturn(run func(co
 	return _c
 }
 
+// GetBlockByNumber provides a mock function with given fields: ctx, blockNumber, dbTx
+func (_m *StorageInterface) GetBlockByNumber(ctx context.Context, blockNumber uint64, dbTx entities.Tx) (*entities.L1Block, error) {
+	ret := _m.Called(ctx, blockNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBlockByNumber")
+	}
+
+	var r0 *entities.L1Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) (*entities.L1Block, error)); ok {
+		return rf(ctx, blockNumber, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) *entities.L1Block); ok {
+		r0 = rf(ctx, blockNumber, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entities.L1Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, entities.Tx) error); ok {
+		r1 = rf(ctx, blockNumber, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StorageInterface_GetBlockByNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetBlockByNumber'
+type StorageInterface_GetBlockByNumber_Call struct {
+	*mock.Call
+}
+
+// GetBlockByNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - blockNumber uint64
+//   - dbTx entities.Tx
+func (_e *StorageInterface_Expecter) GetBlockByNumber(ctx interface{}, blockNumber interface{}, dbTx interface{}) *StorageInterface_GetBlockByNumber_Call {
+	return &StorageInterface_GetBlockByNumber_Call{Call: _e.mock.On("GetBlockByNumber", ctx, blockNumber, dbTx)}
+}
+
+func (_c *StorageInterface_GetBlockByNumber_Call) Run(run func(ctx context.Context, blockNumber uint64, dbTx entities.Tx)) *StorageInterface_GetBlockByNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *StorageInterface_GetBlockByNumber_Call) Return(_a0 *entities.L1Block, _a1 error) *StorageInterface_GetBlockByNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StorageInterface_GetBlockByNumber_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) (*entities.L1Block, error)) *StorageInterface_GetBlockByNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetFirstUncheckedBlock provides a mock function with given fields: ctx, fromBlockNumber, dbTx
 func (_m *StorageInterface) GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx entities.Tx) (*entities.L1Block, error) {
 	ret := _m.Called(ctx, fromBlockNumber, dbTx)
