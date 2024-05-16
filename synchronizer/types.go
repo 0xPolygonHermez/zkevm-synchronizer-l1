@@ -5,14 +5,13 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 )
 
-type L1Block = entities.L1Block
 type stateTxType = entities.Tx
 
-func convertEthermanBlock(block *etherman.Block) *L1Block {
+func convertEthermanBlock(block *etherman.Block) *entities.L1Block {
 	if block == nil {
 		return nil
 	}
-	return &L1Block{
+	return &entities.L1Block{
 		BlockNumber: block.BlockNumber,
 		BlockHash:   block.BlockHash,
 		ParentHash:  block.ParentHash,
@@ -20,8 +19,8 @@ func convertEthermanBlock(block *etherman.Block) *L1Block {
 	}
 }
 
-func convertArrayEthermanBlocks(ethermanBlocks []etherman.Block) []L1Block {
-	l1Blocks := make([]L1Block, len(ethermanBlocks))
+func convertArrayEthermanBlocks(ethermanBlocks []etherman.Block) []entities.L1Block {
+	l1Blocks := make([]entities.L1Block, len(ethermanBlocks))
 	for i, block := range ethermanBlocks {
 		l1Blocks[i] = *convertEthermanBlock(&block)
 	}

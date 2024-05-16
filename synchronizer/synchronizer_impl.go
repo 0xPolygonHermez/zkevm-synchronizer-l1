@@ -126,7 +126,7 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 			return nil
 		case <-time.After(waitDuration):
 			log.Debugf("NetworkID: %d, syncing...", s.networkID)
-			//Sync L1Blocks
+			//Sync entities.L1Blocks
 
 			var isSynced bool
 			if lastBlockSynced, isSynced, err = s.syncBlocks(lastBlockSynced); err != nil {
@@ -149,7 +149,7 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 				lastKnownBlock := header.Number.Uint64()
 				log.Debugf("NetworkID: %d, lastBlockSynced: %d, lastKnownBlock: %d", s.networkID, lastBlockSynced.BlockNumber, lastKnownBlock)
 				if isSynced && !s.synced {
-					log.Infof("NetworkID %d Synced!  lastL1Block: %d lastBlockSynced:%d ", s.networkID, lastKnownBlock, lastBlockSynced.BlockNumber)
+					log.Infof("NetworkID %d Synced!  lastentities.L1Block: %d lastBlockSynced:%d ", s.networkID, lastKnownBlock, lastBlockSynced.BlockNumber)
 					waitDuration = s.cfg.SyncInterval.Duration
 					s.synced = true
 					if returnOnSync {
@@ -186,7 +186,7 @@ func (s *SynchronizerImpl) Stop() {
 // lastBlockSynced: the last block synced
 // isSynced (bool): true if is synced
 // error: if there is an error
-func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *L1Block) (*L1Block, bool, error) {
+func (s *SynchronizerImpl) syncBlocks(lastBlockSynced *entities.L1Block) (*entities.L1Block, bool, error) {
 	// This function will read events fromBlockNum to latestEthBlock. Check reorg to be sure that everything is ok.
 	block, err := s.checkReorg(lastBlockSynced)
 	if err != nil {
@@ -321,7 +321,7 @@ If hash or hash parent don't match, reorg detected and the function will return 
 must be reverted. Then, check the previous ethereum block synced, get block info from the blockchain and check
 hash and has parent. This operation has to be done until a match is found.
 */
-func (s *SynchronizerImpl) checkReorg(latestBlock *L1Block) (*L1Block, error) {
+func (s *SynchronizerImpl) checkReorg(latestBlock *entities.L1Block) (*entities.L1Block, error) {
 	// This function only needs to worry about reorgs if some of the reorganized blocks contained rollup info.
 	latestBlockSynced := *latestBlock
 	var depth uint64
@@ -368,7 +368,7 @@ func (s *SynchronizerImpl) checkReorg(latestBlock *L1Block) (*L1Block, error) {
 			}
 			if errors.Is(err, entities.ErrStorageNotFound) {
 				log.Warnf("networkID: %d, error checking reorg: previous block not found in db: %v", s.networkID, err)
-				return &L1Block{}, nil
+				return &entities.L1Block{}, nil
 			} else if err != nil {
 				log.Errorf("networkID: %d, error detected getting previous block: %v", s.networkID, err)
 				return nil, err

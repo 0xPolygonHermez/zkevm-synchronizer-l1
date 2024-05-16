@@ -51,6 +51,21 @@ type SynchronizerL1InfoTreeQuerier interface {
 	GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash) ([]L1InfoTreeLeaf, error)
 }
 
+type L1Block struct {
+	BlockNumber uint64
+	BlockHash   common.Hash
+	ParentHash  common.Hash
+	ReceivedAt  time.Time
+	Checked     bool // The block is safe (have past the safe point, e.g. Finalized in L1)
+	HasEvents   bool // This block have events from the rollup
+	SyncVersion string
+}
+
+type SynchronizerBlockQuerier interface {
+	GetLastL1Block(ctx context.Context) (*L1Block, error)
+	GetL1BlockByNumber(ctx context.Context, blockNumber uint64) (*L1Block, error)
+}
+
 type SequencedBatches struct {
 	FromBatchNumber uint64
 	ToBatchNumber   uint64
@@ -99,6 +114,7 @@ type Synchronizer interface {
 	SynchronizerSequencedBatchesQuerier
 	SynchronizerReorgSupporter
 	SynchronizerVirtualBatchesQuerier
+	SynchronizerBlockQuerier
 }
 
 func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Synchronizer, error) {

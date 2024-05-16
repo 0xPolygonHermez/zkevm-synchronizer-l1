@@ -21,6 +21,7 @@ type storageSyncQueries interface {
 	syncinterfaces.StorageBlockReaderInterface
 	syncinterfaces.StorageSequenceBatchesInterface
 	syncinterfaces.StorageVirtualBatchInterface
+	syncinterfaces.StorageBlockReaderInterface
 }
 
 type SyncrhronizerQueries struct {
@@ -96,4 +97,22 @@ func (s *SyncrhronizerQueries) GetLastestVirtualBatchNumber(ctx context.Context)
 		return 0, err
 	}
 	return lastBatchNumber, nil
+}
+
+func (s *SyncrhronizerQueries) GetL1BlockByNumber(ctx context.Context, blockNumber uint64) (*L1Block, error) {
+	block, err := s.storage.GetBlockByNumber(ctx, blockNumber, nil)
+	if block == nil {
+		return nil, err
+	}
+	res := L1Block(*block)
+	return &res, err
+}
+
+func (s *SyncrhronizerQueries) GetLastL1Block(ctx context.Context) (*L1Block, error) {
+	block, err := s.storage.GetLastBlock(ctx, nil)
+	if block == nil {
+		return nil, err
+	}
+	res := L1Block(*block)
+	return &res, err
 }
