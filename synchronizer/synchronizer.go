@@ -62,6 +62,7 @@ type L1Block struct {
 }
 
 type SynchronizerBlockQuerier interface {
+	GetLastL1Block(ctx context.Context) (*L1Block, error)
 	GetL1BlockByNumber(ctx context.Context, blockNumber uint64) (*L1Block, error)
 }
 
@@ -113,6 +114,7 @@ type Synchronizer interface {
 	SynchronizerSequencedBatchesQuerier
 	SynchronizerReorgSupporter
 	SynchronizerVirtualBatchesQuerier
+	SynchronizerBlockQuerier
 }
 
 func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Synchronizer, error) {

@@ -25,6 +25,65 @@ func (_m *Synchronizer) EXPECT() *Synchronizer_Expecter {
 	return &Synchronizer_Expecter{mock: &_m.Mock}
 }
 
+// GetL1BlockByNumber provides a mock function with given fields: ctx, blockNumber
+func (_m *Synchronizer) GetL1BlockByNumber(ctx context.Context, blockNumber uint64) (*synchronizer.L1Block, error) {
+	ret := _m.Called(ctx, blockNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetL1BlockByNumber")
+	}
+
+	var r0 *synchronizer.L1Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) (*synchronizer.L1Block, error)); ok {
+		return rf(ctx, blockNumber)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) *synchronizer.L1Block); ok {
+		r0 = rf(ctx, blockNumber)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*synchronizer.L1Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = rf(ctx, blockNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Synchronizer_GetL1BlockByNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetL1BlockByNumber'
+type Synchronizer_GetL1BlockByNumber_Call struct {
+	*mock.Call
+}
+
+// GetL1BlockByNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - blockNumber uint64
+func (_e *Synchronizer_Expecter) GetL1BlockByNumber(ctx interface{}, blockNumber interface{}) *Synchronizer_GetL1BlockByNumber_Call {
+	return &Synchronizer_GetL1BlockByNumber_Call{Call: _e.mock.On("GetL1BlockByNumber", ctx, blockNumber)}
+}
+
+func (_c *Synchronizer_GetL1BlockByNumber_Call) Run(run func(ctx context.Context, blockNumber uint64)) *Synchronizer_GetL1BlockByNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64))
+	})
+	return _c
+}
+
+func (_c *Synchronizer_GetL1BlockByNumber_Call) Return(_a0 *synchronizer.L1Block, _a1 error) *Synchronizer_GetL1BlockByNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Synchronizer_GetL1BlockByNumber_Call) RunAndReturn(run func(context.Context, uint64) (*synchronizer.L1Block, error)) *Synchronizer_GetL1BlockByNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetL1InfoRootPerIndex provides a mock function with given fields: ctx, L1InfoTreeIndex
 func (_m *Synchronizer) GetL1InfoRootPerIndex(ctx context.Context, L1InfoTreeIndex uint32) (common.Hash, error) {
 	ret := _m.Called(ctx, L1InfoTreeIndex)
@@ -139,6 +198,64 @@ func (_c *Synchronizer_GetL1InfoTreeLeaves_Call) Return(_a0 map[uint32]synchroni
 }
 
 func (_c *Synchronizer_GetL1InfoTreeLeaves_Call) RunAndReturn(run func(context.Context, []uint32) (map[uint32]synchronizer.L1InfoTreeLeaf, error)) *Synchronizer_GetL1InfoTreeLeaves_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetLastL1Block provides a mock function with given fields: ctx
+func (_m *Synchronizer) GetLastL1Block(ctx context.Context) (*synchronizer.L1Block, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLastL1Block")
+	}
+
+	var r0 *synchronizer.L1Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (*synchronizer.L1Block, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) *synchronizer.L1Block); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*synchronizer.L1Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Synchronizer_GetLastL1Block_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLastL1Block'
+type Synchronizer_GetLastL1Block_Call struct {
+	*mock.Call
+}
+
+// GetLastL1Block is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *Synchronizer_Expecter) GetLastL1Block(ctx interface{}) *Synchronizer_GetLastL1Block_Call {
+	return &Synchronizer_GetLastL1Block_Call{Call: _e.mock.On("GetLastL1Block", ctx)}
+}
+
+func (_c *Synchronizer_GetLastL1Block_Call) Run(run func(ctx context.Context)) *Synchronizer_GetLastL1Block_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *Synchronizer_GetLastL1Block_Call) Return(_a0 *synchronizer.L1Block, _a1 error) *Synchronizer_GetLastL1Block_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Synchronizer_GetLastL1Block_Call) RunAndReturn(run func(context.Context) (*synchronizer.L1Block, error)) *Synchronizer_GetLastL1Block_Call {
 	_c.Call.Return(run)
 	return _c
 }
