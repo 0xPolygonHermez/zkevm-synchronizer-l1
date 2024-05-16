@@ -36,6 +36,8 @@ type SynchronizerImpl struct {
 	l1EventProcessors   *processor_manager.L1EventProcessors
 	blockRangeProcessor syncinterfaces.BlockRangeProcessor
 	l1Sync              *l1sync.L1SequentialSync
+
+	reorgCallback func(newFirstL1BlockNumberValid uint64)
 }
 
 // NewSynchronizer creates and initializes an instance of Synchronizer
@@ -111,11 +113,15 @@ func (s *SynchronizerImpl) IsSynced() bool {
 
 func (s *SynchronizerImpl) SetCallbackOnReorgDone(callback func(newFirstL1BlockNumberValid uint64)) {
 	//TODO: Implement this function
-	log.Fatal("Not implemented")
+	s.reorgCallback = callback
 }
 
 func (s *SynchronizerImpl) OnReorgExecuted(reorg model.ReorgExecutionResult) {
 	log.Infof("Reorg executed! %s", reorg.String())
+	if s.reorgCallback != nil {
+		s.reorgCallback(reorg.Request.FirstL1BlockNumberToKeep)
+	}
+
 }
 
 // Sync function will read the last state synced and will continue from that point.
