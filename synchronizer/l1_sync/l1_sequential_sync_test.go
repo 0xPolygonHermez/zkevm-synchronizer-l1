@@ -16,6 +16,9 @@ func TestGetL1BlockPointsOk(t *testing.T) {
 	mockBlockProtection := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
 	mockFinalized := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
 	ctx := context.TODO()
+	mockBlockProtection.EXPECT().Description().Return("mock mockBlockProtection").Maybe()
+	mockFinalized.EXPECT().Description().Return("mock mockFinalized").Maybe()
+
 	mockBlockProtection.EXPECT().GetSafeBlockNumber(ctx, nil).Return(uint64(1), nil)
 	mockFinalized.EXPECT().GetSafeBlockNumber(ctx, nil).Return(uint64(2), nil)
 	sut := l1sync.NewBlockPointsRetriever(mockBlockProtection, mockFinalized, nil)

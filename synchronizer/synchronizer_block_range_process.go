@@ -64,7 +64,6 @@ func (s *BlockRangeProcess) addBlock(ctx context.Context, block *etherman.Block,
 }
 
 func (s *BlockRangeProcess) rollback(ctx context.Context, err error, dbTx stateTxType) error {
-
 	// Rollback db transaction
 	rollbackErr := dbTx.Rollback(ctx)
 	if rollbackErr != nil {
@@ -77,7 +76,6 @@ func (s *BlockRangeProcess) rollback(ctx context.Context, err error, dbTx stateT
 		}
 	}
 	return err
-
 }
 
 // ProcessBlockRange process the L1 events and stores the information in the db
