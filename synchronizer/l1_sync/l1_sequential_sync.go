@@ -199,46 +199,15 @@ func (s *L1SequentialSync) iteration(ctx context.Context, blockRange BlockRange,
 	// Name can be different in the order struct. For instance: Batches or Name:NewSequencers. This name is an identifier to check
 	// if the next info that must be stored in the db is a new sequencer or a batch. The value pos (position) tells what is the
 	// array index where this value is.
-	toBlock := blockRange.ToBlock
-	blocks, order, err := s.etherMan.GetRollupInfoByBlockRange(ctx, blockRange.FromBlock, &toBlock)
+	blocks, order, err := s.retrieveDataFromL1AndValidate(ctx, blockRange)
 	if err != nil {
-		log.Errorf("error getting rollup info by block range.  Err: %v", err)
 		return lastEthBlockSynced, false, err
 	}
-	if blockRange.OverlappedFirstBlock {
-		err = s.checkResponseGetRollupInfoByBlockRangeForOverlappedFirstBlock(blocks, blockRange.FromBlock)
-		if err != nil {
-			return lastEthBlockSynced, false, err
-		}
-	}
+	blocks, initBlockReceived := s.extractInitialBlock(blockRange, blocks)
 
-	var initBlockReceived *etherman.Block
-	if len(blocks) != 0 && blockRange.OverlappedFirstBlock {
-		// The first block is overlapped, it have been processed we only want
-		// it to check reorgs (compare that have not changed between the previous checkReorg and the call GetRollupInfoByBlockRange)
-		initBlockReceived = &blocks[0]
-		// First position of the array must be deleted
-		blocks = removeBlockElement(blocks, 0)
-	}
-
-	if !lastEthBlockSynced.Checked || initBlockReceived != nil {
-		// Check reorg again to be sure that the chain has not changed between the previous checkReorg and the call GetRollupInfoByBlockRange
-		log.Debugf("Checking reorgs between lastEthBlockSynced =%d and initBlockReceived: %v", lastEthBlockSynced.BlockNumber, initBlockReceived)
-		block, lastBadBlockNumber, err := s.reorgManager.CheckReorg(lastEthBlockSynced, initBlockReceived)
-		log.Debugf("Checking reorgs between lastEthBlockSynced =%d [AFTER]", lastEthBlockSynced.BlockNumber)
-		if err != nil {
-			log.Errorf("error checking reorgs. Retrying... Err: %v", err)
-			return lastEthBlockSynced, false, fmt.Errorf("error checking reorgs. Err:%w", err)
-		}
-		if block != nil {
-			// In fact block.BlockNumber is the first ok block, so  add 1 to be the first block wrong
-			// maybe doesnt exists
-			err := syncommon.NewReorgError(lastBadBlockNumber, fmt.Errorf("reorg detected. First valid block is %d, lastBadBlock is %d by CheckReorg func", block.BlockNumber, lastBadBlockNumber))
-			return block, false, err
-		}
-	} else {
-		log.Debugf("Skipping reorg check because lastEthBlockSynced %d is checked", lastEthBlockSynced.BlockNumber)
-
+	lastEthBlockSynced, err = s.checkReorgs(lastEthBlockSynced, initBlockReceived)
+	if err != nil {
+		return lastEthBlockSynced, false, err
 	}
 
 	err = s.blockRangeProcessor.ProcessBlockRange(ctx, blocks, order, finalizedBlockNumber)
@@ -264,6 +233,59 @@ func (s *L1SequentialSync) iteration(ctx context.Context, blockRange BlockRange,
 		}
 	}
 	return lastEthBlockSynced, false, nil
+}
+
+func (s *L1SequentialSync) retrieveDataFromL1AndValidate(ctx context.Context, blockRange BlockRange) ([]etherman.Block, map[common.Hash][]etherman.Order, error) {
+	toBlock := blockRange.ToBlock
+	blocks, order, err := s.etherMan.GetRollupInfoByBlockRange(ctx, blockRange.FromBlock, &toBlock)
+	if err != nil {
+		log.Errorf("error getting rollup info by block range.  Err: %v", err)
+		return nil, nil, err
+	}
+	if blockRange.OverlappedFirstBlock {
+		err = s.checkResponseGetRollupInfoByBlockRangeForOverlappedFirstBlock(blocks, blockRange.FromBlock)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	return blocks, order, nil
+}
+
+func (s *L1SequentialSync) extractInitialBlock(blockRange BlockRange, blocks []etherman.Block) ([]etherman.Block, *etherman.Block) {
+	var initBlockReceived *etherman.Block
+	if len(blocks) != 0 && blockRange.OverlappedFirstBlock {
+		// The first block is overlapped, it have been processed we only want
+		// it to check reorgs (compare that have not changed between the previous checkReorg and the call GetRollupInfoByBlockRange)
+		initBlockReceived = &blocks[0]
+		// First position of the array must be deleted
+		blocks = removeBlockElement(blocks, 0)
+	}
+	return blocks, initBlockReceived
+}
+
+// checkReorgs returns first good block and error if something is detected
+func (s *L1SequentialSync) checkReorgs(lastEthBlockSynced *stateBlockType, initBlockReceived *etherman.Block) (*stateBlockType, error) {
+
+	if !lastEthBlockSynced.Checked || initBlockReceived != nil {
+		// Check reorg again to be sure that the chain has not changed between the previous checkReorg and the call GetRollupInfoByBlockRange
+		log.Debugf("Checking reorgs between lastEthBlockSynced =%d and initBlockReceived: %v", lastEthBlockSynced.BlockNumber, initBlockReceived)
+		block, lastBadBlockNumber, err := s.reorgManager.CheckReorg(lastEthBlockSynced, initBlockReceived)
+		log.Debugf("Checking reorgs between lastEthBlockSynced =%d [AFTER]", lastEthBlockSynced.BlockNumber)
+		if err != nil {
+			log.Errorf("error checking reorgs. Retrying... Err: %v", err)
+			return lastEthBlockSynced, fmt.Errorf("error checking reorgs. Err:%w", err)
+		}
+		if block != nil {
+			// In fact block.BlockNumber is the first ok block, so  add 1 to be the first block wrong
+			// maybe doesnt exists
+			err := syncommon.NewReorgError(lastBadBlockNumber, fmt.Errorf("reorg detected. First valid block is %d, lastBadBlock is %d by CheckReorg func", block.BlockNumber, lastBadBlockNumber))
+			return block, err
+		}
+	} else {
+		log.Debugf("Skipping reorg check because lastEthBlockSynced %d is checked", lastEthBlockSynced.BlockNumber)
+
+	}
+	return lastEthBlockSynced, nil
 }
 
 // CreateBlockWithoutRollupInfoIfNeeded creates a block without rollup if
