@@ -113,17 +113,24 @@ func (s *BlockPointsRetrieverImplementation) GetL1BlockPoints(ctx context.Contex
 	}, nil
 }
 
+// It checks L1 block that still are the same in L1
+func (s *L1SequentialSync) checkReorgsOnPreviousL1Blocks(ctx context.Context) error {
+	if s.blockChecker != nil {
+		err := s.blockChecker.Step(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // This function syncs the node from a specific block to the latest
 // returns the last block synced and an error if any
 // returns true if the sync is completed
 func (s *L1SequentialSync) SyncBlocksSequential(ctx context.Context, lastEthBlockSynced *stateBlockType) (*stateBlockType, bool, error) {
-	// Call the blockchain to retrieve data
-
-	if s.blockChecker != nil {
-		err := s.blockChecker.Step(ctx)
-		if err != nil {
-			return lastEthBlockSynced, false, err
-		}
+	err := s.checkReorgsOnPreviousL1Blocks(ctx)
+	if err != nil {
+		return lastEthBlockSynced, false, err
 	}
 
 	blockPoints, err := s.blockPointsRetriever.GetL1BlockPoints(ctx)
