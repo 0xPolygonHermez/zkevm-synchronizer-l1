@@ -39,9 +39,7 @@ func (s *KVState) SetKV(ctx context.Context, key KVKey, value interface{}, dbTx 
 }
 
 func (s *KVState) GetKV(ctx context.Context, key KVKey, value interface{}, dbTx storageTxType) error {
-	err := s.storage.KVGetJson(ctx, key, value, nil, dbTx)
-
-	return err
+	return s.storage.KVGetJson(ctx, key, value, nil, dbTx)
 }
 
 // GetKVHelper is a helper function to get a value from the KV storage, if not found returns nil
@@ -51,5 +49,8 @@ func GetKVHelper[T any](ctx context.Context, key KVKey, getter StateKVInterface,
 	if err != nil && errors.Is(err, entities.ErrNotFound) {
 		return nil, nil
 	}
-	return &value, err
+	if err != nil {
+		return nil, err
+	}
+	return &value, nil
 }

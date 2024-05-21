@@ -24,8 +24,8 @@ func NewSanityStorageCheckerImpl(stateCompatibility syncinterfaces.StateStorageC
 }
 
 func (s *StorageCompatibilityCheckerImpl) CheckAndUpdateStorage(ctx context.Context) error {
-	localRun := s.getDataFromEtherman()
-	return s.stateCompatibility.CheckAndUpdateStorage(ctx, localRun, s.OverrideStorageCheck, nil)
+	currentContetsBoundData := s.getDataFromEtherman()
+	return s.stateCompatibility.CheckAndUpdateStorage(ctx, currentContetsBoundData, s.OverrideStorageCheck, nil)
 }
 
 func (s *StorageCompatibilityCheckerImpl) getDataFromEtherman() entities.StorageContentsBoundData {

@@ -117,6 +117,7 @@ generate-mocks: clean-mocks
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../state/ --output ../state/mocks --outpkg mock_state ${COMMON_MOCKERY_PARAMS}
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../state/entities --output ../state/entities/mocks --outpkg mock_entities ${COMMON_MOCKERY_PARAMS}
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../state/model --output ../state/model/mocks --outpkg mock_model ${COMMON_MOCKERY_PARAMS}
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../state/storage --output ../state/storage/mocks --outpkg mock_storage ${COMMON_MOCKERY_PARAMS}
 
 
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../synchronizer/mocks --structname=DbTxMock --filename=mock_dbtx.go --outpkg mock_synchronizer ${COMMON_MOCKERY_PARAMS}
