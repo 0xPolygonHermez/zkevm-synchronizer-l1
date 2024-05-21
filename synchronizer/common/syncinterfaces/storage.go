@@ -40,16 +40,15 @@ type StorageVirtualBatchInterface interface {
 	GetLastestVirtualBatchNumber(ctx context.Context, constrains *pgstorage.VirtualBatchConstraints, dbTx stateTxType) (uint64, error)
 }
 
-type StorageTransactionInterface interface {
-	//Rollback(ctx context.Context, dbTx stateTxType) error
-	//BeginDBTransaction(ctx context.Context) (stateTxType, error)
-	//BeginTransaction(ctx context.Context) (pgstorage.Tx, error)
-	//Commit(ctx context.Context, dbTx stateTxType) error
-}
-
 type StorageSequenceBatchesInterface interface {
 	AddSequencedBatches(ctx context.Context, sequence *pgstorage.SequencedBatches, dbTx stateTxType) error
 	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx stateTxType) (*pgstorage.SequencedBatches, error)
+}
+
+// StorageKVInterface is an interface for key-value storage
+type StorageKVInterface interface {
+	KVSetJson(ctx context.Context, key string, value interface{}, dbTx stateTxType) error
+	KVGetJson(ctx context.Context, key string, value interface{}, dbTx stateTxType) error
 }
 
 type StateForkIdQuerier interface {
@@ -58,10 +57,10 @@ type StateForkIdQuerier interface {
 }
 
 type StorageInterface interface {
-	StorageTransactionInterface
 	StorageBlockWriterInterface
 	StorageBlockReaderInterface
 	StorageForkIDInterface
 	StorageL1InfoTreeInterface
 	StorageSequenceBatchesInterface
+	StorageKVInterface
 }

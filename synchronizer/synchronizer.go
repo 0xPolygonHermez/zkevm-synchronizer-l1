@@ -150,12 +150,13 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 		return nil, err
 	}
 	state := state.NewState(storage)
-	//l1checker := l1_check_block.NewL1CheckBlockFeature(config.Synchronizer.L1BlockCheck, storage, forkidState)
-	sync, err := NewSynchronizerImpl(ctx, storage, state, etherman, config.Synchronizer)
+	storageCompatibilityChecker := NewSanityStorageCheckerImpl(state, etherman, config.Synchronizer.OverrideStorageCheck)
+	sync, err := NewSynchronizerImpl(ctx, storage, state, etherman, storageCompatibilityChecker, config.Synchronizer)
 	if err != nil {
 		log.Error("Error creating synchronizer", err)
 		return nil, err
 	}
+
 	syncAdapter := NewSynchronizerAdapter(NewSyncrhronizerQueries(state, storage, ctx), sync)
 	return syncAdapter, nil
 }

@@ -42,3 +42,7 @@ type StateInterface interface {
 	StorageBlockReaderInterface
 	stateReorgManager
 }
+
+type StateStorageCompatibilityCheckerInterface interface {
+	CheckAndUpdateStorage(ctx context.Context, runBoundData storageContentsBoundData, overrideStorageCheck bool, dbTx stateTxType) error
+}

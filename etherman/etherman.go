@@ -299,6 +299,11 @@ func (etherMan *Client) GetRollupID() uint {
 	return uint(etherMan.RollupID)
 }
 
+// GetL1ChainID returns the L1 ChainID
+func (etherMan *Client) GetL1ChainID() uint64 {
+	return etherMan.cfg.L1ChainID
+}
+
 // VerifyGenBlockNumber verifies if the genesis Block Number is valid
 func (etherMan *Client) VerifyGenBlockNumber(ctx context.Context, genBlockNumber uint64) (bool, error) {
 	start := time.Now()

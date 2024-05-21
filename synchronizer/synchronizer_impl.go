@@ -36,6 +36,7 @@ type SynchronizerImpl struct {
 	l1EventProcessors   *processor_manager.L1EventProcessors
 	blockRangeProcessor syncinterfaces.BlockRangeProcessor
 	l1Sync              *l1sync.L1SequentialSync
+	storageChecker      syncinterfaces.StorageCompatibilityChecker
 
 	reorgCallback func(newFirstL1BlockNumberValid uint64)
 }
@@ -46,6 +47,7 @@ func NewSynchronizerImpl(
 	storage syncinterfaces.StorageInterface,
 	state syncinterfaces.StateInterface,
 	ethMan EthermanInterface,
+	storageChecker syncinterfaces.StorageCompatibilityChecker,
 	cfg syncconfig.Config) (*SynchronizerImpl, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	networkID := uint(0)
@@ -59,6 +61,7 @@ func NewSynchronizerImpl(
 		genBlockNumber: cfg.GenesisBlockNumber,
 		cfg:            cfg,
 		networkID:      networkID,
+		storageChecker: storageChecker,
 	}
 
 	builder := processor_manager.NewL1EventProcessorsBuilder()
@@ -100,6 +103,12 @@ func NewSynchronizerImpl(
 		})
 
 	state.AddOnReorgCallback(sync.OnReorgExecuted)
+
+	err := sync.CheckStorage(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &sync, nil
 
 }
@@ -122,6 +131,13 @@ func (s *SynchronizerImpl) OnReorgExecuted(reorg model.ReorgExecutionResult) {
 		s.reorgCallback(reorg.Request.FirstL1BlockNumberToKeep)
 	}
 
+}
+
+func (s *SynchronizerImpl) CheckStorage(ctx context.Context) error {
+	if s.storageChecker == nil {
+		return nil
+	}
+	return s.storageChecker.CheckAndUpdateStorage(ctx)
 }
 
 // Sync function will read the last state synced and will continue from that point.
@@ -227,40 +243,3 @@ func (s *SynchronizerImpl) executeReorgIfNeeded(reorgError *common.ReorgError) e
 	return nil
 
 }
-
-/*
-// This function allows reset the state until an specific ethereum block
-func (s *SynchronizerImpl) resetState(blockNumber uint64) error {
-	log.Infof("NetworkID: %d. Reverting synchronization to block: %d", s.networkID, blockNumber)
-	dbTx, err := s.state.BeginTransaction(s.ctx)
-	if err != nil {
-		log.Errorf("networkID: %d, Error starting a db transaction to reset the state. Error: %v", s.networkID, err)
-		return err
-	}
-	err = s.storage.Reset(s.ctx, blockNumber, dbTx)
-	if err != nil {
-		log.Errorf("networkID: %d, error resetting the state. Error: %v", s.networkID, err)
-		rollbackErr := dbTx.Rollback(s.ctx)
-		if rollbackErr != nil {
-			log.Errorf("networkID: %d, error rolling back state to store block. BlockNumber: %d, rollbackErr: %v, error : %s",
-				s.networkID, blockNumber, rollbackErr, err.Error())
-			return rollbackErr
-		}
-		return err
-	}
-
-	err = dbTx.Commit(s.ctx)
-	if err != nil {
-		log.Errorf("networkID: %d, error committing the resetted state. Error: %v", s.networkID, err)
-		rollbackErr := dbTx.Rollback(s.ctx)
-		if rollbackErr != nil {
-			log.Errorf("networkID: %d, error rolling back state to store block. BlockNumber: %d, rollbackErr: %v, error : %s",
-				s.networkID, blockNumber, rollbackErr, err.Error())
-			return rollbackErr
-		}
-		return err
-	}
-
-	return nil
-}
-*/

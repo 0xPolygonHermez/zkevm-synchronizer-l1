@@ -11,16 +11,19 @@ type State struct {
 	*model.L1InfoTreeState
 	*model.BatchState
 	*model.ReorgState
+	*model.StorageCompatibilityState
 	storage.BlockStorer
 }
 
 func NewState(storageImpl storage.Storer) *State {
+	kvState := model.NewKVState(storageImpl)
 	res := &State{
 		model.NewTxManager(storageImpl),
 		model.NewForkIdState(storageImpl),
 		model.NewL1InfoTreeManager(storageImpl),
 		model.NewBatchState(storageImpl),
 		model.NewReorgState(storageImpl),
+		model.NewStorageCompatibilityState(kvState),
 		storageImpl,
 	}
 	// Connect cache invalidation on Reorg

@@ -57,6 +57,11 @@ type txStorer interface {
 	BeginTransaction(ctx context.Context) (storageTxType, error)
 }
 
+type KvStorer interface {
+	KVSetJson(ctx context.Context, key string, value interface{}, dbTx storageTxType) error
+	KVGetJson(ctx context.Context, key string, value interface{}, dbTx storageTxType) error
+}
+
 type Storer interface {
 	txStorer
 	BlockStorer
@@ -65,4 +70,5 @@ type Storer interface {
 	virtualBatchStorer
 	sequencedBatchStorer
 	reorgStorer
+	KvStorer
 }

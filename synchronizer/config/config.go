@@ -20,4 +20,8 @@ type Config struct {
 	SyncBlockProtection string `jsonschema:"enum=lastest,enum=safe, enum=pending, enum=finalized" mapstructure:"SyncBlockProtection"`
 	// Example: SyncBlockProtection= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block
 	SyncBlockProtectionOffset int `mapstructure:"SyncBlockProtectionOffset"`
+
+	// OverrideStorageCheck is a flag to override the storage check
+	// take in account that without that check you can merge data from different rollups or differents L1 networks
+	OverrideStorageCheck bool `mapstructure:"OverrideStorageCheck"`
 }
