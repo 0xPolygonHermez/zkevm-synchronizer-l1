@@ -317,32 +317,6 @@ func (s *L1SequentialSync) CreateBlockWithoutRollupInfoIfNeeded(ctx context.Cont
 	return nil, nil
 }
 
-/*
-	func (s *L1SequentialSync) reorgDetected(ctx context.Context, lastEthBlockSynced *stateBlockType) (*stateBlockType, error) {
-		prevBlock, err := s.state.GetPreviousBlock(ctx, 1, nil)
-		if errors.Is(err, entities.ErrNotFound) {
-			log.Warn("error checking reorg: previous block not found in db: ", err)
-			prevBlock = &stateBlockType{}
-		} else if err != nil {
-			log.Error("error getting previousBlock from db. Error: ", err)
-			return lastEthBlockSynced, err
-		}
-		blockReorged, err := s.checkReorg(prevBlock, nil)
-		if err != nil {
-			log.Error("error checking reorgs in previous blocks. Error: ", err)
-			return lastEthBlockSynced, err
-		}
-		if blockReorged == nil {
-			blockReorged = prevBlock
-		}
-		err = s.resetState(blockReorged.BlockNumber)
-		if err != nil {
-			log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
-			return lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
-		}
-		return blockReorged, nil
-	}
-*/
 func removeBlockElement(slice []etherman.Block, s int) []etherman.Block {
 	ret := make([]etherman.Block, 0)
 	ret = append(ret, slice[:s]...)
