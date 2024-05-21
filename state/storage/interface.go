@@ -13,6 +13,7 @@ type ForkIDInterval = entities.ForkIDInterval
 type VirtualBatch = entities.VirtualBatch
 type SequencedBatches = entities.SequencedBatches
 type storageTxType = entities.Tx
+type kVMetadataEntry = entities.KVMetadataEntry
 
 type BlockStorer interface {
 	AddBlock(ctx context.Context, block *L1Block, dbTx storageTxType) error
@@ -58,8 +59,8 @@ type txStorer interface {
 }
 
 type KvStorer interface {
-	KVSetJson(ctx context.Context, key string, value interface{}, dbTx storageTxType) error
-	KVGetJson(ctx context.Context, key string, value interface{}, dbTx storageTxType) error
+	KVSetJson(ctx context.Context, key string, value interface{}, metadata *kVMetadataEntry, dbTx storageTxType) error
+	KVGetJson(ctx context.Context, key string, value interface{}, metadata *kVMetadataEntry, dbTx storageTxType) error
 }
 
 type Storer interface {

@@ -35,11 +35,11 @@ func NewKVState(storage StorageKVInterface) *KVState {
 }
 
 func (s *KVState) SetKV(ctx context.Context, key KVKey, value interface{}, dbTx storageTxType) error {
-	return s.storage.KVSetJson(ctx, key, value, dbTx)
+	return s.storage.KVSetJson(ctx, key, value, nil, dbTx)
 }
 
 func (s *KVState) GetKV(ctx context.Context, key KVKey, value interface{}, dbTx storageTxType) error {
-	err := s.storage.KVGetJson(ctx, key, value, dbTx)
+	err := s.storage.KVGetJson(ctx, key, value, nil, dbTx)
 
 	return err
 }

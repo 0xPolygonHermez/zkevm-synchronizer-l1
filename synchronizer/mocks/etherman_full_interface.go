@@ -203,6 +203,51 @@ func (_c *EthermanFullInterface_GetL1BlockUpgradeLxLy_Call) RunAndReturn(run fun
 	return _c
 }
 
+// GetL1ChainID provides a mock function with given fields:
+func (_m *EthermanFullInterface) GetL1ChainID() uint64 {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetL1ChainID")
+	}
+
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func() uint64); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	return r0
+}
+
+// EthermanFullInterface_GetL1ChainID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetL1ChainID'
+type EthermanFullInterface_GetL1ChainID_Call struct {
+	*mock.Call
+}
+
+// GetL1ChainID is a helper method to define mock.On call
+func (_e *EthermanFullInterface_Expecter) GetL1ChainID() *EthermanFullInterface_GetL1ChainID_Call {
+	return &EthermanFullInterface_GetL1ChainID_Call{Call: _e.mock.On("GetL1ChainID")}
+}
+
+func (_c *EthermanFullInterface_GetL1ChainID_Call) Run(run func()) *EthermanFullInterface_GetL1ChainID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetL1ChainID_Call) Return(_a0 uint64) *EthermanFullInterface_GetL1ChainID_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetL1ChainID_Call) RunAndReturn(run func() uint64) *EthermanFullInterface_GetL1ChainID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLatestBatchNumber provides a mock function with given fields:
 func (_m *EthermanFullInterface) GetLatestBatchNumber() (uint64, error) {
 	ret := _m.Called()
@@ -309,6 +354,51 @@ func (_c *EthermanFullInterface_GetLatestVerifiedBatchNum_Call) Return(_a0 uint6
 }
 
 func (_c *EthermanFullInterface_GetLatestVerifiedBatchNum_Call) RunAndReturn(run func() (uint64, error)) *EthermanFullInterface_GetLatestVerifiedBatchNum_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetRollupID provides a mock function with given fields:
+func (_m *EthermanFullInterface) GetRollupID() uint {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRollupID")
+	}
+
+	var r0 uint
+	if rf, ok := ret.Get(0).(func() uint); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(uint)
+	}
+
+	return r0
+}
+
+// EthermanFullInterface_GetRollupID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetRollupID'
+type EthermanFullInterface_GetRollupID_Call struct {
+	*mock.Call
+}
+
+// GetRollupID is a helper method to define mock.On call
+func (_e *EthermanFullInterface_Expecter) GetRollupID() *EthermanFullInterface_GetRollupID_Call {
+	return &EthermanFullInterface_GetRollupID_Call{Call: _e.mock.On("GetRollupID")}
+}
+
+func (_c *EthermanFullInterface_GetRollupID_Call) Run(run func()) *EthermanFullInterface_GetRollupID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetRollupID_Call) Return(_a0 uint) *EthermanFullInterface_GetRollupID_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetRollupID_Call) RunAndReturn(run func() uint) *EthermanFullInterface_GetRollupID_Call {
 	_c.Call.Return(run)
 	return _c
 }

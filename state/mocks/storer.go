@@ -1089,6 +1089,106 @@ func (_c *Storer_GetVirtualBatchByBatchNumber_Call) RunAndReturn(run func(contex
 	return _c
 }
 
+// KVGetJson provides a mock function with given fields: ctx, key, value, metadata, dbTx
+func (_m *Storer) KVGetJson(ctx context.Context, key string, value interface{}, metadata *entities.KVMetadataEntry, dbTx entities.Tx) error {
+	ret := _m.Called(ctx, key, value, metadata, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for KVGetJson")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, interface{}, *entities.KVMetadataEntry, entities.Tx) error); ok {
+		r0 = rf(ctx, key, value, metadata, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Storer_KVGetJson_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'KVGetJson'
+type Storer_KVGetJson_Call struct {
+	*mock.Call
+}
+
+// KVGetJson is a helper method to define mock.On call
+//   - ctx context.Context
+//   - key string
+//   - value interface{}
+//   - metadata *entities.KVMetadataEntry
+//   - dbTx entities.Tx
+func (_e *Storer_Expecter) KVGetJson(ctx interface{}, key interface{}, value interface{}, metadata interface{}, dbTx interface{}) *Storer_KVGetJson_Call {
+	return &Storer_KVGetJson_Call{Call: _e.mock.On("KVGetJson", ctx, key, value, metadata, dbTx)}
+}
+
+func (_c *Storer_KVGetJson_Call) Run(run func(ctx context.Context, key string, value interface{}, metadata *entities.KVMetadataEntry, dbTx entities.Tx)) *Storer_KVGetJson_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(interface{}), args[3].(*entities.KVMetadataEntry), args[4].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *Storer_KVGetJson_Call) Return(_a0 error) *Storer_KVGetJson_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Storer_KVGetJson_Call) RunAndReturn(run func(context.Context, string, interface{}, *entities.KVMetadataEntry, entities.Tx) error) *Storer_KVGetJson_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// KVSetJson provides a mock function with given fields: ctx, key, value, metadata, dbTx
+func (_m *Storer) KVSetJson(ctx context.Context, key string, value interface{}, metadata *entities.KVMetadataEntry, dbTx entities.Tx) error {
+	ret := _m.Called(ctx, key, value, metadata, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for KVSetJson")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, interface{}, *entities.KVMetadataEntry, entities.Tx) error); ok {
+		r0 = rf(ctx, key, value, metadata, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Storer_KVSetJson_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'KVSetJson'
+type Storer_KVSetJson_Call struct {
+	*mock.Call
+}
+
+// KVSetJson is a helper method to define mock.On call
+//   - ctx context.Context
+//   - key string
+//   - value interface{}
+//   - metadata *entities.KVMetadataEntry
+//   - dbTx entities.Tx
+func (_e *Storer_Expecter) KVSetJson(ctx interface{}, key interface{}, value interface{}, metadata interface{}, dbTx interface{}) *Storer_KVSetJson_Call {
+	return &Storer_KVSetJson_Call{Call: _e.mock.On("KVSetJson", ctx, key, value, metadata, dbTx)}
+}
+
+func (_c *Storer_KVSetJson_Call) Run(run func(ctx context.Context, key string, value interface{}, metadata *entities.KVMetadataEntry, dbTx entities.Tx)) *Storer_KVSetJson_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(interface{}), args[3].(*entities.KVMetadataEntry), args[4].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *Storer_KVSetJson_Call) Return(_a0 error) *Storer_KVSetJson_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Storer_KVSetJson_Call) RunAndReturn(run func(context.Context, string, interface{}, *entities.KVMetadataEntry, entities.Tx) error) *Storer_KVSetJson_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ResetToL1BlockNumber provides a mock function with given fields: ctx, firstBlockNumberToKeep, dbTx
 func (_m *Storer) ResetToL1BlockNumber(ctx context.Context, firstBlockNumberToKeep uint64, dbTx entities.Tx) error {
 	ret := _m.Called(ctx, firstBlockNumberToKeep, dbTx)

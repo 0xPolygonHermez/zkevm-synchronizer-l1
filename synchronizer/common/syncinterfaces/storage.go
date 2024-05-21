@@ -46,10 +46,6 @@ type StorageSequenceBatchesInterface interface {
 }
 
 // StorageKVInterface is an interface for key-value storage
-type StorageKVInterface interface {
-	KVSetJson(ctx context.Context, key string, value interface{}, dbTx stateTxType) error
-	KVGetJson(ctx context.Context, key string, value interface{}, dbTx stateTxType) error
-}
 
 type StateForkIdQuerier interface {
 	GetForkIDByBatchNumber(ctx context.Context, batchNumber uint64, dbTx stateTxType) uint64
@@ -62,5 +58,4 @@ type StorageInterface interface {
 	StorageForkIDInterface
 	StorageL1InfoTreeInterface
 	StorageSequenceBatchesInterface
-	StorageKVInterface
 }
