@@ -121,6 +121,7 @@ generate-mocks: clean-mocks
 
 
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../synchronizer/mocks --structname=DbTxMock --filename=mock_dbtx.go --outpkg mock_synchronizer ${COMMON_MOCKERY_PARAMS}
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../state/storage/pgstorage/mocks --structname=DbTxMock --filename=mock_dbtx.go --outpkg mock_pgstorage ${COMMON_MOCKERY_PARAMS}
 	
 
 ## Help display.

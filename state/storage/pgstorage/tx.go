@@ -20,6 +20,12 @@ type stateImplementationTx struct {
 	commitCallbacks   []TxCallbackType
 }
 
+func NewTxImpl(tx pgx.Tx) Tx {
+	return &stateImplementationTx{
+		Tx: tx,
+	}
+}
+
 func (s *stateImplementationTx) AddRollbackCallback(cb TxCallbackType) {
 	s.rollbackCallbacks = append(s.rollbackCallbacks, cb)
 }
