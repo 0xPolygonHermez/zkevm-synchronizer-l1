@@ -121,10 +121,10 @@ func (s *SynchronizerImpl) IsSynced() bool {
 }
 
 func (s *SynchronizerImpl) SetCallbackOnReorgDone(callback func(reorgData ReorgExecutionResult)) {
-	//TODO: Implement this function
 	s.reorgCallback = callback
 }
 
+// OnReorgExecuted this is a CB setted to state reorg
 func (s *SynchronizerImpl) OnReorgExecuted(reorg model.ReorgExecutionResult) {
 	log.Infof("Reorg executed! %s", reorg.String())
 	if s.reorgCallback != nil {
@@ -132,7 +132,7 @@ func (s *SynchronizerImpl) OnReorgExecuted(reorg model.ReorgExecutionResult) {
 			FirstL1BlockNumberValidAfterReorg: &reorg.Request.FirstL1BlockNumberToKeep,
 			ReasonError:                       reorg.Request.ReasonError,
 		}
-		log.Infof("Executing reorg callback in a go-routine")
+		log.Infof("Executing reorg callback in a goroutine")
 		go s.reorgCallback(param)
 	}
 
@@ -240,6 +240,7 @@ func (s *SynchronizerImpl) executeReorgIfNeeded(reorgError *common.ReorgError) e
 		_ = dbTx.Rollback(s.ctx)
 		return result.ExecutionError
 	}
+	// This commit is going to launch the callback to OnReorgExecuted
 	errCommit := dbTx.Commit(s.ctx)
 	if errCommit != nil {
 		log.Errorf("networkID: %d, error committing reorg. Error: %v", s.networkID, errCommit)

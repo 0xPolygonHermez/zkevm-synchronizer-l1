@@ -73,7 +73,7 @@ func (s *ReorgState) ExecuteReorg(ctx context.Context, reorgRequest ReorgRequest
 }
 
 func (s *ReorgState) onTxCommit(dbTx storageTxType, err error) {
-	if err != nil {
+	if err == nil {
 		for _, f := range s.onReorgCallbacks {
 			f(*s.lastReorgResult)
 		}
