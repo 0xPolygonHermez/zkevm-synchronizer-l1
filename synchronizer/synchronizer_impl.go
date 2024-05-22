@@ -21,9 +21,7 @@ import (
 
 // SynchronizerImpl connects L1 and L2
 type SynchronizerImpl struct {
-	etherMan EthermanInterface
-	// TODO: remove
-
+	etherMan       EthermanInterface
 	storage        syncinterfaces.StorageInterface
 	state          syncinterfaces.StateInterface
 	ctx            context.Context

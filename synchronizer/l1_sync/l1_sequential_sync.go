@@ -128,11 +128,6 @@ func (s *L1SequentialSync) checkReorgsOnPreviousL1Blocks(ctx context.Context) er
 // returns the last block synced and an error if any
 // returns true if the sync is completed
 func (s *L1SequentialSync) SyncBlocksSequential(ctx context.Context, lastEthBlockSynced *stateBlockType) (*stateBlockType, bool, error) {
-	err := s.checkReorgsOnPreviousL1Blocks(ctx)
-	if err != nil {
-		return lastEthBlockSynced, false, err
-	}
-
 	blockPoints, err := s.blockPointsRetriever.GetL1BlockPoints(ctx)
 	if err != nil {
 		return lastEthBlockSynced, false, err
@@ -148,6 +143,11 @@ func (s *L1SequentialSync) SyncBlocksSequential(ctx context.Context, lastEthBloc
 	blockRangeIterator := NewBlockRangeIterator(fromBlock, s.cfg.SyncChunkSize, blockPoints.L1LastBlockToSync)
 
 	for {
+		log.Debugf("Check that old blocks haven't changed...")
+		err := s.checkReorgsOnPreviousL1Blocks(ctx)
+		if err != nil {
+			return lastEthBlockSynced, false, err
+		}
 		if blockRangeIterator == nil {
 			log.Debugf("Nothing to do starting from %d to %d. Skipping...", fromBlock, blockPoints.L1LastBlockToSync)
 			return lastEthBlockSynced, true, nil
