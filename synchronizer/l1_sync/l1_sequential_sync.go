@@ -19,7 +19,7 @@ type EthermanInterface interface {
 
 type StateL1SeqInterface interface {
 	BeginTransaction(ctx context.Context) (dbTxType, error)
-	GetPreviousBlock(ctx context.Context, depth uint64, fromBlockNumber *uint64, tx dbTxType) (*stateBlockType, error)
+	//GetPreviousBlock(ctx context.Context, depth uint64, fromBlockNumber *uint64, tx dbTxType) (*stateBlockType, error)
 }
 type BlockPoints struct {
 	L1LastBlockToSync      uint64

@@ -68,7 +68,7 @@ func TestBlockAddAndGets(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, testCase.queryLastBlock.String(), lastBlock.String(), "GetLastBlock")
 
-		prevBlock, err := storage.GetPreviousBlock(ctx, 1, nil, dbTx)
+		prevBlock, err := storage.GetPreviousBlock(ctx, 1, dbTx)
 		if testCase.queryPreviousBlock == nil {
 			require.ErrorIs(t, err, entities.ErrNotFound)
 		} else {
@@ -97,24 +97,9 @@ func TestGetPreviousBlockFromBlock(t *testing.T) {
 	err = storage.AddBlock(ctx, &block310, dbTx)
 	require.NoError(t, err)
 
-	block, err := storage.GetPreviousBlock(ctx, 0, nil, dbTx)
+	block, err := storage.GetPreviousBlock(ctx, 0, dbTx)
 	require.NoError(t, err)
 	require.Equal(t, block310.String(), block.String(), "offset 0 must return latest block")
-	blockNumber := uint64(310)
-	block, err = storage.GetPreviousBlock(ctx, 0, &blockNumber, dbTx)
-	require.NoError(t, err)
-	require.Equal(t, block310.String(), block.String(), "offset 0 and fromBlock latest must return latest block")
-
-	blockNumber = uint64(309)
-	block, err = storage.GetPreviousBlock(ctx, 0, &blockNumber, dbTx)
-	require.NoError(t, err)
-	require.Equal(t, block301.String(), block.String(), "offset 0 and fromBlock latest-1 must return previous to latest")
-
-	blockNumber = uint64(309)
-	block, err = storage.GetPreviousBlock(ctx, 1, &blockNumber, dbTx)
-	require.NoError(t, err)
-	require.Equal(t, block300.String(), block.String(), "offset 1 and fromBlock latest-1 must return 2 before to latest")
-
 }
 
 func TestUpdateCheckedBlockByNumber(t *testing.T) {

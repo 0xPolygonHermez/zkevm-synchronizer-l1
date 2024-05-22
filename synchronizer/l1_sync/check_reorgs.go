@@ -14,7 +14,7 @@ import (
 
 type stateInterface interface {
 	BeginTransaction(ctx context.Context) (dbTxType, error)
-	GetPreviousBlock(ctx context.Context, depth uint64, fromBlockNumber *uint64, tx dbTxType) (*stateBlockType, error)
+	GetPreviousBlock(ctx context.Context, depth uint64, tx dbTxType) (*stateBlockType, error)
 }
 
 type EthermanReorgManager interface {
@@ -118,7 +118,7 @@ func (s *CheckReorgManager) NewCheckReorg(latestStoredBlock *stateBlockType, syn
 				log.Errorf("error creating db transaction to get prevoius blocks")
 				return nil, 0, err
 			}
-			lb, err := s.state.GetPreviousBlock(s.ctx, depth, nil, dbTx)
+			lb, err := s.state.GetPreviousBlock(s.ctx, depth, dbTx)
 			errC := dbTx.Commit(s.ctx)
 			if errC != nil {
 				log.Errorf("error committing dbTx, err: %v", errC)

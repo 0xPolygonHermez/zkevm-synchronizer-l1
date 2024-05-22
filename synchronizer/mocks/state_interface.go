@@ -81,9 +81,9 @@ func (_c *stateInterface_BeginTransaction_Call) RunAndReturn(run func(context.Co
 	return _c
 }
 
-// GetPreviousBlock provides a mock function with given fields: ctx, depth, fromBlockNumber, tx
-func (_m *stateInterface) GetPreviousBlock(ctx context.Context, depth uint64, fromBlockNumber *uint64, tx entities.Tx) (*entities.L1Block, error) {
-	ret := _m.Called(ctx, depth, fromBlockNumber, tx)
+// GetPreviousBlock provides a mock function with given fields: ctx, depth, tx
+func (_m *stateInterface) GetPreviousBlock(ctx context.Context, depth uint64, tx entities.Tx) (*entities.L1Block, error) {
+	ret := _m.Called(ctx, depth, tx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetPreviousBlock")
@@ -91,19 +91,19 @@ func (_m *stateInterface) GetPreviousBlock(ctx context.Context, depth uint64, fr
 
 	var r0 *entities.L1Block
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64, entities.Tx) (*entities.L1Block, error)); ok {
-		return rf(ctx, depth, fromBlockNumber, tx)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) (*entities.L1Block, error)); ok {
+		return rf(ctx, depth, tx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64, entities.Tx) *entities.L1Block); ok {
-		r0 = rf(ctx, depth, fromBlockNumber, tx)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) *entities.L1Block); ok {
+		r0 = rf(ctx, depth, tx)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*entities.L1Block)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, *uint64, entities.Tx) error); ok {
-		r1 = rf(ctx, depth, fromBlockNumber, tx)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, entities.Tx) error); ok {
+		r1 = rf(ctx, depth, tx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -119,15 +119,14 @@ type stateInterface_GetPreviousBlock_Call struct {
 // GetPreviousBlock is a helper method to define mock.On call
 //   - ctx context.Context
 //   - depth uint64
-//   - fromBlockNumber *uint64
 //   - tx entities.Tx
-func (_e *stateInterface_Expecter) GetPreviousBlock(ctx interface{}, depth interface{}, fromBlockNumber interface{}, tx interface{}) *stateInterface_GetPreviousBlock_Call {
-	return &stateInterface_GetPreviousBlock_Call{Call: _e.mock.On("GetPreviousBlock", ctx, depth, fromBlockNumber, tx)}
+func (_e *stateInterface_Expecter) GetPreviousBlock(ctx interface{}, depth interface{}, tx interface{}) *stateInterface_GetPreviousBlock_Call {
+	return &stateInterface_GetPreviousBlock_Call{Call: _e.mock.On("GetPreviousBlock", ctx, depth, tx)}
 }
 
-func (_c *stateInterface_GetPreviousBlock_Call) Run(run func(ctx context.Context, depth uint64, fromBlockNumber *uint64, tx entities.Tx)) *stateInterface_GetPreviousBlock_Call {
+func (_c *stateInterface_GetPreviousBlock_Call) Run(run func(ctx context.Context, depth uint64, tx entities.Tx)) *stateInterface_GetPreviousBlock_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(*uint64), args[3].(entities.Tx))
+		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
 	})
 	return _c
 }
@@ -137,7 +136,7 @@ func (_c *stateInterface_GetPreviousBlock_Call) Return(_a0 *entities.L1Block, _a
 	return _c
 }
 
-func (_c *stateInterface_GetPreviousBlock_Call) RunAndReturn(run func(context.Context, uint64, *uint64, entities.Tx) (*entities.L1Block, error)) *stateInterface_GetPreviousBlock_Call {
+func (_c *stateInterface_GetPreviousBlock_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) (*entities.L1Block, error)) *stateInterface_GetPreviousBlock_Call {
 	_c.Call.Return(run)
 	return _c
 }
