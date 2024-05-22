@@ -26,6 +26,11 @@ type stateReorgManager interface {
 	ExecuteReorg(ctx context.Context, reorgRequest model.ReorgRequest, dbTx stateTxType) model.ReorgExecutionResult
 }
 
+type StateForkIdQuerier interface {
+	GetForkIDByBatchNumber(ctx context.Context, batchNumber uint64, dbTx stateTxType) uint64
+	GetForkIDByBlockNumber(ctx context.Context, blockNumber uint64, dbTx stateTxType) uint64
+}
+
 type StateInterface interface {
 	AddL1InfoTreeLeafAndAssignIndex(ctx context.Context, exitRoot *entities.L1InfoTreeLeaf, dbTx stateTxType) (*entities.L1InfoTreeLeaf, error)
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage"
 )
 
 // storageContentsBoundData is a struct that contains the RollupID and L1ChainID
@@ -15,12 +16,13 @@ import (
 // in storage is invalid
 
 type storageContentsBoundData = entities.StorageContentsBoundData
+type storageKVInterface = storage.KvStorer
 
 type StorageCompatibilityState struct {
-	storage StateKVInterface
+	storage storageKVInterface
 }
 
-func NewStorageCompatibilityState(storage StateKVInterface) *StorageCompatibilityState {
+func NewStorageCompatibilityState(storage storageKVInterface) *StorageCompatibilityState {
 	return &StorageCompatibilityState{
 		storage: storage,
 	}
@@ -64,7 +66,7 @@ func (s *StorageCompatibilityState) CheckSanity(ctx context.Context, runBoundDat
 }
 
 func (s *StorageCompatibilityState) setStorageContentsBoundData(ctx context.Context, data storageContentsBoundData, dbTx storageTxType) error {
-	return s.storage.SetKV(ctx, keyStorageContentBound, data, dbTx)
+	return s.storage.KVSetJson(ctx, keyStorageContentBound, data, nil, dbTx)
 }
 
 func (s *StorageCompatibilityState) compareData(runBoundData storageContentsBoundData, storageData *storageContentsBoundData) error {

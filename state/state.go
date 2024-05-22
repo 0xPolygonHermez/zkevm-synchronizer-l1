@@ -16,14 +16,14 @@ type State struct {
 }
 
 func NewState(storageImpl storage.Storer) *State {
-	kvState := model.NewKVState(storageImpl)
+
 	res := &State{
 		model.NewTxManager(storageImpl),
 		model.NewForkIdState(storageImpl),
 		model.NewL1InfoTreeManager(storageImpl),
 		model.NewBatchState(storageImpl),
 		model.NewReorgState(storageImpl),
-		model.NewStorageCompatibilityState(kvState),
+		model.NewStorageCompatibilityState(storageImpl),
 		storageImpl,
 	}
 	// Connect cache invalidation on Reorg

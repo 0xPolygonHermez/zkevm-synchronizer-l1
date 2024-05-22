@@ -45,13 +45,6 @@ type StorageSequenceBatchesInterface interface {
 	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx stateTxType) (*pgstorage.SequencedBatches, error)
 }
 
-// StorageKVInterface is an interface for key-value storage
-
-type StateForkIdQuerier interface {
-	GetForkIDByBatchNumber(ctx context.Context, batchNumber uint64, dbTx stateTxType) uint64
-	GetForkIDByBlockNumber(ctx context.Context, blockNumber uint64, dbTx stateTxType) uint64
-}
-
 type StorageInterface interface {
 	StorageBlockWriterInterface
 	StorageBlockReaderInterface

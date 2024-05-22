@@ -100,11 +100,17 @@ type SynchronizerVirtualBatchesQuerier interface {
 	GetLastestVirtualBatchNumber(ctx context.Context) (uint64, error)
 }
 
+type ReorgExecutionResult struct {
+	// FirstL1BlockNumberValidAfterReorg is the first block or nil if the reorg have delete all blocks
+	FirstL1BlockNumberValidAfterReorg *uint64
+	ReasonError                       error
+}
+
 // SynchronizerReorgSupporter is an interface that give support to the reorgs detected on L1
 type SynchronizerReorgSupporter interface {
 	// SetCallbackOnReorgDone sets a callback that will be called when the reorg is done
 	// to disable it you can set nil
-	SetCallbackOnReorgDone(callback func(newFirstL1BlockNumberValid uint64))
+	SetCallbackOnReorgDone(callback func(reorgData ReorgExecutionResult))
 }
 
 type Synchronizer interface {

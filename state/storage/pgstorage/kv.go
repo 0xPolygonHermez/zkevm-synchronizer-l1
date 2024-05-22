@@ -10,8 +10,9 @@ import (
 )
 
 type KVMetadataEntry = entities.KVMetadataEntry
+type KVKey = entities.KVKey
 
-func (p *PostgresStorage) KVSetString(ctx context.Context, key string, value string, metadata *KVMetadataEntry, dbTx dbTxType) error {
+func (p *PostgresStorage) KVSetString(ctx context.Context, key KVKey, value string, metadata *KVMetadataEntry, dbTx dbTxType) error {
 	if metadata == nil {
 		timeNow := time.Now()
 		metadata = &KVMetadataEntry{
@@ -29,7 +30,7 @@ func (p *PostgresStorage) KVSetString(ctx context.Context, key string, value str
 	return nil
 }
 
-func (p *PostgresStorage) KVSetJson(ctx context.Context, key string, value interface{}, metadata *KVMetadataEntry, dbTx dbTxType) error {
+func (p *PostgresStorage) KVSetJson(ctx context.Context, key KVKey, value interface{}, metadata *KVMetadataEntry, dbTx dbTxType) error {
 	jsonValue, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -37,7 +38,7 @@ func (p *PostgresStorage) KVSetJson(ctx context.Context, key string, value inter
 	return p.KVSetString(ctx, key, string(jsonValue), metadata, dbTx)
 }
 
-func (p *PostgresStorage) KVGetString(ctx context.Context, key string, metadata *KVMetadataEntry, dbTx dbTxType) (string, error) {
+func (p *PostgresStorage) KVGetString(ctx context.Context, key KVKey, metadata *KVMetadataEntry, dbTx dbTxType) (string, error) {
 	e := p.getExecQuerier(getPgTx(dbTx))
 	const getSQL = "SELECT value, created_at, updated_at, sync_version FROM sync.kv WHERE key = $1"
 	storageMetaData := &KVMetadataEntry{}
@@ -54,7 +55,7 @@ func (p *PostgresStorage) KVGetString(ctx context.Context, key string, metadata 
 	return value, nil
 }
 
-func (p *PostgresStorage) KVGetJson(ctx context.Context, key string, value interface{}, metadata *KVMetadataEntry, dbTx dbTxType) error {
+func (p *PostgresStorage) KVGetJson(ctx context.Context, key KVKey, value interface{}, metadata *KVMetadataEntry, dbTx dbTxType) error {
 	valueStr, err := p.KVGetString(ctx, key, metadata, dbTx)
 	if err != nil {
 		return err
@@ -62,7 +63,7 @@ func (p *PostgresStorage) KVGetJson(ctx context.Context, key string, value inter
 	return json.Unmarshal([]byte(valueStr), value)
 }
 
-func (p *PostgresStorage) KVExists(ctx context.Context, key string, dbTx dbTxType) (bool, error) {
+func (p *PostgresStorage) KVExists(ctx context.Context, key KVKey, dbTx dbTxType) (bool, error) {
 	e := p.getExecQuerier(getPgTx(dbTx))
 	const existsSQL = "SELECT EXISTS(SELECT 1 FROM sync.kv WHERE key = $1)"
 	row := e.QueryRow(ctx, existsSQL, key)

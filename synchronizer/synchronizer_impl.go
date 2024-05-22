@@ -38,7 +38,7 @@ type SynchronizerImpl struct {
 	l1Sync              *l1sync.L1SequentialSync
 	storageChecker      syncinterfaces.StorageCompatibilityChecker
 
-	reorgCallback func(newFirstL1BlockNumberValid uint64)
+	reorgCallback func(nreorgData ReorgExecutionResult)
 }
 
 // NewSynchronizer creates and initializes an instance of Synchronizer
@@ -120,7 +120,7 @@ func (s *SynchronizerImpl) IsSynced() bool {
 	return s.synced
 }
 
-func (s *SynchronizerImpl) SetCallbackOnReorgDone(callback func(newFirstL1BlockNumberValid uint64)) {
+func (s *SynchronizerImpl) SetCallbackOnReorgDone(callback func(reorgData ReorgExecutionResult)) {
 	//TODO: Implement this function
 	s.reorgCallback = callback
 }
@@ -128,7 +128,12 @@ func (s *SynchronizerImpl) SetCallbackOnReorgDone(callback func(newFirstL1BlockN
 func (s *SynchronizerImpl) OnReorgExecuted(reorg model.ReorgExecutionResult) {
 	log.Infof("Reorg executed! %s", reorg.String())
 	if s.reorgCallback != nil {
-		s.reorgCallback(reorg.Request.FirstL1BlockNumberToKeep)
+		param := ReorgExecutionResult{
+			FirstL1BlockNumberValidAfterReorg: &reorg.Request.FirstL1BlockNumberToKeep,
+			ReasonError:                       reorg.Request.ReasonError,
+		}
+		log.Infof("Executing reorg callback in a go-routine")
+		go s.reorgCallback(param)
 	}
 
 }

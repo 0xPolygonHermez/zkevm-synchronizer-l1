@@ -22,6 +22,65 @@ func (_m *StorageReorgInterface) EXPECT() *StorageReorgInterface_Expecter {
 	return &StorageReorgInterface_Expecter{mock: &_m.Mock}
 }
 
+// GetLastBlock provides a mock function with given fields: ctx, dbTx
+func (_m *StorageReorgInterface) GetLastBlock(ctx context.Context, dbTx entities.Tx) (*entities.L1Block, error) {
+	ret := _m.Called(ctx, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLastBlock")
+	}
+
+	var r0 *entities.L1Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, entities.Tx) (*entities.L1Block, error)); ok {
+		return rf(ctx, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, entities.Tx) *entities.L1Block); ok {
+		r0 = rf(ctx, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entities.L1Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, entities.Tx) error); ok {
+		r1 = rf(ctx, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StorageReorgInterface_GetLastBlock_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLastBlock'
+type StorageReorgInterface_GetLastBlock_Call struct {
+	*mock.Call
+}
+
+// GetLastBlock is a helper method to define mock.On call
+//   - ctx context.Context
+//   - dbTx entities.Tx
+func (_e *StorageReorgInterface_Expecter) GetLastBlock(ctx interface{}, dbTx interface{}) *StorageReorgInterface_GetLastBlock_Call {
+	return &StorageReorgInterface_GetLastBlock_Call{Call: _e.mock.On("GetLastBlock", ctx, dbTx)}
+}
+
+func (_c *StorageReorgInterface_GetLastBlock_Call) Run(run func(ctx context.Context, dbTx entities.Tx)) *StorageReorgInterface_GetLastBlock_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *StorageReorgInterface_GetLastBlock_Call) Return(_a0 *entities.L1Block, _a1 error) *StorageReorgInterface_GetLastBlock_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StorageReorgInterface_GetLastBlock_Call) RunAndReturn(run func(context.Context, entities.Tx) (*entities.L1Block, error)) *StorageReorgInterface_GetLastBlock_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ResetToL1BlockNumber provides a mock function with given fields: ctx, firstBlockNumberToKeep, dbTx
 func (_m *StorageReorgInterface) ResetToL1BlockNumber(ctx context.Context, firstBlockNumberToKeep uint64, dbTx entities.Tx) error {
 	ret := _m.Called(ctx, firstBlockNumberToKeep, dbTx)

@@ -539,7 +539,7 @@ func (_c *Synchronizer_IsSynced_Call) RunAndReturn(run func() bool) *Synchronize
 }
 
 // SetCallbackOnReorgDone provides a mock function with given fields: callback
-func (_m *Synchronizer) SetCallbackOnReorgDone(callback func(uint64)) {
+func (_m *Synchronizer) SetCallbackOnReorgDone(callback func(synchronizer.ReorgExecutionResult)) {
 	_m.Called(callback)
 }
 
@@ -549,14 +549,14 @@ type Synchronizer_SetCallbackOnReorgDone_Call struct {
 }
 
 // SetCallbackOnReorgDone is a helper method to define mock.On call
-//   - callback func(uint64)
+//   - callback func(synchronizer.ReorgExecutionResult)
 func (_e *Synchronizer_Expecter) SetCallbackOnReorgDone(callback interface{}) *Synchronizer_SetCallbackOnReorgDone_Call {
 	return &Synchronizer_SetCallbackOnReorgDone_Call{Call: _e.mock.On("SetCallbackOnReorgDone", callback)}
 }
 
-func (_c *Synchronizer_SetCallbackOnReorgDone_Call) Run(run func(callback func(uint64))) *Synchronizer_SetCallbackOnReorgDone_Call {
+func (_c *Synchronizer_SetCallbackOnReorgDone_Call) Run(run func(callback func(synchronizer.ReorgExecutionResult))) *Synchronizer_SetCallbackOnReorgDone_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(func(uint64)))
+		run(args[0].(func(synchronizer.ReorgExecutionResult)))
 	})
 	return _c
 }
@@ -566,7 +566,7 @@ func (_c *Synchronizer_SetCallbackOnReorgDone_Call) Return() *Synchronizer_SetCa
 	return _c
 }
 
-func (_c *Synchronizer_SetCallbackOnReorgDone_Call) RunAndReturn(run func(func(uint64))) *Synchronizer_SetCallbackOnReorgDone_Call {
+func (_c *Synchronizer_SetCallbackOnReorgDone_Call) RunAndReturn(run func(func(synchronizer.ReorgExecutionResult))) *Synchronizer_SetCallbackOnReorgDone_Call {
 	_c.Call.Return(run)
 	return _c
 }

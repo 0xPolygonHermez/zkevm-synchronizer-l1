@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 )
 
 // ReorgRequest is a struct that contains the information needed to execute a reorg
@@ -39,6 +41,7 @@ type ReorgCallbackType = func(ReorgExecutionResult)
 
 type StorageReorgInterface interface {
 	ResetToL1BlockNumber(ctx context.Context, firstBlockNumberToKeep uint64, dbTx storageTxType) error
+	GetLastBlock(ctx context.Context, dbTx stateTxType) (*entities.L1Block, error)
 }
 
 type ReorgState struct {
