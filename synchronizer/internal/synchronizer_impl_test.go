@@ -8,13 +8,18 @@ import (
 	syncconfig "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/config"
 	mock_syncinterfaces "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/syncinterfaces/mocks"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFirstExecutionNoDataOnDb(t *testing.T) {
 	testData := newTestDataSyncImpl(t)
 	testData.mockStorage.EXPECT().GetLastBlock(mock.Anything, mock.Anything).Return(nil, entities.ErrNotFound)
-	testData.mockL1Syncer.EXPECT().SyncBlocks(testData.ctx, mock.Anything).Return(nil, true, nil)
-	testData.sut.Sync(FlagReturnBeforeReorg | FlagReturnOnSync)
+	block := entities.L1Block{
+		BlockNumber: 123,
+	}
+	testData.mockL1Syncer.EXPECT().SyncBlocks(testData.ctx, mock.Anything).Return(&block, true, nil)
+	err := testData.sut.Sync(FlagReturnBeforeReorg | FlagReturnOnSync)
+	require.NoError(t, err)
 }
 
 type testDataSyncImpl struct {
