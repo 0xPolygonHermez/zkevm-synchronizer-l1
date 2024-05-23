@@ -114,21 +114,11 @@ func (s *BlockPointsRetrieverImplementation) GetL1BlockPoints(ctx context.Contex
 	}, nil
 }
 
-// It checks L1 block that still are the same in L1
-func (s *L1SequentialSync) checkReorgsOnPreviousL1Blocks(ctx context.Context) error {
-	if s.blockChecker != nil {
-		err := s.blockChecker.Step(ctx)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // This function syncs the node from a specific block to the latest
+// if lastEthBlockSynced == nil -> starts from GenesisBlockNumber
 // returns the last block synced and an error if any
 // returns true if the sync is completed
-func (s *L1SequentialSync) SyncBlocksSequential(ctx context.Context, lastEthBlockSynced *stateBlockType) (*stateBlockType, bool, error) {
+func (s *L1SequentialSync) SyncBlocks(ctx context.Context, lastEthBlockSynced *stateBlockType) (*stateBlockType, bool, error) {
 	blockPoints, err := s.blockPointsRetriever.GetL1BlockPoints(ctx)
 	if err != nil {
 		return lastEthBlockSynced, false, err
@@ -138,8 +128,10 @@ func (s *L1SequentialSync) SyncBlocksSequential(ctx context.Context, lastEthBloc
 	}
 
 	var fromBlock uint64
-	if lastEthBlockSynced.BlockNumber > 0 {
+	if lastEthBlockSynced != nil && lastEthBlockSynced.BlockNumber > 0 {
 		fromBlock = lastEthBlockSynced.BlockNumber
+	} else {
+		fromBlock = s.cfg.GenesisBlockNumber
 	}
 	blockRangeIterator := NewBlockRangeIterator(fromBlock, s.cfg.SyncChunkSize, blockPoints.L1LastBlockToSync)
 
@@ -153,7 +145,7 @@ func (s *L1SequentialSync) SyncBlocksSequential(ctx context.Context, lastEthBloc
 			log.Debugf("Nothing to do starting from %d to %d. Skipping...", fromBlock, blockPoints.L1LastBlockToSync)
 			return lastEthBlockSynced, true, nil
 		}
-		blockRange := blockRangeIterator.GetRange(lastEthBlockSynced.HasEvents && !lastEthBlockSynced.Checked)
+		blockRange := blockRangeIterator.GetRange(lastEthBlockSynced.IsUnsafeAndHaveRollupdata())
 		log.Infof("Syncing %s", blockRangeIterator.String())
 		synced := false
 		lastEthBlockSynced, synced, err = s.iteration(ctx, blockRange, blockPoints.L1FinalizedBlockNumber, lastEthBlockSynced)
@@ -191,6 +183,17 @@ func (s *L1SequentialSync) checkResponseGetRollupInfoByBlockRangeForOverlappedFi
 	return nil
 }
 
+// It checks L1 block that still are the same in L1
+func (s *L1SequentialSync) checkReorgsOnPreviousL1Blocks(ctx context.Context) error {
+	if s.blockChecker != nil {
+		err := s.blockChecker.Step(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // firstBlockRequestIsOverlapped = means that fromBlock is one that we already have and have events
 func (s *L1SequentialSync) iteration(ctx context.Context, blockRange BlockRange, finalizedBlockNumber uint64, lastEthBlockSynced *stateBlockType) (*stateBlockType, bool, error) {
 
@@ -205,10 +208,11 @@ func (s *L1SequentialSync) iteration(ctx context.Context, blockRange BlockRange,
 		return lastEthBlockSynced, false, err
 	}
 	blocks, initBlockReceived := s.extractInitialBlock(blockRange, blocks)
-
-	lastEthBlockSynced, err = s.checkReorgs(lastEthBlockSynced, initBlockReceived)
-	if err != nil {
-		return lastEthBlockSynced, false, err
+	if lastEthBlockSynced != nil {
+		lastEthBlockSynced, err = s.checkReorgs(lastEthBlockSynced, initBlockReceived)
+		if err != nil {
+			return lastEthBlockSynced, false, err
+		}
 	}
 
 	err = s.blockRangeProcessor.ProcessBlockRange(ctx, blocks, order, finalizedBlockNumber)

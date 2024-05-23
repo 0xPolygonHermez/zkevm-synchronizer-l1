@@ -31,9 +31,8 @@ type SynchronizerImpl struct {
 	networkID      uint
 	synced         bool
 
-	l1EventProcessors   *processor_manager.L1EventProcessors
 	blockRangeProcessor syncinterfaces.BlockRangeProcessor
-	l1Sync              *l1sync.L1SequentialSync
+	l1Sync              syncinterfaces.L1Syncer
 	storageChecker      syncinterfaces.StorageCompatibilityChecker
 
 	reorgCallback func(nreorgData ReorgExecutionResult)
@@ -54,6 +53,7 @@ func NewSynchronizerImpl(
 		defer cancel()
 		return nil, err
 	}
+	cfg.GenesisBlockNumber = genesisBlockNumber
 	l1EventProcessors := newL1EventProcessor(state)
 	blockRangeProcessor := NewBlockRangeProcessLegacy(storage, state, state, l1EventProcessors)
 
@@ -86,7 +86,6 @@ func NewSynchronizerImpl(
 		cfg:                 cfg,
 		networkID:           networkID,
 		storageChecker:      storageChecker,
-		l1EventProcessors:   l1EventProcessors,
 		l1Sync:              l1SequentialSync,
 		blockRangeProcessor: blockRangeProcessor,
 	}
@@ -160,17 +159,23 @@ func (s *SynchronizerImpl) CheckStorage(ctx context.Context) error {
 func (s *SynchronizerImpl) getLastL1BlockOnStorage(ctx context.Context) (*entities.L1Block, error) {
 	l1block, err := s.storage.GetLastBlock(ctx, nil)
 	if errors.Is(err, entities.ErrNotFound) {
-		log.Infof("networkID: %d, error getting the latest block. No data stored. Setting genesis block. Error: %v", s.networkID, err)
-		return &entities.L1Block{
-			BlockNumber: max(0, s.genBlockNumber-1),
-		}, nil
+		log.Infof("networkID: %d, error getting the latest block. No data on stored.", s.networkID)
+		return nil, nil
 	}
 	return l1block, err
 }
 
+type SyncExecutionFlags uint64
+
+const (
+	FlagReturnOnSync SyncExecutionFlags = 1 << iota
+	FlagReturnBeforeReorg
+	FlagReturnAfterReorg
+)
+
 // Sync function will read the last state synced and will continue from that point.
 // Sync() will read blockchain events to detect rollup updates
-func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
+func (s *SynchronizerImpl) Sync(executionFlags SyncExecutionFlags) error {
 	// If there is no lastEthereumBlock means that sync from the beginning is necessary. If not, it continues from the retrieved ethereum block
 	// Get the latest synced block. If there is no block on db, use genesis block
 	log.Infof("Synchronization started")
@@ -193,13 +198,23 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 			//Sync L1Blocks
 
 			var isSynced bool
-			if lastBlockSynced, isSynced, err = s.l1Sync.SyncBlocksSequential(s.ctx, lastBlockSynced); err != nil {
+			if lastBlockSynced, isSynced, err = s.l1Sync.SyncBlocks(s.ctx, lastBlockSynced); err != nil {
 				log.Warnf("networkID: %d, error syncing blocks: %v", s.networkID, err)
-
-				err = s.executeReorgIfNeeded(common.CastReorgError(err))
-				if err != nil {
-					log.Errorf("networkID: %d, error resetting the state to a previous block. Error: %v", s.networkID, err)
-					continue
+				reorgError := common.CastReorgError(err)
+				if reorgError != nil {
+					if (executionFlags & FlagReturnBeforeReorg) != 0 {
+						log.Infof("NetworkID: %d, Synchronization finished, returning before executing reorg %+v", s.networkID, reorgError)
+						return err
+					}
+					err = s.executeReorg(reorgError)
+					if err != nil {
+						log.Errorf("networkID: %d, error resetting the state to a previous block. Error: %v", s.networkID, err)
+						continue
+					}
+					if (executionFlags & FlagReturnAfterReorg) != 0 {
+						log.Infof("NetworkID: %d, Synchronization finished, returning after reorg %+v", s.networkID, reorgError)
+						return err
+					}
 				}
 
 				lastBlockSynced, err = s.getLastL1BlockOnStorage(s.ctx)
@@ -213,7 +228,7 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 			s.setSyncedStatus(isSynced)
 			if s.synced {
 				log.Infof("NetworkID %d Synced!   lastBlockSynced:%d ", s.networkID, lastBlockSynced.BlockNumber)
-				if returnOnSync {
+				if (executionFlags & FlagReturnOnSync) != 0 {
 					log.Infof("NetworkID: %d, Synchronization finished, returning because returnOnSync=true", s.networkID)
 					return nil
 				}
@@ -231,7 +246,7 @@ func (s *SynchronizerImpl) setSyncedStatus(synced bool) {
 func (s *SynchronizerImpl) Stop() {
 	s.cancelCtx()
 }
-func (s *SynchronizerImpl) executeReorgIfNeeded(reorgError *common.ReorgError) error {
+func (s *SynchronizerImpl) executeReorg(reorgError *common.ReorgError) error {
 	if reorgError == nil {
 		return nil
 	}

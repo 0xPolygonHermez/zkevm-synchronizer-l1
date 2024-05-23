@@ -28,7 +28,7 @@ func (s *SynchronizerAdapter) SetCallbackOnReorgDone(callback func(reorgData Reo
 }
 
 func (s *SynchronizerAdapter) Sync(returnOnSync bool) error {
-	return s.internalSyncrhonizer.Sync(returnOnSync)
+	return s.internalSyncrhonizer.Sync(internal.FlagReturnOnSync)
 }
 
 func (s *SynchronizerAdapter) Stop() {

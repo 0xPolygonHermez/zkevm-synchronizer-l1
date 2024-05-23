@@ -59,7 +59,7 @@ func TestSyncBlocksSequentialNothingToDo(t *testing.T) {
 		L1LastBlockToSync:      99,
 		L1FinalizedBlockNumber: 100,
 	}, nil)
-	resBlock, synced, err := testData.sut.SyncBlocksSequential(testData.ctx, testData.lastEthBlock)
+	resBlock, synced, err := testData.sut.SyncBlocks(testData.ctx, testData.lastEthBlock)
 	require.NoError(t, err)
 	require.Equal(t, synced, true)
 	require.Equal(t, resBlock, testData.lastEthBlock)
@@ -73,7 +73,7 @@ func TestSyncBlocksSequentialReorgMissingFirstBlockOnRollupResponse(t *testing.T
 	}, nil)
 	toBlock := uint64(100)
 	testData.mockEth.EXPECT().GetRollupInfoByBlockRange(testData.ctx, uint64(100), &toBlock).Return(nil, nil, nil)
-	_, _, err := testData.sut.SyncBlocksSequential(testData.ctx, testData.lastEthBlock)
+	_, _, err := testData.sut.SyncBlocks(testData.ctx, testData.lastEthBlock)
 	require.Error(t, err)
 }
 
@@ -85,7 +85,7 @@ func TestSyncBlocksSequentialReorgDetected(t *testing.T) {
 	}, nil)
 	toBlock := uint64(100)
 	testData.mockEth.EXPECT().GetRollupInfoByBlockRange(testData.ctx, uint64(100), &toBlock).Return(nil, nil, nil)
-	_, _, err := testData.sut.SyncBlocksSequential(testData.ctx, testData.lastEthBlock)
+	_, _, err := testData.sut.SyncBlocks(testData.ctx, testData.lastEthBlock)
 	require.Error(t, err)
 }
 
