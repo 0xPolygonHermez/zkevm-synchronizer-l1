@@ -1,13 +1,40 @@
 package synchronizer
 
+import (
+	internal "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/internal"
+)
+
 type SynchronizerAdapter struct {
 	*SyncrhronizerQueries
-	*SynchronizerImpl
+	internalSyncrhonizer *internal.SynchronizerImpl
 }
 
-func NewSynchronizerAdapter(queries *SyncrhronizerQueries, sync *SynchronizerImpl) *SynchronizerAdapter {
+func NewSynchronizerAdapter(queries *SyncrhronizerQueries, sync *internal.SynchronizerImpl) *SynchronizerAdapter {
 	return &SynchronizerAdapter{
 		SyncrhronizerQueries: queries,
-		SynchronizerImpl:     sync,
+		internalSyncrhonizer: sync,
 	}
+}
+
+func (s *SynchronizerAdapter) SetCallbackOnReorgDone(callback func(reorgData ReorgExecutionResult)) {
+	s.internalSyncrhonizer.SetCallbackOnReorgDone(
+		func(nreorgData internal.ReorgExecutionResult) {
+			callback(ReorgExecutionResult{
+				FirstL1BlockNumberValidAfterReorg: nreorgData.FirstL1BlockNumberValidAfterReorg,
+				ReasonError:                       nreorgData.ReasonError,
+			})
+		})
+
+}
+
+func (s *SynchronizerAdapter) Sync(returnOnSync bool) error {
+	return s.internalSyncrhonizer.Sync(returnOnSync)
+}
+
+func (s *SynchronizerAdapter) Stop() {
+	s.internalSyncrhonizer.Stop()
+}
+
+func (s *SynchronizerAdapter) IsSynced() bool {
+	return s.internalSyncrhonizer.IsSynced()
 }

@@ -110,7 +110,7 @@ clean-mocks:
 COMMON_MOCKERY_PARAMS=--disable-version-string --with-expecter
 .PHONY: generate-mocks
 generate-mocks: clean-mocks 
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/ --output ../synchronizer/mocks --outpkg mock_synchronizer ${COMMON_MOCKERY_PARAMS}
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/syncinterfaces --output ../synchronizer/syncinterfaces/mocks --outpkg mock_syncinterfaces ${COMMON_MOCKERY_PARAMS}
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/l1_check_block --output ../synchronizer/l1_check_block/mocks --outpkg mock_l1_check_block ${COMMON_MOCKERY_PARAMS}
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/l1_sync --output ../synchronizer/l1_sync/mocks --outpkg mock_l1sync ${COMMON_MOCKERY_PARAMS}
 

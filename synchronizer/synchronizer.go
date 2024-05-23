@@ -10,6 +10,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage/pgstorage"
+	internal "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/internal"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -156,8 +157,8 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 		return nil, err
 	}
 	state := state.NewState(storage)
-	storageCompatibilityChecker := NewSanityStorageCheckerImpl(state, etherman, config.Synchronizer.OverrideStorageCheck)
-	sync, err := NewSynchronizerImpl(ctx, storage, state, etherman, storageCompatibilityChecker, config.Synchronizer)
+	storageCompatibilityChecker := internal.NewSanityStorageCheckerImpl(state, etherman, config.Synchronizer.OverrideStorageCheck)
+	sync, err := internal.NewSynchronizerImpl(ctx, storage, state, etherman, storageCompatibilityChecker, config.Synchronizer)
 	if err != nil {
 		log.Error("Error creating synchronizer", err)
 		return nil, err

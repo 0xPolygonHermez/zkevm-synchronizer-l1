@@ -6,7 +6,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/syncinterfaces"
 	"github.com/ethereum/go-ethereum/common"
 )
 
