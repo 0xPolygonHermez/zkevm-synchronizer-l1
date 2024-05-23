@@ -27,18 +27,16 @@ type EthermanReorgManager interface {
 }
 
 type CheckReorgManager struct {
-	ctx                context.Context
-	etherMan           EthermanReorgManager
-	state              StateReorgInterface
-	GenesisBlockNumber uint64
+	ctx      context.Context
+	etherMan EthermanReorgManager
+	state    StateReorgInterface
 }
 
-func NewCheckReorgManager(ctx context.Context, etherMan EthermanReorgManager, state StateReorgInterface, genesisBlockNumber uint64) *CheckReorgManager {
+func NewCheckReorgManager(ctx context.Context, etherMan EthermanReorgManager, state StateReorgInterface) *CheckReorgManager {
 	return &CheckReorgManager{
-		ctx:                ctx,
-		etherMan:           etherMan,
-		state:              state,
-		GenesisBlockNumber: genesisBlockNumber,
+		ctx:      ctx,
+		etherMan: etherMan,
+		state:    state,
 	}
 }
 
@@ -47,13 +45,15 @@ func NewCheckReorgManager(ctx context.Context, etherMan EthermanReorgManager, st
 // - first block ok
 // - last bad block number
 // - error
+// Special case:
+// - If all blocks are bad on DB: returns nil, lastBadBlock, ErrReorgAllBlocksOnDBAreBad
 func (s *CheckReorgManager) CheckReorg(latestBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, uint64, error) {
 	if latestBlock == nil {
 		err := fmt.Errorf("lastEthBlockSynced is nil calling checkReorgAndExecuteReset")
 		log.Errorf("%s, it never have to happens", err.Error())
 		return nil, 0, err
 	}
-	blockOk, badBlockNumber, errReturnedReorgFunction := s.NewCheckReorg(latestBlock, syncedBlock)
+	blockOk, badBlockNumber, errReturnedReorgFunction := s.newCheckReorg(latestBlock, syncedBlock)
 	return blockOk, badBlockNumber, errReturnedReorgFunction
 }
 
@@ -70,7 +70,9 @@ hash and has parent. This operation has to be done until a match is found.
 // - first block ok
 // - last bad block number
 // - error
-func (s *CheckReorgManager) NewCheckReorg(latestStoredBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, uint64, error) {
+// Special case:
+// - If all blocks are bad on DB: returns nil, lastBadBlock, ErrReorgAllBlocksOnDBAreBad
+func (s *CheckReorgManager) newCheckReorg(latestStoredBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, uint64, error) {
 	// This function only needs to worry about reorgs if some of the reorganized blocks contained rollup info.
 	latestStoredEthBlock := *latestStoredBlock
 	reorgedBlock := *latestStoredBlock

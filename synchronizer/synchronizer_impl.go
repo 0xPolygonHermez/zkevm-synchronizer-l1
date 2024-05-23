@@ -83,7 +83,7 @@ func NewSynchronizerImpl(
 	}
 	finalizedBlockNumberFetcher := l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.FinalizedBlockNumber, 0)
 	syncPointBlockNumberFecther := l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.SyncBlockProtection), cfg.SyncBlockProtectionOffset)
-	reorgManager := l1sync.NewCheckReorgManager(ctx, ethMan, state, nil, sync.genBlockNumber)
+	reorgManager := l1sync.NewCheckReorgManager(ctx, ethMan, state)
 	blocksRetriever := l1sync.NewBlockPointsRetriever(
 		syncPointBlockNumberFecther,
 		finalizedBlockNumberFetcher,
@@ -143,6 +143,17 @@ func (s *SynchronizerImpl) CheckStorage(ctx context.Context) error {
 	return s.storageChecker.CheckAndUpdateStorage(ctx)
 }
 
+func (s *SynchronizerImpl) getLastL1BlockOnStorage(ctx context.Context) (*entities.L1Block, error) {
+	l1block, err := s.storage.GetLastBlock(ctx, nil)
+	if errors.Is(err, entities.ErrNotFound) {
+		log.Infof("networkID: %d, error getting the latest block. No data stored. Setting genesis block. Error: %v", s.networkID, err)
+		return &entities.L1Block{
+			BlockNumber: max(0, s.genBlockNumber-1),
+		}, nil
+	}
+	return l1block, err
+}
+
 // Sync function will read the last state synced and will continue from that point.
 // Sync() will read blockchain events to detect rollup updates
 func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
@@ -151,21 +162,11 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 	log.Infof("Synchronization started")
 	s.synced = false
 
-	lastBlockSynced, err := s.storage.GetLastBlock(s.ctx, nil)
+	lastBlockSynced, err := s.getLastL1BlockOnStorage(s.ctx)
 	if err != nil {
-		if errors.Is(err, entities.ErrNotFound) {
-			//log.Infof("networkID: %d, error getting the latest ethereum block. No data stored. Setting genesis block. Error: %v", s.networkID, err)
-			lastBlockSynced = &entities.L1Block{
-				BlockNumber: max(0, s.genBlockNumber-1),
-			}
-			log.Infof("networkID: %d, error getting the latest block. No data stored. Using starting block: %d ",
-				s.networkID, lastBlockSynced.BlockNumber)
-		} else {
-			log.Fatalf("networkID: %d, unexpected error getting the latest block. Error: %s", s.networkID, err.Error())
-		}
+		log.Fatalf("networkID: %d, unexpected error getting the latest block. Error: %s", s.networkID, err.Error())
 	} else {
 		log.Infof("networkID: %d, continuing from the last block stored on DB. lastBlockSynced: %+v", s.networkID, lastBlockSynced)
-
 	}
 	log.Infof("NetworkID: %d, initial lastBlockSynced: %+v", s.networkID, lastBlockSynced)
 	for {
@@ -187,7 +188,7 @@ func (s *SynchronizerImpl) Sync(returnOnSync bool) error {
 					continue
 				}
 
-				lastBlockSynced, err = s.storage.GetLastBlock(s.ctx, nil)
+				lastBlockSynced, err = s.getLastL1BlockOnStorage(s.ctx)
 				if err != nil {
 					log.Fatalf("networkID: %d, error getting lastBlockSynced to resume the synchronization... Error: ", s.networkID, err)
 				}

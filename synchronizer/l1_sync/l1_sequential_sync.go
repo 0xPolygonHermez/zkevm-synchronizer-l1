@@ -2,6 +2,7 @@ package l1sync
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
@@ -271,16 +272,21 @@ func (s *L1SequentialSync) checkReorgs(lastEthBlockSynced *stateBlockType, initB
 		log.Debugf("Checking reorgs between lastEthBlockSynced =%d and initBlockReceived: %v", lastEthBlockSynced.BlockNumber, initBlockReceived)
 		block, lastBadBlockNumber, err := s.reorgManager.CheckReorg(lastEthBlockSynced, initBlockReceived)
 		log.Debugf("Checking reorgs between lastEthBlockSynced =%d [AFTER]", lastEthBlockSynced.BlockNumber)
-		if err != nil {
+		if err != nil && !errors.Is(err, ErrReorgAllBlocksOnDBAreBad) {
 			log.Errorf("error checking reorgs. Retrying... Err: %v", err)
 			return lastEthBlockSynced, fmt.Errorf("error checking reorgs. Err:%w", err)
 		}
 		if block != nil {
-			// In fact block.BlockNumber is the first ok block, so  add 1 to be the first block wrong
-			// maybe doesnt exists
+			// I use lastBadBlockNumber to support the case that all blocks are bad on DB
 			err := syncommon.NewReorgError(lastBadBlockNumber, fmt.Errorf("reorg detected. First valid block is %d, lastBadBlock is %d by CheckReorg func", block.BlockNumber, lastBadBlockNumber))
 			return block, err
 		}
+		if errors.Is(err, ErrReorgAllBlocksOnDBAreBad) {
+			log.Warn("Reorg detected. Affect all l1block on DB")
+			err := syncommon.NewReorgError(lastBadBlockNumber, fmt.Errorf("reorg detected. Affect all l1block on DB, lastBadBlock is %d by CheckReorg func", lastBadBlockNumber))
+			return nil, err
+		}
+
 	} else {
 		log.Debugf("Skipping reorg check because lastEthBlockSynced %d is checked", lastEthBlockSynced.BlockNumber)
 
