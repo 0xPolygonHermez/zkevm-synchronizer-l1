@@ -258,7 +258,7 @@ func (s *SynchronizerImpl) executeReorg(reorgError *common.ReorgError) error {
 
 	req := model.ReorgRequest{
 		FirstL1BlockNumberToKeep: reorgError.BlockNumber - 1, // Previous block to last bad block
-		ReasonError:              reorgError.Err,
+		ReasonError:              reorgError,
 	}
 
 	result := s.state.ExecuteReorg(s.ctx, req, dbTx)
