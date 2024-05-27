@@ -43,3 +43,14 @@ func NewL1BlockFromEthermanBlock(block *etherman.Block, isFinalized bool) *L1Blo
 		HasEvents:   block.HasEvents(),
 	}
 }
+
+func IsBlockFinalized(blockNumber uint64, finalizedBlockNumber uint64) bool {
+	return blockNumber <= finalizedBlockNumber
+}
+
+func (b *L1Block) IsUnsafeAndHaveRollupdata() bool {
+	if b == nil {
+		return false
+	}
+	return !b.Checked && b.HasEvents
+}

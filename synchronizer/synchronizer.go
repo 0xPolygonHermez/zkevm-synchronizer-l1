@@ -10,6 +10,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage/pgstorage"
+	internal "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/internal"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -100,11 +101,17 @@ type SynchronizerVirtualBatchesQuerier interface {
 	GetLastestVirtualBatchNumber(ctx context.Context) (uint64, error)
 }
 
+type ReorgExecutionResult struct {
+	// FirstL1BlockNumberValidAfterReorg is the first block or nil if the reorg have delete all blocks
+	FirstL1BlockNumberValidAfterReorg *uint64
+	ReasonError                       error
+}
+
 // SynchronizerReorgSupporter is an interface that give support to the reorgs detected on L1
 type SynchronizerReorgSupporter interface {
 	// SetCallbackOnReorgDone sets a callback that will be called when the reorg is done
 	// to disable it you can set nil
-	SetCallbackOnReorgDone(callback func(newFirstL1BlockNumberValid uint64))
+	SetCallbackOnReorgDone(callback func(reorgData ReorgExecutionResult))
 }
 
 type Synchronizer interface {
@@ -150,12 +157,13 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 		return nil, err
 	}
 	state := state.NewState(storage)
-	//l1checker := l1_check_block.NewL1CheckBlockFeature(config.Synchronizer.L1BlockCheck, storage, forkidState)
-	sync, err := NewSynchronizerImpl(ctx, storage, state, etherman, config.Synchronizer)
+	storageCompatibilityChecker := internal.NewSanityStorageCheckerImpl(state, etherman, config.Synchronizer.OverrideStorageCheck)
+	sync, err := internal.NewSynchronizerImpl(ctx, storage, state, etherman, storageCompatibilityChecker, config.Synchronizer)
 	if err != nil {
 		log.Error("Error creating synchronizer", err)
 		return nil, err
 	}
+
 	syncAdapter := NewSynchronizerAdapter(NewSyncrhronizerQueries(state, storage, ctx), sync)
 	return syncAdapter, nil
 }

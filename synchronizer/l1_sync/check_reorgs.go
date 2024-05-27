@@ -8,44 +8,53 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/common/syncinterfaces"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1_check_block"
+	ethTypes "github.com/ethereum/go-ethereum/core/types"
 )
 
-type stateInterface interface {
-	BeginStateTransaction(ctx context.Context) (dbTxType, error)
+var (
+	// This is a special case that means that all blocks are bad on DB, is a bit weird
+	// for that reason returns a specific error to allow the caller to take action
+	ErrReorgAllBlocksOnDBAreBad = fmt.Errorf("reorg reached the genesis block")
+)
+
+type StateReorgInterface interface {
+	BeginTransaction(ctx context.Context) (dbTxType, error)
 	GetPreviousBlock(ctx context.Context, depth uint64, tx dbTxType) (*stateBlockType, error)
 }
 
-type CheckReorgManager struct {
-	asyncL1BlockChecker l1_check_block.L1BlockCheckerIntegrator
-	ctx                 context.Context
-	etherMan            syncinterfaces.EthermanFullInterface
-	state               stateInterface
-	GenesisBlockNumber  uint64
+type EthermanReorgManager interface {
+	EthBlockByNumber(ctx context.Context, blockNumber uint64) (*ethTypes.Block, error)
 }
 
-func NewCheckReorgManager(ctx context.Context, etherMan syncinterfaces.EthermanFullInterface, state stateInterface, asyncL1BlockChecker l1_check_block.L1BlockCheckerIntegrator, genesisBlockNumber uint64) *CheckReorgManager {
+type CheckReorgManager struct {
+	ctx      context.Context
+	etherMan EthermanReorgManager
+	state    StateReorgInterface
+}
+
+func NewCheckReorgManager(ctx context.Context, etherMan EthermanReorgManager, state StateReorgInterface) *CheckReorgManager {
 	return &CheckReorgManager{
-		asyncL1BlockChecker: asyncL1BlockChecker,
-		ctx:                 ctx,
-		etherMan:            etherMan,
-		state:               state,
-		GenesisBlockNumber:  genesisBlockNumber,
+		ctx:      ctx,
+		etherMan: etherMan,
+		state:    state,
 	}
 }
 
-func (s *CheckReorgManager) CheckReorg(latestBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, error) {
+// CheckReorg checks consistency of blocks
+// Returns:
+// - first block ok
+// - last bad block number
+// - error
+// Special case:
+// - If all blocks are bad on DB: returns nil, lastBadBlock, ErrReorgAllBlocksOnDBAreBad
+func (s *CheckReorgManager) CheckReorg(latestBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, uint64, error) {
 	if latestBlock == nil {
 		err := fmt.Errorf("lastEthBlockSynced is nil calling checkReorgAndExecuteReset")
 		log.Errorf("%s, it never have to happens", err.Error())
-		return nil, err
+		return nil, 0, err
 	}
-	block, errReturnedReorgFunction := s.NewCheckReorg(latestBlock, syncedBlock)
-	if s.asyncL1BlockChecker != nil {
-		return s.asyncL1BlockChecker.CheckReorgWrapper(s.ctx, block, errReturnedReorgFunction)
-	}
-	return block, errReturnedReorgFunction
+	blockOk, badBlockNumber, errReturnedReorgFunction := s.newCheckReorg(latestBlock, syncedBlock)
+	return blockOk, badBlockNumber, errReturnedReorgFunction
 }
 
 /*
@@ -57,19 +66,26 @@ must be reverted. Then, check the previous ethereum block synced, get block info
 hash and has parent. This operation has to be done until a match is found.
 */
 
-func (s *CheckReorgManager) NewCheckReorg(latestStoredBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, error) {
+// Returns:
+// - first block ok
+// - last bad block number
+// - error
+// Special case:
+// - If all blocks are bad on DB: returns nil, lastBadBlock, ErrReorgAllBlocksOnDBAreBad
+func (s *CheckReorgManager) newCheckReorg(latestStoredBlock *stateBlockType, syncedBlock *etherman.Block) (*stateBlockType, uint64, error) {
 	// This function only needs to worry about reorgs if some of the reorganized blocks contained rollup info.
 	latestStoredEthBlock := *latestStoredBlock
 	reorgedBlock := *latestStoredBlock
 	var depth uint64
 	block := syncedBlock
+	lastBadBlockNumber := uint64(0)
 	for {
 		if block == nil {
 			log.Infof("[checkReorg function] Checking Block %d in L1", reorgedBlock.BlockNumber)
 			b, err := s.etherMan.EthBlockByNumber(s.ctx, reorgedBlock.BlockNumber)
 			if err != nil {
 				log.Errorf("error getting latest block synced from blockchain. Block: %d, error: %v", reorgedBlock.BlockNumber, err)
-				return nil, err
+				return nil, 0, err
 			}
 			block = &etherman.Block{
 				BlockNumber: b.Number().Uint64(),
@@ -80,7 +96,7 @@ func (s *CheckReorgManager) NewCheckReorg(latestStoredBlock *stateBlockType, syn
 				err := fmt.Errorf("wrong ethereum block retrieved from blockchain. Block numbers don't match. BlockNumber stored: %d. BlockNumber retrieved: %d",
 					reorgedBlock.BlockNumber, block.BlockNumber)
 				log.Error("error: ", err)
-				return nil, err
+				return nil, 0, err
 			}
 		} else {
 			log.Infof("[checkReorg function] Using block %d from GetRollupInfoByBlockRange", block.BlockNumber)
@@ -89,7 +105,7 @@ func (s *CheckReorgManager) NewCheckReorg(latestStoredBlock *stateBlockType, syn
 		log.Infof("[checkReorg function] reorgedBlockNumber: %d reorgedBlockHash already synced: %s", reorgedBlock.BlockNumber, reorgedBlock.BlockHash.String())
 
 		// Compare hashes
-		if (block.BlockHash != reorgedBlock.BlockHash || block.ParentHash != reorgedBlock.ParentHash) && reorgedBlock.BlockNumber > s.GenesisBlockNumber {
+		if block.BlockHash != reorgedBlock.BlockHash || block.ParentHash != reorgedBlock.ParentHash {
 			log.Infof("checkReorg: Bad block %d hashOk %t parentHashOk %t", reorgedBlock.BlockNumber, block.BlockHash == reorgedBlock.BlockHash, block.ParentHash == reorgedBlock.ParentHash)
 			log.Debug("[checkReorg function] => latestBlockNumber: ", reorgedBlock.BlockNumber)
 			log.Debug("[checkReorg function] => latestBlockHash: ", reorgedBlock.BlockHash)
@@ -100,29 +116,15 @@ func (s *CheckReorgManager) NewCheckReorg(latestStoredBlock *stateBlockType, syn
 			depth++
 			log.Debug("REORG: Looking for the latest correct ethereum block. Depth: ", depth)
 			// Reorg detected. Getting previous block
-			dbTx, err := s.state.BeginStateTransaction(s.ctx)
-			if err != nil {
-				log.Errorf("error creating db transaction to get prevoius blocks")
-				return nil, err
-			}
-			lb, err := s.state.GetPreviousBlock(s.ctx, depth, dbTx)
-			errC := dbTx.Commit(s.ctx)
-			if errC != nil {
-				log.Errorf("error committing dbTx, err: %v", errC)
-				rollbackErr := dbTx.Rollback(s.ctx)
-				if rollbackErr != nil {
-					log.Errorf("error rolling back state. RollbackErr: %v", rollbackErr)
-					return nil, rollbackErr
-				}
-				log.Errorf("error committing dbTx, err: %v", errC)
-				return nil, errC
-			}
+			lastBadBlockNumber = reorgedBlock.BlockNumber
+			lb, err := s.state.GetPreviousBlock(s.ctx, depth, nil)
+
 			if errors.Is(err, entities.ErrNotFound) {
-				log.Warn("error checking reorg: previous block not found in db. Reorg reached the genesis block: %v.Genesis block can't be reorged, using genesis block as starting point. Error: %v", reorgedBlock, err)
-				return &reorgedBlock, nil
+				log.Warnf("error checking reorg: previous block not found in db. Reorg reached las block on DB (usually the genesis block): %v.That is very unusual. It returns an error", reorgedBlock)
+				return nil, reorgedBlock.BlockNumber, ErrReorgAllBlocksOnDBAreBad
 			} else if err != nil {
 				log.Error("error getting previousBlock from db. Error: ", err)
-				return nil, err
+				return nil, 0, err
 			}
 			reorgedBlock = *lb
 		} else {
@@ -134,9 +136,9 @@ func (s *CheckReorgManager) NewCheckReorg(latestStoredBlock *stateBlockType, syn
 	}
 	if latestStoredEthBlock.BlockHash != reorgedBlock.BlockHash {
 		latestStoredBlock = &reorgedBlock
-		log.Info("Reorg detected in block: ", latestStoredEthBlock.BlockNumber, " last block OK: ", latestStoredBlock.BlockNumber)
-		return latestStoredBlock, nil
+		log.Info("Reorg detected in block: ", latestStoredEthBlock.BlockNumber, " last block OK: ", latestStoredBlock.BlockNumber, " first bad Block: ", lastBadBlockNumber)
+		return latestStoredBlock, lastBadBlockNumber, nil
 	}
 	log.Debugf("No reorg detected in block: %d. BlockHash: %s", latestStoredEthBlock.BlockNumber, latestStoredEthBlock.BlockHash.String())
-	return nil, nil
+	return nil, 0, nil
 }

@@ -299,6 +299,11 @@ func (etherMan *Client) GetRollupID() uint {
 	return uint(etherMan.RollupID)
 }
 
+// GetL1ChainID returns the L1 ChainID
+func (etherMan *Client) GetL1ChainID() uint64 {
+	return etherMan.cfg.L1ChainID
+}
+
 // VerifyGenBlockNumber verifies if the genesis Block Number is valid
 func (etherMan *Client) VerifyGenBlockNumber(ctx context.Context, genBlockNumber uint64) (bool, error) {
 	start := time.Now()
@@ -976,6 +981,24 @@ func (etherMan *Client) updateL1InfoTreeEvent(ctx context.Context, vLog types.Lo
 	(*blocksOrder)[block.BlockHash] = append((*blocksOrder)[block.BlockHash], order)
 	return nil
 }
+
+func (etherMan *Client) GetL1BlockByNumber(ctx context.Context, blockNumber uint64) (*Block, error) {
+	ethBlock, err := etherMan.EthClient.BlockByNumber(ctx, new(big.Int).SetUint64(blockNumber))
+	if err != nil {
+		return nil, err
+	}
+	t := time.Unix(int64(ethBlock.Time()), 0)
+
+	//block := prepareBlock(vLog, t, fullBlock)
+	block := Block{
+		BlockNumber: ethBlock.NumberU64(),
+		BlockHash:   ethBlock.Hash(),
+		ParentHash:  ethBlock.ParentHash(),
+		ReceivedAt:  t,
+	}
+	return &block, nil
+}
+
 func (etherMan *Client) retrieveFullBlockbyHash(ctx context.Context, blockHash common.Hash) (*Block, error) {
 	var err error
 	var fullBlock *types.Block
@@ -1006,7 +1029,7 @@ func (etherMan *Client) retrieveFullBlockbyHash(ctx context.Context, blockHash c
 	//block := prepareBlock(vLog, t, fullBlock)
 	block := Block{
 		BlockNumber: fullBlock.NumberU64(),
-		BlockHash:   blockHash,
+		BlockHash:   fullBlock.Hash(),
 		ParentHash:  fullBlock.ParentHash(),
 		ReceivedAt:  t,
 	}

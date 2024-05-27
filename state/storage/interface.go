@@ -13,9 +13,11 @@ type ForkIDInterval = entities.ForkIDInterval
 type VirtualBatch = entities.VirtualBatch
 type SequencedBatches = entities.SequencedBatches
 type storageTxType = entities.Tx
+type kVMetadataEntry = entities.KVMetadataEntry
 
 type BlockStorer interface {
 	AddBlock(ctx context.Context, block *L1Block, dbTx storageTxType) error
+	UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx storageTxType) error
 	GetLastBlock(ctx context.Context, dbTx storageTxType) (*L1Block, error)
 	GetBlockByNumber(ctx context.Context, blockNumber uint64, dbTx storageTxType) (*L1Block, error)
 	GetPreviousBlock(ctx context.Context, offset uint64, dbTx storageTxType) (*L1Block, error)
@@ -48,8 +50,17 @@ type virtualBatchStorer interface {
 	GetVirtualBatchByBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) (*VirtualBatch, error)
 }
 
+type reorgStorer interface {
+	ResetToL1BlockNumber(ctx context.Context, firstBlockNumberToKeep uint64, dbTx storageTxType) error
+}
+
 type txStorer interface {
 	BeginTransaction(ctx context.Context) (storageTxType, error)
+}
+
+type KvStorer interface {
+	KVSetJson(ctx context.Context, key string, value interface{}, metadata *kVMetadataEntry, dbTx storageTxType) error
+	KVGetJson(ctx context.Context, key string, value interface{}, metadata *kVMetadataEntry, dbTx storageTxType) error
 }
 
 type Storer interface {
@@ -59,4 +70,6 @@ type Storer interface {
 	l1infoTreeStorer
 	virtualBatchStorer
 	sequencedBatchStorer
+	reorgStorer
+	KvStorer
 }

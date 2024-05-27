@@ -68,8 +68,6 @@ func (s *ForkIdState) AddForkID(ctx context.Context, newForkID ForkIDInterval, d
 	if err != nil {
 		return err
 	}
-	// TODO: When add batch support check that
-	//s.checkIfForkIDAffectsPreviousBatches(ctx, newForkID, dbTx)
 	return err
 }
 func (p *ForkIdState) GetForkIDs(ctx context.Context, dbTx stateTxType) ([]ForkIDInterval, error) {

@@ -5,6 +5,7 @@ package mock_entities
 import (
 	context "context"
 
+	entities "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -21,8 +22,41 @@ func (_m *Tx) EXPECT() *Tx_Expecter {
 	return &Tx_Expecter{mock: &_m.Mock}
 }
 
+// AddCommitCallback provides a mock function with given fields: _a0
+func (_m *Tx) AddCommitCallback(_a0 entities.TxCallbackType) {
+	_m.Called(_a0)
+}
+
+// Tx_AddCommitCallback_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddCommitCallback'
+type Tx_AddCommitCallback_Call struct {
+	*mock.Call
+}
+
+// AddCommitCallback is a helper method to define mock.On call
+//   - _a0 entities.TxCallbackType
+func (_e *Tx_Expecter) AddCommitCallback(_a0 interface{}) *Tx_AddCommitCallback_Call {
+	return &Tx_AddCommitCallback_Call{Call: _e.mock.On("AddCommitCallback", _a0)}
+}
+
+func (_c *Tx_AddCommitCallback_Call) Run(run func(_a0 entities.TxCallbackType)) *Tx_AddCommitCallback_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(entities.TxCallbackType))
+	})
+	return _c
+}
+
+func (_c *Tx_AddCommitCallback_Call) Return() *Tx_AddCommitCallback_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *Tx_AddCommitCallback_Call) RunAndReturn(run func(entities.TxCallbackType)) *Tx_AddCommitCallback_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // AddRollbackCallback provides a mock function with given fields: _a0
-func (_m *Tx) AddRollbackCallback(_a0 func()) {
+func (_m *Tx) AddRollbackCallback(_a0 entities.TxCallbackType) {
 	_m.Called(_a0)
 }
 
@@ -32,14 +66,14 @@ type Tx_AddRollbackCallback_Call struct {
 }
 
 // AddRollbackCallback is a helper method to define mock.On call
-//   - _a0 func()
+//   - _a0 entities.TxCallbackType
 func (_e *Tx_Expecter) AddRollbackCallback(_a0 interface{}) *Tx_AddRollbackCallback_Call {
 	return &Tx_AddRollbackCallback_Call{Call: _e.mock.On("AddRollbackCallback", _a0)}
 }
 
-func (_c *Tx_AddRollbackCallback_Call) Run(run func(_a0 func())) *Tx_AddRollbackCallback_Call {
+func (_c *Tx_AddRollbackCallback_Call) Run(run func(_a0 entities.TxCallbackType)) *Tx_AddRollbackCallback_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(func()))
+		run(args[0].(entities.TxCallbackType))
 	})
 	return _c
 }
@@ -49,7 +83,7 @@ func (_c *Tx_AddRollbackCallback_Call) Return() *Tx_AddRollbackCallback_Call {
 	return _c
 }
 
-func (_c *Tx_AddRollbackCallback_Call) RunAndReturn(run func(func())) *Tx_AddRollbackCallback_Call {
+func (_c *Tx_AddRollbackCallback_Call) RunAndReturn(run func(entities.TxCallbackType)) *Tx_AddRollbackCallback_Call {
 	_c.Call.Return(run)
 	return _c
 }
