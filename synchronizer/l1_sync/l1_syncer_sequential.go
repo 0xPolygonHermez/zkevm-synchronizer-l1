@@ -131,7 +131,7 @@ func (s *L1SequentialSync) SyncBlocks(ctx context.Context, lastEthBlockSynced *s
 	if lastEthBlockSynced != nil && lastEthBlockSynced.BlockNumber > 0 {
 		fromBlock = lastEthBlockSynced.BlockNumber
 	} else {
-		// fromBlock is the first block that we have, that the reson that we must sub 1 to genesis
+		// fromBlock contains the first block in the DB, therefore if we do not have any it is as if we had the one before genesis
 		fromBlock = s.cfg.GenesisBlockNumber - 1
 	}
 	blockRangeIterator := NewBlockRangeIterator(fromBlock, s.cfg.SyncChunkSize, blockPoints.L1LastBlockToSync)
