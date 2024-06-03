@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	mock_l1_check_block "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1_check_block/mocks"
 	l1sync "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1_sync"
 	mock_l1sync "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/l1_sync/mocks"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -89,6 +91,22 @@ func TestSyncBlocksSequentialReorgDetected(t *testing.T) {
 	require.Error(t, err)
 }
 
+// First block to request is the genesis
+func TestSyncBlocksSequentialStartingNoBlock(t *testing.T) {
+	testData := newL1SyncData(t)
+	toBlock := uint64(140)
+	testData.mockBlockRetriever.EXPECT().GetL1BlockPoints(testData.ctx).Return(l1sync.BlockPoints{
+		L1LastBlockToSync:      toBlock,
+		L1FinalizedBlockNumber: toBlock,
+	}, nil)
+
+	testData.mockEth.EXPECT().GetRollupInfoByBlockRange(testData.ctx, uint64(testData.cfg.GenesisBlockNumber), &toBlock).Return(nil, nil, nil)
+	testData.mockBlockProcessor.EXPECT().ProcessBlockRange(testData.ctx, []etherman.Block(nil), map[common.Hash][]etherman.Order(nil), toBlock).Return(nil)
+
+	_, _, err := testData.sut.SyncBlocks(testData.ctx, nil)
+	require.NoError(t, err)
+}
+
 // --- HELPER FUNCTIONS ----------------------------------------------
 type testL1SyncData struct {
 	mockBlockRetriever *mock_l1sync.BlockPointsRetriever
@@ -99,6 +117,7 @@ type testL1SyncData struct {
 	sut                *l1sync.L1SequentialSync
 	ctx                context.Context
 	lastEthBlock       *entities.L1Block
+	cfg                l1sync.L1SequentialSyncConfig
 }
 
 func newL1SyncData(t *testing.T) *testL1SyncData {
@@ -107,10 +126,11 @@ func newL1SyncData(t *testing.T) *testL1SyncData {
 	mockState := mock_l1sync.NewStateL1SeqInterface(t)
 	mockBlockProcessor := mock_l1sync.NewBlockRangeProcessor(t)
 	mockReorg := mock_l1sync.NewReorgManager(t)
-	sut := l1sync.NewL1SequentialSync(mockBlock, mockEth, mockState, mockBlockProcessor, mockReorg, nil, l1sync.L1SequentialSyncConfig{
+	cfg := l1sync.L1SequentialSyncConfig{
 		SyncChunkSize:      100,
 		GenesisBlockNumber: 123,
-	})
+	}
+	sut := l1sync.NewL1SequentialSync(mockBlock, mockEth, mockState, mockBlockProcessor, mockReorg, nil, cfg)
 	ctx := context.TODO()
 	lastEthBlock := &entities.L1Block{
 		BlockNumber: 100,
@@ -125,5 +145,6 @@ func newL1SyncData(t *testing.T) *testL1SyncData {
 		sut:                sut,
 		ctx:                ctx,
 		lastEthBlock:       lastEthBlock,
+		cfg:                cfg,
 	}
 }
