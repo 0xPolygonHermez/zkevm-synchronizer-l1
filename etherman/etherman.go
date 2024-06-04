@@ -1632,15 +1632,6 @@ func (etherMan *Client) oldVerifyBatchesTrustedAggregatorEvent(ctx context.Conte
 	return etherMan.verifyBatches(ctx, vLog, blocks, blocksOrder, vb.NumBatch, vb.StateRoot, vb.Aggregator, TrustedVerifyBatchOrder)
 }
 
-func (etherMan *Client) verifyBatchesEvent(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) error {
-	log.Debug("VerifyBatches event detected")
-	vb, err := etherMan.ZkEVM.ParseVerifyBatches(vLog)
-	if err != nil {
-		log.Error("error parsing VerifyBatches event. Error: ", err)
-		return err
-	}
-	return etherMan.verifyBatches(ctx, vLog, blocks, blocksOrder, vb.NumBatch, vb.StateRoot, vb.Aggregator, VerifyBatchOrder)
-}
 func (etherMan *Client) verifyBatches(
 	ctx context.Context,
 	vLog types.Log,
