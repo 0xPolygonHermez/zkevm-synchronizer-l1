@@ -8,6 +8,7 @@ on:
       - update-external-dependencies
       - 'release/**'
       - 'feature/**'
+      - 'fix/**'
 jobs:
   test_db:
     runs-on: ubuntu-latest
