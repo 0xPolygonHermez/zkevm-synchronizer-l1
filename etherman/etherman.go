@@ -116,6 +116,55 @@ var (
 	// methodIDSequenceBatchesElderberry: MethodID for sequenceBatches in Elderberry
 	methodIDSequenceBatchesElderberry = []byte{0xde, 0xf5, 0x7e, 0x54} // 0xdef57e54 sequenceBatches((bytes,bytes32,uint64,bytes32)[],uint64,uint64,address)
 
+	sginatures = []string{
+		"SetBatchFee(uint256)",
+		"SetTrustedAggregator(address)",
+		"SetVerifyBatchTimeTarget(uint64)",
+		"SetMultiplierBatchFee(uint16)",
+		"SetPendingStateTimeout(uint64)",
+		"SetTrustedAggregatorTimeout(uint64)",
+		"OverridePendingState(uint32,uint64,bytes32,bytes32,address)",
+		"ProveNonDeterministicPendingState(bytes32,bytes32)",
+		"ConsolidatePendingState(uint32,uint64,bytes32,bytes32,uint64)",
+		"VerifyBatchesTrustedAggregator(uint32,uint64,bytes32,bytes32,address)",
+		"VerifyBatches(uint32,uint64,bytes32,bytes32,address)",
+		"OnSequenceBatches(uint32,uint64)",
+		"UpdateRollup(uint32,uint32,uint64)",
+		"AddExistingRollup(uint32,uint64,address,uint64,uint8,uint64)",
+		"CreateNewRollup(uint32,uint32,address,uint64,address)",
+		"ObsoleteRollupType(uint32)",
+		"AddNewRollupType(uint32,address,address,uint64,uint8,bytes32,string)",
+		"AcceptAdminRole(address)",
+		"TransferAdminRole(address)",
+		"SetForceBatchAddress(address)",
+		"SetForceBatchTimeout(uint64)",
+		"SetTrustedSequencerURL(string)",
+		"SetTrustedSequencer(address)",
+		"VerifyBatches(uint64,bytes32,address)",
+		"SequenceForceBatches(uint64)",
+		"ForceBatch(uint64,bytes32,address,bytes)",
+		"SequenceBatches(uint64,bytes32)",
+		"InitialSequenceBatches(bytes,bytes32,address)",
+		"UpdateEtrogSequence(uint64,bytes,bytes32,address)",
+		"Initialized(uint64)",
+		"RoleAdminChanged(bytes32,bytes32,bytes32)",
+		"RoleGranted(bytes32,address,address)",
+		"RoleRevoked(bytes32,address,address)",
+		"EmergencyStateActivated()",
+		"EmergencyStateDeactivated()",
+		"UpdateL1InfoTree(bytes32,bytes32)",
+		"UpdateGlobalExitRoot(bytes32,bytes32)",
+		"VerifyBatchesTrustedAggregator(uint64,bytes32,address)",
+		"OwnershipTransferred(address,address)",
+		"UpdateZkEVMVersion(uint64,uint64,string)",
+		"ConsolidatePendingState(uint64,bytes32,uint64)",
+		"OverridePendingState(uint64,bytes32,address)",
+		"SequenceBatches(uint64)",
+		"Initialized(uint8)",
+		"AdminChanged(address,address)",
+		"BeaconUpgraded(address)",
+		"Upgraded(address)",
+	}
 	// ErrNotFound is used when the object is not found
 	ErrNotFound = errors.New("not found")
 	// ErrIsReadOnlyMode is used when the EtherMan client is in read-only mode.
@@ -125,11 +174,27 @@ var (
 	ErrPrivateKeyNotFound = errors.New("can't find sender private key to sign tx")
 )
 
+var (
+	signatureMap = createMapSignatures()
+)
+
 // SequencedBatchesSigHash returns the hash for the `SequenceBatches` event.
 func SequencedBatchesSigHash() common.Hash { return sequenceBatchesSignatureHash }
 
 // TrustedVerifyBatchesSigHash returns the hash for the `TrustedVerifyBatches` event.
 func TrustedVerifyBatchesSigHash() common.Hash { return verifyBatchesTrustedAggregatorSignatureHash }
+
+func createMapSignatures() map[common.Hash]string {
+	signatureMap := make(map[common.Hash]string)
+	for _, signature := range sginatures {
+		signatureMap[crypto.Keccak256Hash([]byte(signature))] = signature
+	}
+	return signatureMap
+}
+
+func translateSignatureHash(hash common.Hash) string {
+	return signatureMap[hash]
+}
 
 // EventOrder is the the type used to identify the events order
 type EventOrder string
@@ -501,13 +566,16 @@ func (etherMan *Client) GetRollupInfoByBlockRange(ctx context.Context, fromBlock
 	query := ethereum.FilterQuery{
 		FromBlock: new(big.Int).SetUint64(fromBlock),
 		Addresses: etherMan.SCAddresses,
-		Topics: [][]common.Hash{{updateL1InfoTreeSignatureHash,
-			updateZkEVMVersionSignatureHash,
-			updateRollupSignatureHash,
-			addExistingRollupSignatureHash,
-			createNewRollupSignatureHash,
-			sequenceBatchesSignatureHash,
-			initialSequenceBatchesSignatureHash}},
+		/*
+			Topics: [][]common.Hash{{initialSequenceBatchesSignatureHash,
+				updateL1InfoTreeSignatureHash,
+				updateZkEVMVersionSignatureHash,
+				updateRollupSignatureHash,
+				addExistingRollupSignatureHash,
+				createNewRollupSignatureHash,
+				sequenceBatchesSignatureHash,
+			}},
+		*/
 	}
 	if toBlock != nil {
 		query.ToBlock = new(big.Int).SetUint64(*toBlock)
@@ -595,6 +663,7 @@ func (etherMan *Client) readEvents(ctx context.Context, query ethereum.FilterQue
 	}
 	blocksOrder := make(map[common.Hash][]Order)
 	startProcess := time.Now()
+	logEvents(logs)
 	for _, vLog := range logs {
 		startProcessSingleEvent := time.Now()
 		if !isheadBlockInArray(&blocks, vLog.BlockHash, vLog.BlockNumber) {
@@ -603,6 +672,8 @@ func (etherMan *Client) readEvents(ctx context.Context, query ethereum.FilterQue
 				blocks = append(blocks, blockRetrieve)
 			}
 		}
+		log.Debugf("Processing event: topic:%s (%s) blockHash:%s blockNumber:%s txHash: %s", vLog.Topics[0].String(),
+			translateSignatureHash(vLog.Topics[0]), vLog.BlockHash.String(), vLog.BlockNumber, vLog.TxHash.String())
 		err := etherMan.processEvent(ctx, vLog, &blocks, &blocksOrder)
 		metrics.ProcessSingleEventTime(time.Since(startProcessSingleEvent))
 		metrics.EventCounter()
@@ -614,6 +685,14 @@ func (etherMan *Client) readEvents(ctx context.Context, query ethereum.FilterQue
 	metrics.ProcessAllEventTime(time.Since(startProcess))
 	metrics.ReadAndProcessAllEventsTime(time.Since(start))
 	return blocks, blocksOrder, nil
+}
+
+func logEvents(logs []types.Log) {
+	log.Debug("Events detected: ", len(logs))
+	for _, vLog := range logs {
+		log.Debugf("Event detected: topic:%s blockHash:%s blockNumber:%s txHash: %s",
+			translateSignatureHash(vLog.Topics[0]), vLog.BlockHash.String(), vLog.BlockNumber, vLog.TxHash.String())
+	}
 }
 
 func (etherMan *Client) processEvent(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) error {
@@ -641,7 +720,8 @@ func (etherMan *Client) processEvent(ctx context.Context, vLog types.Log, blocks
 	case oldVerifyBatchesTrustedAggregatorSignatureHash:
 		return etherMan.oldVerifyBatchesTrustedAggregatorEvent(ctx, vLog, blocks, blocksOrder)
 	case verifyBatchesSignatureHash:
-		return etherMan.verifyBatchesEvent(ctx, vLog, blocks, blocksOrder)
+		log.Debug("verifyBatchesSignatureHash event detected. Ignoring...")
+		return nil
 	case sequenceForceBatchesSignatureHash:
 		return etherMan.forceSequencedBatchesEvent(ctx, vLog, blocks, blocksOrder)
 	case setTrustedSequencerURLSignatureHash:
