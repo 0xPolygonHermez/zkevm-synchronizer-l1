@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
@@ -56,9 +57,22 @@ func NewSynchronizerImpl(
 	cfg.GenesisBlockNumber = genesisBlockNumber
 	l1EventProcessors := newL1EventProcessor(state)
 	blockRangeProcessor := NewBlockRangeProcessLegacy(storage, state, state, l1EventProcessors)
-
-	finalizedBlockNumberFetcher := l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.FinalizedBlockNumber, 0)
-	syncPointBlockNumberFecther := l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.SyncBlockProtection), cfg.SyncBlockProtectionOffset)
+	if cfg.SyncBlockFinalized == "" {
+		log.Warnf("SyncBlockFinalized is empty, setting to finalized")
+		cfg.SyncBlockFinalized = "finalized"
+	}
+	finalizedBlockPoint, err := l1_check_block.StringToL1BlockPointWithOffset(cfg.SyncBlockFinalized)
+	if err != nil {
+		defer cancel()
+		return nil, fmt.Errorf("synchronizer.SyncBlockFinalized have a wrong value. Err: %w", err)
+	}
+	syncBlockPoint, err := l1_check_block.StringToL1BlockPointWithOffset(cfg.SyncBlockProtection)
+	if err != nil {
+		defer cancel()
+		return nil, fmt.Errorf("synchronizer.SyncBlockProtection have a wrong value. Err: %w", err)
+	}
+	finalizedBlockNumberFetcher := l1_check_block.NewSafeL1BlockNumberFetch(finalizedBlockPoint)
+	syncPointBlockNumberFecther := l1_check_block.NewSafeL1BlockNumberFetch(syncBlockPoint)
 	reorgManager := l1sync.NewCheckReorgManager(ctx, ethMan, state)
 	blocksRetriever := l1sync.NewBlockPointsRetriever(
 		syncPointBlockNumberFecther,
