@@ -147,7 +147,7 @@ func (s *L1SequentialSync) SyncBlocks(ctx context.Context, lastEthBlockSynced *s
 			return lastEthBlockSynced, true, nil
 		}
 		blockRange := blockRangeIterator.GetRange(lastEthBlockSynced.IsUnsafeAndHaveRollupdata())
-		log.Infof("Syncing %s", blockRangeIterator.String())
+		log.Infof("Syncing %s Progress: %s", blockRangeIterator.String(), s.calculateProgress(blockRange, blockPoints))
 		synced := false
 		lastEthBlockSynced, synced, err = s.iteration(ctx, blockRange, blockPoints.L1FinalizedBlockNumber, lastEthBlockSynced)
 		if err != nil {
@@ -166,6 +166,12 @@ func (s *L1SequentialSync) SyncBlocks(ctx context.Context, lastEthBlockSynced *s
 		}
 	}
 	return lastEthBlockSynced, true, nil
+}
+
+func (s *L1SequentialSync) calculateProgress(blockRange BlockRange, blockPoints BlockPoints) string {
+	totalBlocksToProcess := blockPoints.L1LastBlockToSync - s.cfg.GenesisBlockNumber
+	blocksProcessed := blockRange.FromBlock - s.cfg.GenesisBlockNumber
+	return fmt.Sprintf("Percent: %3.1f", float32(blocksProcessed*100)/float32(totalBlocksToProcess))
 }
 
 func (s *L1SequentialSync) checkResponseGetRollupInfoByBlockRangeForOverlappedFirstBlock(blocks []etherman.Block, fromBlock uint64) error {
