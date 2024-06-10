@@ -19,7 +19,7 @@ import (
 type testData struct {
 	mockL1Client         *mock_l1_check_block.L1Requester
 	mockState            *mock_l1_check_block.StateInterfacer
-	mockBlockNumberFetch *mock_l1_check_block.SafeL1BlockNumberFetcher
+	mockBlockNumberFetch *mock_l1_check_block.L1BlockNumberFetcher
 	sut                  *l1_check_block.CheckL1BlockHash
 	ctx                  context.Context
 	stateBlock           *l1_check_block.L1Block
@@ -28,7 +28,7 @@ type testData struct {
 func newTestData(t *testing.T) *testData {
 	mockL1Client := mock_l1_check_block.NewL1Requester(t)
 	mockState := mock_l1_check_block.NewStateInterfacer(t)
-	mockBlockNumberFetch := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
+	mockBlockNumberFetch := mock_l1_check_block.NewL1BlockNumberFetcher(t)
 	mockBlockNumberFetch.EXPECT().Description().Return("mock").Maybe()
 	sut := l1_check_block.NewCheckL1BlockHash(mockL1Client, mockState, mockBlockNumberFetch)
 	require.NotNil(t, sut)
@@ -60,11 +60,11 @@ func TestCheckL1BlockHashErrorGettingFirstUncheckedBlockFromDB(t *testing.T) {
 	require.Error(t, res)
 }
 
-func TestCheckL1BlockHashErrorGettingGetSafeBlockNumber(t *testing.T) {
+func TestCheckL1BlockHashErrorGettingGetBlockNumber(t *testing.T) {
 	data := newTestData(t)
 
 	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, uint64(0), nil).Return(data.stateBlock, nil)
-	data.mockBlockNumberFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(0), fmt.Errorf("error"))
+	data.mockBlockNumberFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(uint64(0), fmt.Errorf("error"))
 	res := data.sut.Step(data.ctx)
 	require.Error(t, res)
 }
@@ -74,7 +74,7 @@ func TestCheckL1BlockHashSafePointIsInFuture(t *testing.T) {
 	data := newTestData(t)
 
 	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, uint64(0), nil).Return(data.stateBlock, nil)
-	data.mockBlockNumberFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(data.stateBlock.BlockNumber-1, nil)
+	data.mockBlockNumberFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(data.stateBlock.BlockNumber-1, nil)
 
 	res := data.sut.Step(data.ctx)
 	require.NoError(t, res)
@@ -84,7 +84,7 @@ func TestCheckL1BlockHashL1ClientReturnsANil(t *testing.T) {
 	data := newTestData(t)
 
 	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, uint64(0), nil).Return(data.stateBlock, nil)
-	data.mockBlockNumberFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(data.stateBlock.BlockNumber+10, nil)
+	data.mockBlockNumberFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(data.stateBlock.BlockNumber+10, nil)
 	data.mockL1Client.EXPECT().HeaderByNumber(data.ctx, big.NewInt(int64(data.stateBlock.BlockNumber))).Return(nil, nil)
 	res := data.sut.Step(data.ctx)
 	require.Error(t, res)
@@ -96,7 +96,7 @@ func TestCheckL1BlockHashMatchHashUpdateCheckMarkOnDB(t *testing.T) {
 
 	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, uint64(0), nil).Return(data.stateBlock, nil)
 	data.mockBlockNumberFetch.EXPECT().Description().Return("mock")
-	data.mockBlockNumberFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(data.stateBlock.BlockNumber, nil)
+	data.mockBlockNumberFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(data.stateBlock.BlockNumber, nil)
 	l1Block := &types.Header{
 		Number: big.NewInt(100),
 	}
@@ -114,7 +114,7 @@ func TestCheckL1BlockHashMismatch(t *testing.T) {
 
 	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, uint64(0), nil).Return(data.stateBlock, nil)
 	data.stateBlock.BlockHash = common.HexToHash("0x1234") // Wrong hash to trigger a mismatch
-	data.mockBlockNumberFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(data.stateBlock.BlockNumber, nil)
+	data.mockBlockNumberFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(data.stateBlock.BlockNumber, nil)
 	l1Block := &types.Header{
 		Number: big.NewInt(100),
 	}

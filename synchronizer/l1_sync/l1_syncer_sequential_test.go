@@ -15,14 +15,14 @@ import (
 )
 
 func TestGetL1BlockPointsOk(t *testing.T) {
-	mockBlockProtection := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
-	mockFinalized := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
+	mockBlockProtection := mock_l1_check_block.NewL1BlockNumberFetcher(t)
+	mockFinalized := mock_l1_check_block.NewL1BlockNumberFetcher(t)
 	ctx := context.TODO()
 	mockBlockProtection.EXPECT().Description().Return("mock mockBlockProtection").Maybe()
 	mockFinalized.EXPECT().Description().Return("mock mockFinalized").Maybe()
 
-	mockBlockProtection.EXPECT().GetSafeBlockNumber(ctx, nil).Return(uint64(1), nil)
-	mockFinalized.EXPECT().GetSafeBlockNumber(ctx, nil).Return(uint64(2), nil)
+	mockBlockProtection.EXPECT().BlockNumber(ctx, nil).Return(uint64(1), nil)
+	mockFinalized.EXPECT().BlockNumber(ctx, nil).Return(uint64(2), nil)
 	sut := l1sync.NewBlockPointsRetriever(mockBlockProtection, mockFinalized, nil)
 
 	points, err := sut.GetL1BlockPoints(ctx)
@@ -32,11 +32,11 @@ func TestGetL1BlockPointsOk(t *testing.T) {
 }
 
 func TestGetL1BlockPointsErr1(t *testing.T) {
-	mockBlockProtection := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
-	mockFinalized := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
+	mockBlockProtection := mock_l1_check_block.NewL1BlockNumberFetcher(t)
+	mockFinalized := mock_l1_check_block.NewL1BlockNumberFetcher(t)
 	ctx := context.TODO()
-	mockBlockProtection.EXPECT().GetSafeBlockNumber(ctx, nil).Return(uint64(1), fmt.Errorf("error"))
-	//mockFinalized.EXPECT().GetSafeBlockNumber(ctx, nil).Return(uint64(2), nil)
+	mockBlockProtection.EXPECT().BlockNumber(ctx, nil).Return(uint64(1), fmt.Errorf("error"))
+	//mockFinalized.EXPECT().BlockNumber(ctx, nil).Return(uint64(2), nil)
 	sut := l1sync.NewBlockPointsRetriever(mockBlockProtection, mockFinalized, nil)
 
 	_, err := sut.GetL1BlockPoints(ctx)
@@ -44,11 +44,11 @@ func TestGetL1BlockPointsErr1(t *testing.T) {
 }
 
 func TestGetL1BlockPointsErr2(t *testing.T) {
-	mockBlockProtection := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
-	mockFinalized := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
+	mockBlockProtection := mock_l1_check_block.NewL1BlockNumberFetcher(t)
+	mockFinalized := mock_l1_check_block.NewL1BlockNumberFetcher(t)
 	ctx := context.TODO()
-	mockBlockProtection.EXPECT().GetSafeBlockNumber(ctx, nil).Return(uint64(1), nil)
-	mockFinalized.EXPECT().GetSafeBlockNumber(ctx, nil).Return(uint64(2), fmt.Errorf("error"))
+	mockBlockProtection.EXPECT().BlockNumber(ctx, nil).Return(uint64(1), nil)
+	mockFinalized.EXPECT().BlockNumber(ctx, nil).Return(uint64(2), fmt.Errorf("error"))
 	sut := l1sync.NewBlockPointsRetriever(mockBlockProtection, mockFinalized, nil)
 
 	_, err := sut.GetL1BlockPoints(ctx)

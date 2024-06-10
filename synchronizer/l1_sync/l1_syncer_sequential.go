@@ -80,12 +80,12 @@ func NewL1SequentialSync(blockPointsRetriever BlockPointsRetriever,
 }
 
 type BlockPointsRetrieverImplementation struct {
-	syncBlockProtection l1_check_block.SafeL1BlockNumberFetcher
-	finalizedBlock      l1_check_block.SafeL1BlockNumberFetcher
+	syncBlockProtection l1_check_block.L1BlockNumberFetcher
+	finalizedBlock      l1_check_block.L1BlockNumberFetcher
 	l1Client            l1_check_block.L1Requester
 }
 
-func NewBlockPointsRetriever(syncBlockProtection, finalizedBlock l1_check_block.SafeL1BlockNumberFetcher, l1Client l1_check_block.L1Requester) *BlockPointsRetrieverImplementation {
+func NewBlockPointsRetriever(syncBlockProtection, finalizedBlock l1_check_block.L1BlockNumberFetcher, l1Client l1_check_block.L1Requester) *BlockPointsRetrieverImplementation {
 	return &BlockPointsRetrieverImplementation{
 		syncBlockProtection: syncBlockProtection,
 		finalizedBlock:      finalizedBlock,
@@ -94,12 +94,12 @@ func NewBlockPointsRetriever(syncBlockProtection, finalizedBlock l1_check_block.
 }
 
 func (s *BlockPointsRetrieverImplementation) GetL1BlockPoints(ctx context.Context) (BlockPoints, error) {
-	lastKnownBlock, err := s.syncBlockProtection.GetSafeBlockNumber(ctx, s.l1Client)
+	lastKnownBlock, err := s.syncBlockProtection.BlockNumber(ctx, s.l1Client)
 	if err != nil {
 		log.Error("error getting header of the latest block in L1. Error: ", err)
 		return BlockPoints{}, err
 	}
-	finalizedBlockNumber, err := s.finalizedBlock.GetSafeBlockNumber(ctx, s.l1Client)
+	finalizedBlockNumber, err := s.finalizedBlock.BlockNumber(ctx, s.l1Client)
 	if err != nil {
 		log.Errorf("error getting finalized block number in L1. Error: %v", err)
 		return BlockPoints{}, err

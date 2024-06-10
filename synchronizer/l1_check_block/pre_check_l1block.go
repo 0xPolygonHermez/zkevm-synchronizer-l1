@@ -31,13 +31,13 @@ type StatePreCheckInterfacer interface {
 type PreCheckL1BlockHash struct {
 	L1Client                  L1Requester
 	State                     StatePreCheckInterfacer
-	InitialSegmentBlockNumber SafeL1BlockNumberFetcher
-	EndSegmentBlockNumber     SafeL1BlockNumberFetcher
+	InitialSegmentBlockNumber L1BlockNumberFetcher
+	EndSegmentBlockNumber     L1BlockNumberFetcher
 }
 
 // NewPreCheckL1BlockHash creates a new CheckL1BlockHash
 func NewPreCheckL1BlockHash(l1Client L1Requester, state StatePreCheckInterfacer,
-	initial, end SafeL1BlockNumberFetcher) *PreCheckL1BlockHash {
+	initial, end L1BlockNumberFetcher) *PreCheckL1BlockHash {
 	return &PreCheckL1BlockHash{
 		L1Client:                  l1Client,
 		State:                     state,
@@ -53,11 +53,11 @@ func (p *PreCheckL1BlockHash) Name() string {
 
 // Step is a method that checks the L1 block hash, run until all blocks are checked and returns
 func (p *PreCheckL1BlockHash) Step(ctx context.Context) error {
-	from, err := p.InitialSegmentBlockNumber.GetSafeBlockNumber(ctx, p.L1Client)
+	from, err := p.InitialSegmentBlockNumber.BlockNumber(ctx, p.L1Client)
 	if err != nil {
 		return err
 	}
-	to, err := p.EndSegmentBlockNumber.GetSafeBlockNumber(ctx, p.L1Client)
+	to, err := p.EndSegmentBlockNumber.BlockNumber(ctx, p.L1Client)
 	if err != nil {
 		return err
 	}

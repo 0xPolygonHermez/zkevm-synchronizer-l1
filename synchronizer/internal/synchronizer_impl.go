@@ -71,8 +71,8 @@ func NewSynchronizerImpl(
 		defer cancel()
 		return nil, fmt.Errorf("synchronizer.SyncBlockProtection have a wrong value. Err: %w", err)
 	}
-	finalizedBlockNumberFetcher := l1_check_block.NewSafeL1BlockNumberFetch(finalizedBlockPoint).SetIfNotFoundReturnsZero()
-	syncPointBlockNumberFecther := l1_check_block.NewSafeL1BlockNumberFetch(syncBlockPoint)
+	finalizedBlockNumberFetcher := l1_check_block.NewL1BlockNumberByNameFetch(finalizedBlockPoint).SetIfNotFoundReturnsZero()
+	syncPointBlockNumberFecther := l1_check_block.NewL1BlockNumberByNameFetch(syncBlockPoint)
 	reorgManager := l1sync.NewCheckReorgManager(ctx, ethMan, state)
 	blocksRetriever := l1sync.NewBlockPointsRetriever(
 		syncPointBlockNumberFecther,
