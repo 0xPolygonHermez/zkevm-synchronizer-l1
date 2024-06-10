@@ -17,8 +17,8 @@ const DefaultValues = `
 	SyncInterval = "10s"
 	SyncChunkSize = 500
 	GenesisBlockNumber = 0
-	SyncBlockProtection = "latest"
-	SyncBlockProtectionOffset = -5
+	SyncUpToBlock = "latest"
+	BlockFinality = "finalized"
 [Etherman]
 	L1URL = "http://localhost:8545"
 	[Etherman.Contracts]
