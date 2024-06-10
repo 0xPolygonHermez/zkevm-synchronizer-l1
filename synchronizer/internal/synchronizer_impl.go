@@ -69,7 +69,7 @@ func NewSynchronizerImpl(
 	syncBlockPoint, err := l1_check_block.StringToL1BlockPointWithOffset(cfg.SyncUpToBlock)
 	if err != nil {
 		defer cancel()
-		return nil, fmt.Errorf("synchronizer.SyncUpToBlock have a wrong value. Err: %w", err)
+		return nil, fmt.Errorf("synchronizer.SyncUpToBlock has a wrong value. Err: %w", err)
 	}
 	log.Debugf("Syncing up to block: %s (block considered not subject to reorgs:%s)", syncBlockPoint.String(), finalizedBlockPoint.String())
 	if finalizedBlockPoint.GreaterThan(&syncBlockPoint) {
