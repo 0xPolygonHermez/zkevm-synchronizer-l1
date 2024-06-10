@@ -30,7 +30,7 @@ func TestDefault(t *testing.T) {
 			MaxConns: 10,
 		},
 		Synchronizer: syncconfig.Config{
-			SyncInterval:         types.Duration{time.Second * 10},
+			SyncInterval:         types.Duration{Duration: time.Second},
 			SyncChunkSize:        500,
 			GenesisBlockNumber:   0,
 			SyncUpToBlock:        "latest",

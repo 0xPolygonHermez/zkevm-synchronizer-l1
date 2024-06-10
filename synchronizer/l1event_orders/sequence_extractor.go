@@ -19,7 +19,10 @@ func GetSequenceFromL1EventOrder(event etherman.EventOrder, l1Block *etherman.Bl
 	case etherman.InitialSequenceBatchesOrder:
 		return getSequence(l1Block.SequencedBatches[position],
 			func(batch etherman.SequencedBatch) uint64 { return batch.BatchNumber })
-
+	case etherman.UpdateEtrogSequenceOrder:
+		seq := Sequence{FromBatchNumber: l1Block.UpdateEtrogSequence.BatchNumber,
+			ToBatchNumber: l1Block.UpdateEtrogSequence.BatchNumber}
+		return &seq
 	}
 	return nil
 }

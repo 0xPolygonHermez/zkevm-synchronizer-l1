@@ -141,6 +141,7 @@ func newL1EventProcessor(state syncinterfaces.StateInterface) *processor_manager
 	builder.Register(incaberry.NewProcessorForkId(state))
 	builder.Register(etrog.NewProcessorL1InitialSequenceBatches(state))
 	builder.Register(elderberry.NewProcessorL1SequenceBatchesElderberry(etrogSequenceBatchesProcessor))
+	builder.Register(etrog.NewProcessorL1UpdateEtrogSequence(state))
 	return builder.Build()
 }
 
