@@ -17,8 +17,8 @@ type testPreCheckData struct {
 	sut              *l1_check_block.PreCheckL1BlockHash
 	mockL1Client     *mock_l1_check_block.L1Requester
 	mockState        *mock_l1_check_block.StatePreCheckInterfacer
-	mockInitialFetch *mock_l1_check_block.SafeL1BlockNumberFetcher
-	mockEndFetch     *mock_l1_check_block.SafeL1BlockNumberFetcher
+	mockInitialFetch *mock_l1_check_block.L1BlockNumberFetcher
+	mockEndFetch     *mock_l1_check_block.L1BlockNumberFetcher
 	ctx              context.Context
 	stateBlocks      []*L1Block
 }
@@ -26,8 +26,8 @@ type testPreCheckData struct {
 func newPreCheckData(t *testing.T) *testPreCheckData {
 	mockL1Client := mock_l1_check_block.NewL1Requester(t)
 	mockState := mock_l1_check_block.NewStatePreCheckInterfacer(t)
-	mockInitialFetch := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
-	mockEndFetch := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
+	mockInitialFetch := mock_l1_check_block.NewL1BlockNumberFetcher(t)
+	mockEndFetch := mock_l1_check_block.NewL1BlockNumberFetcher(t)
 	sut := l1_check_block.NewPreCheckL1BlockHash(mockL1Client, mockState, mockInitialFetch, mockEndFetch)
 	return &testPreCheckData{
 		sut:              sut,
@@ -54,8 +54,8 @@ func TestPreCheckL1BlockFromGreaterThanTo(t *testing.T) {
 	data := newPreCheckData(t)
 	data.mockInitialFetch.EXPECT().Description().Return("initial")
 	data.mockEndFetch.EXPECT().Description().Return("end")
-	data.mockInitialFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(1234), nil)
-	data.mockEndFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(1230), nil)
+	data.mockInitialFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(uint64(1234), nil)
+	data.mockEndFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(uint64(1230), nil)
 
 	res := data.sut.Step(data.ctx)
 	require.NoError(t, res)
@@ -66,8 +66,8 @@ func TestPreCheckL1BlockNoBlocksOnState(t *testing.T) {
 	data := newPreCheckData(t)
 	data.mockInitialFetch.EXPECT().Description().Return("initial")
 	data.mockEndFetch.EXPECT().Description().Return("end")
-	data.mockInitialFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(1234), nil)
-	data.mockEndFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(1250), nil)
+	data.mockInitialFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(uint64(1234), nil)
+	data.mockEndFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(uint64(1250), nil)
 	data.mockState.EXPECT().GetUncheckedBlocks(data.ctx, uint64(1234), uint64(1250), nil).Return(nil, nil)
 
 	res := data.sut.Step(data.ctx)
@@ -78,8 +78,8 @@ func TestPreCheckL1BlockBlocksMatch(t *testing.T) {
 	data := newPreCheckData(t)
 	data.mockInitialFetch.EXPECT().Description().Return("initial")
 	data.mockEndFetch.EXPECT().Description().Return("end")
-	data.mockInitialFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(1234), nil)
-	data.mockEndFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(1250), nil)
+	data.mockInitialFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(uint64(1234), nil)
+	data.mockEndFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(uint64(1250), nil)
 	data.mockState.EXPECT().GetUncheckedBlocks(data.ctx, uint64(1234), uint64(1250), nil).Return(data.stateBlocks, nil)
 	l1Block1 := &types.Header{
 		Number: big.NewInt(int64(data.stateBlocks[0].BlockNumber)),
@@ -99,8 +99,8 @@ func TestPreCheckL1BlockBlocksMismatch(t *testing.T) {
 	data := newPreCheckData(t)
 	data.mockInitialFetch.EXPECT().Description().Return("initial")
 	data.mockEndFetch.EXPECT().Description().Return("end")
-	data.mockInitialFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(1234), nil)
-	data.mockEndFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(1250), nil)
+	data.mockInitialFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(uint64(1234), nil)
+	data.mockEndFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(uint64(1250), nil)
 	data.stateBlocks[1].BlockHash = common.HexToHash("0x12345678901234567890123456789012345678901234567890")
 	data.mockState.EXPECT().GetUncheckedBlocks(data.ctx, uint64(1234), uint64(1250), nil).Return(data.stateBlocks, nil)
 	l1Block1 := &types.Header{
@@ -124,8 +124,8 @@ func TestPreCheckL1BlockBlocksMismatchButIsNoLongerInState(t *testing.T) {
 	data := newPreCheckData(t)
 	data.mockInitialFetch.EXPECT().Description().Return("initial")
 	data.mockEndFetch.EXPECT().Description().Return("end")
-	data.mockInitialFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(1234), nil)
-	data.mockEndFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(1250), nil)
+	data.mockInitialFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(uint64(1234), nil)
+	data.mockEndFetch.EXPECT().BlockNumber(data.ctx, data.mockL1Client).Return(uint64(1250), nil)
 	data.stateBlocks[1].BlockHash = common.HexToHash("0x12345678901234567890123456789012345678901234567890")
 	data.mockState.EXPECT().GetUncheckedBlocks(data.ctx, uint64(1234), uint64(1250), nil).Return(data.stateBlocks, nil)
 	l1Block1 := &types.Header{

@@ -28,9 +28,9 @@ type StateInterfacer interface {
 	UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx stateTxType) error
 }
 
-// SafeL1BlockNumberFetcher is an interface for fetching the  L1 block number reference point (safe, finalized,...)
-type SafeL1BlockNumberFetcher interface {
-	GetSafeBlockNumber(ctx context.Context, l1Client L1Requester) (uint64, error)
+// L1BlockNumberFetcher is an interface for fetching the  L1 block number reference point (safe, finalized,...)
+type L1BlockNumberFetcher interface {
+	BlockNumber(ctx context.Context, l1Client L1Requester) (uint64, error)
 	Description() string
 }
 
@@ -38,11 +38,11 @@ type SafeL1BlockNumberFetcher interface {
 type CheckL1BlockHash struct {
 	L1Client               L1Requester
 	State                  StateInterfacer
-	SafeBlockNumberFetcher SafeL1BlockNumberFetcher
+	SafeBlockNumberFetcher L1BlockNumberFetcher
 }
 
 // NewCheckL1BlockHash creates a new CheckL1BlockHash
-func NewCheckL1BlockHash(l1Client L1Requester, state StateInterfacer, safeBlockNumberFetcher SafeL1BlockNumberFetcher) *CheckL1BlockHash {
+func NewCheckL1BlockHash(l1Client L1Requester, state StateInterfacer, safeBlockNumberFetcher L1BlockNumberFetcher) *CheckL1BlockHash {
 	return &CheckL1BlockHash{
 		L1Client:               l1Client,
 		State:                  state,
@@ -69,7 +69,7 @@ func (p *CheckL1BlockHash) Step(ctx context.Context) error {
 		log.Warnf("%s: function CheckL1Block receive a nil pointer", p.Name())
 		return nil
 	}
-	safeBlockNumber, err := p.SafeBlockNumberFetcher.GetSafeBlockNumber(ctx, p.L1Client)
+	safeBlockNumber, err := p.SafeBlockNumberFetcher.BlockNumber(ctx, p.L1Client)
 	if err != nil {
 		return err
 	}

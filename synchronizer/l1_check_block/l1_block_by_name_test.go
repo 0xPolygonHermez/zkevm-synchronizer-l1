@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestGetSafeBlockNumber(t *testing.T) {
+func TestBlockNumber(t *testing.T) {
 	ctx := context.Background()
 	mockRequester := mock_l1_check_block.NewL1Requester(t)
 	//safeBlockPoint := big.NewInt(50)
@@ -23,18 +23,18 @@ func TestGetSafeBlockNumber(t *testing.T) {
 		BlockPoint: l1_check_block.SafeBlockNumber,
 		Offset:     offset,
 	}
-	safeL1Block := l1_check_block.NewSafeL1BlockNumberFetch(syncPoint)
+	safeL1Block := l1_check_block.NewL1BlockNumberByNameFetch(syncPoint)
 
 	mockRequester.EXPECT().HeaderByNumber(ctx, mock.Anything).Return(&types.Header{
 		Number: big.NewInt(100),
 	}, nil)
-	blockNumber, err := safeL1Block.GetSafeBlockNumber(ctx, mockRequester)
+	blockNumber, err := safeL1Block.BlockNumber(ctx, mockRequester)
 	assert.NoError(t, err)
 	expectedBlockNumber := uint64(100 + offset)
 	assert.Equal(t, expectedBlockNumber, blockNumber)
 }
 
-func TestGetSafeBlockNumberMutliplesCases(t *testing.T) {
+func TestBlockNumberMutliplesCases(t *testing.T) {
 	tests := []struct {
 		name                string
 		blockPoint          string
@@ -108,19 +108,19 @@ func TestGetSafeBlockNumberMutliplesCases(t *testing.T) {
 			syncPointStr := fmt.Sprintf("%s/%d", tt.blockPoint, tt.offset)
 			syncPoint, err := l1_check_block.StringToL1BlockPointWithOffset(syncPointStr)
 			assert.NoError(t, err)
-			safeL1Block := l1_check_block.NewSafeL1BlockNumberFetch(syncPoint)
+			safeL1Block := l1_check_block.NewL1BlockNumberByNameFetch(syncPoint)
 
 			mockRequester.EXPECT().HeaderByNumber(ctx, tt.expectedCallToGeth).Return(&types.Header{
 				Number: big.NewInt(int64(tt.l1ReturnBlockNumber)),
 			}, nil)
-			blockNumber, err := safeL1Block.GetSafeBlockNumber(ctx, mockRequester)
+			blockNumber, err := safeL1Block.BlockNumber(ctx, mockRequester)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedBlockNumber, blockNumber)
 		})
 	}
 }
 
-func TestGetSafeBlockNumberWithOffsetMutliplesCases(t *testing.T) {
+func TestBlockNumberWithOffsetMutliplesCases(t *testing.T) {
 	tests := []struct {
 		name       string
 		blockPoint string
@@ -169,7 +169,7 @@ func TestGetSafeBlockNumberWithOffsetMutliplesCases(t *testing.T) {
 	}
 }
 
-func TestGetSafeBlockNumberNotFound(t *testing.T) {
+func TestBlockNumberNotFound(t *testing.T) {
 	ctx := context.Background()
 	mockRequester := mock_l1_check_block.NewL1Requester(t)
 	//safeBlockPoint := big.NewInt(50)
@@ -179,13 +179,13 @@ func TestGetSafeBlockNumberNotFound(t *testing.T) {
 		Offset:     offset,
 	}
 	mockRequester.EXPECT().HeaderByNumber(ctx, mock.Anything).Return(nil, fmt.Errorf("block not found"))
-	safeL1Block := l1_check_block.NewSafeL1BlockNumberFetch(syncPoint)
-	_, err := safeL1Block.GetSafeBlockNumber(ctx, mockRequester)
+	safeL1Block := l1_check_block.NewL1BlockNumberByNameFetch(syncPoint)
+	_, err := safeL1Block.BlockNumber(ctx, mockRequester)
 	assert.Error(t, err)
 
 	mockRequester.EXPECT().HeaderByNumber(ctx, mock.Anything).Return(nil, fmt.Errorf("block not found"))
-	safeL1Block = l1_check_block.NewSafeL1BlockNumberFetch(syncPoint).SetIfNotFoundReturnsZero()
-	block, err := safeL1Block.GetSafeBlockNumber(ctx, mockRequester)
+	safeL1Block = l1_check_block.NewL1BlockNumberByNameFetch(syncPoint).SetIfNotFoundReturnsZero()
+	block, err := safeL1Block.BlockNumber(ctx, mockRequester)
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(0), block)
 

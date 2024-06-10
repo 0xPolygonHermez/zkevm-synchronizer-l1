@@ -37,6 +37,17 @@ const (
 	LastBlockNumber L1BlockPoint = 0
 )
 
+var (
+	// L1SafeFetch object preconfigured to fetch the safe block number
+	L1SafeFetch = L1BlockNumberByNameFetch{L1BlockPointWithOffset{BlockPoint: SafeBlockNumber, Offset: 0}, false}
+	// L1FinalizedFetch object preconfigured to fetch the finalized block number
+	L1FinalizedFetch = L1BlockNumberByNameFetch{L1BlockPointWithOffset{BlockPoint: FinalizedBlockNumber, Offset: 0}, false}
+	// L1PendingFetch object preconfigured to fetch the pending block number
+	L1PendingFetch = L1BlockNumberByNameFetch{L1BlockPointWithOffset{BlockPoint: PendingBlockNumber, Offset: 0}, false}
+	// L1LastestFetch object preconfigured to fetch the latest block number
+	L1LastestFetch = L1BlockNumberByNameFetch{L1BlockPointWithOffset{BlockPoint: LastBlockNumber, Offset: 0}, false}
+)
+
 // ToString converts a L1BlockPoint to a string
 func (v L1BlockPoint) ToString() string {
 	switch v {
@@ -107,19 +118,19 @@ func (v L1BlockPoint) ToGethRequest() *big.Int {
 	return big.NewInt(int64(v))
 }
 
-// SafeL1BlockNumberFetch  implements a safe L1 block number fetch
-type SafeL1BlockNumberFetch struct {
+// L1BlockNumberByNameFetch  implements a safe L1 block number fetch
+type L1BlockNumberByNameFetch struct {
 	L1BlockPointWithOffset
 	IfNotFoundReturnsZeroFlag bool
 }
 
-// NewSafeL1BlockNumberFetch creates a new SafeL1BlockNumberFetch
-func NewSafeL1BlockNumberFetch(safeBlockPointWithOffset L1BlockPointWithOffset) *SafeL1BlockNumberFetch {
-	res := SafeL1BlockNumberFetch{L1BlockPointWithOffset: safeBlockPointWithOffset}
+// NewL1BlockNumberByNameFetch creates a new SafeL1BlockNumberFetch
+func NewL1BlockNumberByNameFetch(safeBlockPointWithOffset L1BlockPointWithOffset) *L1BlockNumberByNameFetch {
+	res := L1BlockNumberByNameFetch{L1BlockPointWithOffset: safeBlockPointWithOffset}
 	return &res
 }
 
-func (p *SafeL1BlockNumberFetch) SetIfNotFoundReturnsZero() *SafeL1BlockNumberFetch {
+func (p *L1BlockNumberByNameFetch) SetIfNotFoundReturnsZero() *L1BlockNumberByNameFetch {
 	if p == nil {
 		return p
 	}
@@ -128,15 +139,15 @@ func (p *SafeL1BlockNumberFetch) SetIfNotFoundReturnsZero() *SafeL1BlockNumberFe
 }
 
 // Description returns a string representation of SafeL1BlockNumberFetch
-func (p *SafeL1BlockNumberFetch) Description() string {
+func (p *L1BlockNumberByNameFetch) Description() string {
 	if p == nil {
 		return "nil"
 	}
 	return (*p).String()
 }
 
-// GetSafeBlockNumber gets the safe block number from L1
-func (p *SafeL1BlockNumberFetch) GetSafeBlockNumber(ctx context.Context, requester L1Requester) (uint64, error) {
+// BlockNumber gets the safe block number from L1
+func (p *L1BlockNumberByNameFetch) BlockNumber(ctx context.Context, requester L1Requester) (uint64, error) {
 	l1SafePointBlock, err := requester.HeaderByNumber(ctx, p.BlockPoint.ToGethRequest())
 	blockNumber := uint64(0)
 	if err != nil {
