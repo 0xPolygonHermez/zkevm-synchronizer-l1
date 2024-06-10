@@ -168,3 +168,25 @@ func TestGetSafeBlockNumberWithOffsetMutliplesCases(t *testing.T) {
 		})
 	}
 }
+
+func TestGetSafeBlockNumberNotFound(t *testing.T) {
+	ctx := context.Background()
+	mockRequester := mock_l1_check_block.NewL1Requester(t)
+	//safeBlockPoint := big.NewInt(50)
+	offset := 10
+	syncPoint := l1_check_block.L1BlockPointWithOffset{
+		BlockPoint: l1_check_block.SafeBlockNumber,
+		Offset:     offset,
+	}
+	mockRequester.EXPECT().HeaderByNumber(ctx, mock.Anything).Return(nil, fmt.Errorf("block not found"))
+	safeL1Block := l1_check_block.NewSafeL1BlockNumberFetch(syncPoint)
+	_, err := safeL1Block.GetSafeBlockNumber(ctx, mockRequester)
+	assert.Error(t, err)
+
+	mockRequester.EXPECT().HeaderByNumber(ctx, mock.Anything).Return(nil, fmt.Errorf("block not found"))
+	safeL1Block = l1_check_block.NewSafeL1BlockNumberFetch(syncPoint).SetIfNotFoundReturnsZero()
+	block, err := safeL1Block.GetSafeBlockNumber(ctx, mockRequester)
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(0), block)
+
+}

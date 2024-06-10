@@ -108,12 +108,23 @@ func (v L1BlockPoint) ToGethRequest() *big.Int {
 }
 
 // SafeL1BlockNumberFetch  implements a safe L1 block number fetch
-type SafeL1BlockNumberFetch = L1BlockPointWithOffset
+type SafeL1BlockNumberFetch struct {
+	L1BlockPointWithOffset
+	IfNotFoundReturnsZeroFlag bool
+}
 
 // NewSafeL1BlockNumberFetch creates a new SafeL1BlockNumberFetch
 func NewSafeL1BlockNumberFetch(safeBlockPointWithOffset L1BlockPointWithOffset) *SafeL1BlockNumberFetch {
-	res := SafeL1BlockNumberFetch(safeBlockPointWithOffset)
+	res := SafeL1BlockNumberFetch{L1BlockPointWithOffset: safeBlockPointWithOffset}
 	return &res
+}
+
+func (p *SafeL1BlockNumberFetch) SetIfNotFoundReturnsZero() *SafeL1BlockNumberFetch {
+	if p == nil {
+		return p
+	}
+	p.IfNotFoundReturnsZeroFlag = true
+	return p
 }
 
 // Description returns a string representation of SafeL1BlockNumberFetch
@@ -129,8 +140,9 @@ func (p *SafeL1BlockNumberFetch) GetSafeBlockNumber(ctx context.Context, request
 	l1SafePointBlock, err := requester.HeaderByNumber(ctx, p.BlockPoint.ToGethRequest())
 	blockNumber := uint64(0)
 	if err != nil {
-		if strings.Contains(err.Error(), "block not found") {
+		if strings.Contains(err.Error(), "block not found") && p.IfNotFoundReturnsZeroFlag {
 			log.Warnf("block %s not found, assuming 0", p.String())
+			return blockNumber, nil
 		} else {
 			log.Errorf("%s: Error getting L1 block %d. err: %s", logPrefix, p.String(), err.Error())
 			return uint64(0), err
