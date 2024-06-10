@@ -4,13 +4,27 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
+const (
+	L1BlockPointWithOffsetDelimiter = "/"
+)
+
 // L1BlockPoint is an enum that represents the point of the L1 block
 type L1BlockPoint int
+
+type L1BlockPointWithOffset struct {
+	BlockPoint L1BlockPoint
+	Offset     int
+}
+
+func (v L1BlockPointWithOffset) String() string {
+	return fmt.Sprintf("%s%s%d", v.BlockPoint.ToString(), L1BlockPointWithOffsetDelimiter, v.Offset)
+}
 
 const (
 	// FinalizedBlockNumber is the finalized block number
@@ -39,18 +53,42 @@ func (v L1BlockPoint) ToString() string {
 }
 
 // StringToL1BlockPoint converts a string to a L1BlockPoint
-func StringToL1BlockPoint(s string) L1BlockPoint {
+func StringToL1BlockPointWithOffset(s string) (L1BlockPointWithOffset, error) {
+	result := L1BlockPointWithOffset{}
+	splitted := strings.Split(s, L1BlockPointWithOffsetDelimiter)
+	if len(splitted) > 2 {
+		return result, fmt.Errorf("invalid L1BlockPointWithOffset string: %s (only 1 delimiter permitted)", s)
+	}
+	l1block, err := StringToL1BlockPoint(splitted[0])
+	if err != nil {
+		return result, err
+	}
+	result.BlockPoint = l1block
+	if len(splitted) == 2 {
+		offset, err := fmt.Sscanf(splitted[1], "%d", &result.Offset)
+		if err != nil {
+			return result, fmt.Errorf("invalid L1BlockPointWithOffset string: %s (offset must be an integer)", s)
+		}
+		if offset != 1 {
+			return result, fmt.Errorf("invalid L1BlockPointWithOffset string: %s (only 1 offset permitted)", s)
+		}
+	}
+	return result, nil
+}
+
+// StringToL1BlockPoint converts a string to a L1BlockPoint
+func StringToL1BlockPoint(s string) (L1BlockPoint, error) {
 	switch s {
 	case "finalized":
-		return FinalizedBlockNumber
+		return FinalizedBlockNumber, nil
 	case "safe":
-		return SafeBlockNumber
+		return SafeBlockNumber, nil
 	case "pending":
-		return PendingBlockNumber
+		return PendingBlockNumber, nil
 	case "latest":
-		return LastBlockNumber
+		return LastBlockNumber, nil
 	default:
-		return FinalizedBlockNumber
+		return FinalizedBlockNumber, fmt.Errorf("invalid L1BlockPoint string: %s", s)
 	}
 }
 
@@ -69,52 +107,60 @@ func (v L1BlockPoint) ToGethRequest() *big.Int {
 	return big.NewInt(int64(v))
 }
 
-// SafeL1BlockNumberFetch is a struct that implements a safe L1 block number fetch
+// SafeL1BlockNumberFetch  implements a safe L1 block number fetch
 type SafeL1BlockNumberFetch struct {
-	// SafeBlockPoint is the block number that is reference to l1 Block
-	SafeBlockPoint L1BlockPoint
-	// Offset is a vaule add to the L1 block
-	Offset int
+	L1BlockPointWithOffset
+	IfNotFoundReturnsZeroFlag bool
 }
 
 // NewSafeL1BlockNumberFetch creates a new SafeL1BlockNumberFetch
-func NewSafeL1BlockNumberFetch(safeBlockPoint L1BlockPoint, offset int) *SafeL1BlockNumberFetch {
-	return &SafeL1BlockNumberFetch{
-		SafeBlockPoint: safeBlockPoint,
-		Offset:         offset,
+func NewSafeL1BlockNumberFetch(safeBlockPointWithOffset L1BlockPointWithOffset) *SafeL1BlockNumberFetch {
+	res := SafeL1BlockNumberFetch{L1BlockPointWithOffset: safeBlockPointWithOffset}
+	return &res
+}
+
+func (p *SafeL1BlockNumberFetch) SetIfNotFoundReturnsZero() *SafeL1BlockNumberFetch {
+	if p == nil {
+		return p
 	}
+	p.IfNotFoundReturnsZeroFlag = true
+	return p
 }
 
 // Description returns a string representation of SafeL1BlockNumberFetch
 func (p *SafeL1BlockNumberFetch) Description() string {
-	return fmt.Sprintf("%s/%d", p.SafeBlockPoint.ToString(), p.Offset)
+	if p == nil {
+		return "nil"
+	}
+	return (*p).String()
 }
 
 // GetSafeBlockNumber gets the safe block number from L1
 func (p *SafeL1BlockNumberFetch) GetSafeBlockNumber(ctx context.Context, requester L1Requester) (uint64, error) {
-	l1SafePointBlock, err := requester.HeaderByNumber(ctx, p.SafeBlockPoint.ToGethRequest())
+	l1SafePointBlock, err := requester.HeaderByNumber(ctx, p.BlockPoint.ToGethRequest())
+	blockNumber := uint64(0)
 	if err != nil {
-		log.Errorf("%s: Error getting L1 block %d. err: %s", logPrefix, p.String(), err.Error())
-		return uint64(0), err
-	}
-	result := l1SafePointBlock.Number.Uint64()
-	if p.Offset < 0 {
-		if result < uint64(-p.Offset) {
-			result = 0
+		if strings.Contains(err.Error(), "block not found") && p.IfNotFoundReturnsZeroFlag {
+			log.Warnf("block %s not found, assuming 0", p.String())
+			return blockNumber, nil
 		} else {
-			result += uint64(p.Offset)
+			log.Errorf("%s: Error getting L1 block %d. err: %s", logPrefix, p.String(), err.Error())
+			return uint64(0), err
+		}
+	}
+	blockNumber = l1SafePointBlock.Number.Uint64()
+	if p.Offset < 0 {
+		if blockNumber < uint64(-p.Offset) {
+			blockNumber = 0
+		} else {
+			blockNumber += uint64(p.Offset)
 		}
 	} else {
-		result = l1SafePointBlock.Number.Uint64() + uint64(p.Offset)
+		blockNumber = l1SafePointBlock.Number.Uint64() + uint64(p.Offset)
 	}
-	if p.SafeBlockPoint == LastBlockNumber {
-		result = min(result, l1SafePointBlock.Number.Uint64())
+	if p.BlockPoint == LastBlockNumber {
+		blockNumber = min(blockNumber, l1SafePointBlock.Number.Uint64())
 	}
 
-	return result, nil
-}
-
-// String returns a string representation of SafeL1BlockNumberFetch
-func (p *SafeL1BlockNumberFetch) String() string {
-	return fmt.Sprintf("SafeBlockPoint: %s, Offset: %d", p.SafeBlockPoint.ToString(), p.Offset)
+	return blockNumber, nil
 }
