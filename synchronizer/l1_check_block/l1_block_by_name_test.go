@@ -190,3 +190,40 @@ func TestBlockNumberNotFound(t *testing.T) {
 	assert.Equal(t, uint64(0), block)
 
 }
+
+func TestGreaterThan(t *testing.T) {
+	finalized := &l1_check_block.L1BlockPointWithOffset{
+		BlockPoint: l1_check_block.FinalizedBlockNumber,
+		Offset:     0,
+	}
+	safe := &l1_check_block.L1BlockPointWithOffset{
+		BlockPoint: l1_check_block.SafeBlockNumber,
+		Offset:     0,
+	}
+	lastest := &l1_check_block.L1BlockPointWithOffset{
+		BlockPoint: l1_check_block.LastBlockNumber,
+		Offset:     0,
+	}
+	assert.False(t, finalized.GreaterThan(safe))
+	assert.False(t, safe.GreaterThan(lastest))
+	assert.False(t, finalized.GreaterThan(lastest))
+	assert.True(t, lastest.GreaterThan(finalized))
+	assert.True(t, lastest.GreaterThan(safe))
+	assert.True(t, safe.GreaterThan(finalized))
+
+	assert.False(t, safe.GreaterThan(safe))
+}
+
+func TestWithOffsetGreaterThan(t *testing.T) {
+	safe10 := &l1_check_block.L1BlockPointWithOffset{
+		BlockPoint: l1_check_block.SafeBlockNumber,
+		Offset:     10,
+	}
+	safem10 := &l1_check_block.L1BlockPointWithOffset{
+		BlockPoint: l1_check_block.SafeBlockNumber,
+		Offset:     5,
+	}
+
+	assert.True(t, safe10.GreaterThan(safem10))
+	assert.False(t, safe10.GreaterThan(safe10))
+}

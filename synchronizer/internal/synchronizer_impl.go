@@ -57,20 +57,26 @@ func NewSynchronizerImpl(
 	cfg.GenesisBlockNumber = genesisBlockNumber
 	l1EventProcessors := newL1EventProcessor(state)
 	blockRangeProcessor := NewBlockRangeProcessLegacy(storage, state, state, l1EventProcessors)
-	if cfg.SyncBlockFinalized == "" {
-		log.Warnf("SyncBlockFinalized is empty, setting to finalized")
-		cfg.SyncBlockFinalized = "finalized"
+	if cfg.BlockFinality == "" {
+		log.Warnf("BlockFinality is empty, setting to finalized")
+		cfg.BlockFinality = "finalized"
 	}
-	finalizedBlockPoint, err := l1_check_block.StringToL1BlockPointWithOffset(cfg.SyncBlockFinalized)
+	finalizedBlockPoint, err := l1_check_block.StringToL1BlockPointWithOffset(cfg.BlockFinality)
 	if err != nil {
 		defer cancel()
-		return nil, fmt.Errorf("synchronizer.SyncBlockFinalized have a wrong value. Err: %w", err)
+		return nil, fmt.Errorf("synchronizer.BlockFinality have a wrong value. Err: %w", err)
 	}
-	syncBlockPoint, err := l1_check_block.StringToL1BlockPointWithOffset(cfg.SyncBlockProtection)
+	syncBlockPoint, err := l1_check_block.StringToL1BlockPointWithOffset(cfg.SyncUpToBlock)
 	if err != nil {
 		defer cancel()
-		return nil, fmt.Errorf("synchronizer.SyncBlockProtection have a wrong value. Err: %w", err)
+		return nil, fmt.Errorf("synchronizer.SyncUpToBlock have a wrong value. Err: %w", err)
 	}
+	log.Debugf("Syncing up to block: %s (block considered not subject to reorgs:%s)", syncBlockPoint.String(), finalizedBlockPoint.String())
+	if finalizedBlockPoint.GreaterThan(&syncBlockPoint) {
+		defer cancel()
+		return nil, fmt.Errorf("synchronizer.SyncUpToBlock (%s) must be greater or equal than synchronizer.BlockFinality (%s)", syncBlockPoint.String(), finalizedBlockPoint.String())
+	}
+
 	finalizedBlockNumberFetcher := l1_check_block.NewL1BlockNumberByNameFetch(finalizedBlockPoint).SetIfNotFoundReturnsZero()
 	syncPointBlockNumberFecther := l1_check_block.NewL1BlockNumberByNameFetch(syncBlockPoint)
 	reorgManager := l1sync.NewCheckReorgManager(ctx, ethMan, state)

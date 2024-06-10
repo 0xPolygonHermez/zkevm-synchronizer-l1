@@ -26,6 +26,19 @@ func (v L1BlockPointWithOffset) String() string {
 	return fmt.Sprintf("%s%s%d", v.BlockPoint.ToString(), L1BlockPointWithOffsetDelimiter, v.Offset)
 }
 
+func (p *L1BlockPointWithOffset) GreaterThan(other *L1BlockPointWithOffset) bool {
+	if p == nil || other == nil {
+		return false
+	}
+	if p.BlockPoint < other.BlockPoint {
+		return true
+	}
+	if p.BlockPoint == other.BlockPoint {
+		return p.Offset > other.Offset
+	}
+	return false
+}
+
 const (
 	// FinalizedBlockNumber is the finalized block number
 	FinalizedBlockNumber L1BlockPoint = 3
