@@ -64,7 +64,7 @@ func NewSynchronizerImpl(
 	finalizedBlockPoint, err := l1_check_block.StringToL1BlockPointWithOffset(cfg.BlockFinality)
 	if err != nil {
 		defer cancel()
-		return nil, fmt.Errorf("synchronizer.BlockFinality have a wrong value. Err: %w", err)
+		return nil, fmt.Errorf("synchronizer.BlockFinality has a wrong value. Err: %w", err)
 	}
 	syncBlockPoint, err := l1_check_block.StringToL1BlockPointWithOffset(cfg.SyncUpToBlock)
 	if err != nil {
