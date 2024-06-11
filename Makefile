@@ -102,8 +102,15 @@ install-linter: ## Installs the linter
 lint:  ## Runs the linter
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/golangci-lint run --timeout=5m
 
-
-
+.PHONY: lint
+check-is-new-version: ## Checks if the version is new or already exists
+	@export VERSION=$$(go run ./cmd/ --version  | cut -f 3 -d ' ') ; \
+	echo "current version: $$VERSION" ; \
+	if [ -z "$$VERSION" ]; then echo "Error: Version is empty" && exit 1; fi ; \
+	git tag -l $$VERSION | grep $$VERSION  ; \
+	if [ $$? -eq 0 ]; then echo "Error: Version already exists"; exit 1; fi ; \
+	echo "Version is new"
+	
 
 
 .PHONY: update-external-dependencies
