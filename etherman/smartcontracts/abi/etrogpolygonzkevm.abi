@@ -237,6 +237,11 @@
     },
     {
         "inputs": [],
+        "name": "SequenceWithDataAvailabilityNotAllowed",
+        "type": "error"
+    },
+    {
+        "inputs": [],
         "name": "SequenceZeroBatches",
         "type": "error"
     },
@@ -253,6 +258,11 @@
     {
         "inputs": [],
         "name": "StoredRootMustBeDifferentThanNewRoot",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "SwitchToSameValue",
         "type": "error"
     },
     {
@@ -390,6 +400,19 @@
             {
                 "indexed": false,
                 "internalType": "address",
+                "name": "newDataAvailabilityProtocol",
+                "type": "address"
+            }
+        ],
+        "name": "SetDataAvailabilityProtocol",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
                 "name": "newForceBatchAddress",
                 "type": "address"
             }
@@ -438,6 +461,12 @@
     },
     {
         "anonymous": false,
+        "inputs": [],
+        "name": "SwitchSequenceWithDataAvailability",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
         "inputs": [
             {
                 "indexed": false,
@@ -447,37 +476,6 @@
             }
         ],
         "name": "TransferAdminRole",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "uint64",
-                "name": "numBatch",
-                "type": "uint64"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes",
-                "name": "transactions",
-                "type": "bytes"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes32",
-                "name": "lastGlobalExitRoot",
-                "type": "bytes32"
-            },
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "sequencer",
-                "type": "address"
-            }
-        ],
-        "name": "UpdateEtrogSequence",
         "type": "event"
     },
     {
@@ -624,19 +622,6 @@
     },
     {
         "inputs": [],
-        "name": "SET_UP_ETROG_TX",
-        "outputs": [
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
         "name": "SIGNATURE_INITIALIZE_TX_R",
         "outputs": [
             {
@@ -715,6 +700,19 @@
                 "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "dataAvailabilityProtocol",
+        "outputs": [
+            {
+                "internalType": "contract IDataAvailabilityProtocol",
+                "name": "",
+                "type": "address"
             }
         ],
         "stateMutability": "view",
@@ -895,36 +893,16 @@
         "type": "function"
     },
     {
-        "inputs": [
+        "inputs": [],
+        "name": "isSequenceWithDataAvailabilityAllowed",
+        "outputs": [
             {
-                "internalType": "address",
-                "name": "_admin",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "_trustedSequencer",
-                "type": "address"
-            },
-            {
-                "internalType": "string",
-                "name": "_trustedSequencerURL",
-                "type": "string"
-            },
-            {
-                "internalType": "string",
-                "name": "_networkName",
-                "type": "string"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "_lastAccInputHash",
-                "type": "bytes32"
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
             }
         ],
-        "name": "initializeUpgrade",
-        "outputs": [],
-        "stateMutability": "nonpayable",
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -1086,6 +1064,51 @@
             {
                 "components": [
                     {
+                        "internalType": "bytes32",
+                        "name": "transactionsHash",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "forcedGlobalExitRoot",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "forcedTimestamp",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "forcedBlockHashL1",
+                        "type": "bytes32"
+                    }
+                ],
+                "internalType": "struct PolygonValidiumEtrog.ValidiumBatchData[]",
+                "name": "batches",
+                "type": "tuple[]"
+            },
+            {
+                "internalType": "address",
+                "name": "l2Coinbase",
+                "type": "address"
+            },
+            {
+                "internalType": "bytes",
+                "name": "dataAvailabilityMessage",
+                "type": "bytes"
+            }
+        ],
+        "name": "sequenceBatchesValidium",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
                         "internalType": "bytes",
                         "name": "transactions",
                         "type": "bytes"
@@ -1112,6 +1135,19 @@
             }
         ],
         "name": "sequenceForceBatches",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IDataAvailabilityProtocol",
+                "name": "newDataAvailabilityProtocol",
+                "type": "address"
+            }
+        ],
+        "name": "setDataAvailabilityProtocol",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -1164,6 +1200,19 @@
             }
         ],
         "name": "setTrustedSequencerURL",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bool",
+                "name": "newIsSequenceWithDataAvailabilityAllowed",
+                "type": "bool"
+            }
+        ],
+        "name": "switchSequenceWithDataAvailability",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
