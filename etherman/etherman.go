@@ -1,7 +1,6 @@
 package etherman
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -265,8 +264,8 @@ type Client struct {
 	GlobalExitRootManager    *polygonzkevmglobalexitroot.Polygonzkevmglobalexitroot
 	OldGlobalExitRootManager *oldpolygonzkevmglobalexitroot.Oldpolygonzkevmglobalexitroot
 	SCAddresses              []common.Address
-
-	RollupID uint32
+	SequenceBatchesDecoders  []SequenceBatchesDecoder
+	RollupID                 uint32
 
 	GasProviders externalGasProviders
 
@@ -352,7 +351,11 @@ func NewClient(cfg Config) (*Client, error) {
 		OldGlobalExitRootManager: oldGlobalExitRoot,
 		SCAddresses:              scAddresses,
 		RollupID:                 rollupID,
-
+		SequenceBatchesDecoders: []SequenceBatchesDecoder{
+			NewDecodeSequenceBatchesEtrogValidium(),
+			NewDecodeSequenceBatchesEtrog(),
+			NewDecodeSequenceBatchesElderberry(),
+		},
 		cfg:  cfg,
 		auth: map[common.Address]bind.TransactOpts{},
 	}
@@ -1379,20 +1382,9 @@ func (etherMan *Client) sequencedBatchesEvent(ctx context.Context, vLog types.Lo
 
 	var sequences []SequencedBatch
 	if sb.NumBatch != 1 {
-		methodId := tx.Data()[:4]
-		log.Debugf("MethodId: %s", common.Bytes2Hex(methodId))
-		if bytes.Equal(methodId, methodIDSequenceBatchesEtrog) {
-			sequences, err = decodeSequencesEtrog(tx.Data(), sb.NumBatch, msg.From, vLog.TxHash, msg.Nonce, sb.L1InfoRoot)
-			if err != nil {
-				return fmt.Errorf("error decoding the sequences (etrog): %v", err)
-			}
-		} else if bytes.Equal(methodId, methodIDSequenceBatchesElderberry) {
-			sequences, err = decodeSequencesElderberry(tx.Data(), sb.NumBatch, msg.From, vLog.TxHash, msg.Nonce, sb.L1InfoRoot)
-			if err != nil {
-				return fmt.Errorf("error decoding the sequences (elderberry): %v", err)
-			}
-		} else {
-			return fmt.Errorf("error decoding the sequences: methodId %s unknown", common.Bytes2Hex(methodId))
+		sequences, err = etherMan.decodeSequenceBatches(tx.Data(), sb.NumBatch, msg.From, vLog.TxHash, msg.Nonce, sb.L1InfoRoot)
+		if err != nil {
+			return fmt.Errorf("error decoding the sequences: %v", err)
 		}
 	} else {
 		log.Info("initial transaction sequence...")
@@ -1424,6 +1416,18 @@ func (etherMan *Client) sequencedBatchesEvent(ctx context.Context, vLog types.Lo
 	}
 	(*blocksOrder)[(*blocks)[len(*blocks)-1].BlockHash] = append((*blocksOrder)[(*blocks)[len(*blocks)-1].BlockHash], or)
 	return nil
+}
+
+func (etherMan *Client) decodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
+	methodId := txData[:4]
+	log.Debugf("MethodId: %s", common.Bytes2Hex(methodId))
+	for _, decoder := range etherMan.SequenceBatchesDecoders {
+		if decoder.MatchMethodId(methodId) {
+			log.Debugf("MethodId: %s ==> %s", common.Bytes2Hex(methodId), decoder.NameMethodID(methodId))
+			return decoder.DecodeSequenceBatches(txData, lastBatchNumber, sequencer, txHash, nonce, l1InfoRoot)
+		}
+	}
+	return nil, fmt.Errorf("error decoding the sequences: methodId %s unknown", common.Bytes2Hex(methodId))
 }
 
 func (etherMan *Client) sequencedBatchesPreEtrogEvent(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) error {
@@ -1471,108 +1475,6 @@ func (etherMan *Client) sequencedBatchesPreEtrogEvent(ctx context.Context, vLog 
 	}
 	(*blocksOrder)[(*blocks)[len(*blocks)-1].BlockHash] = append((*blocksOrder)[(*blocks)[len(*blocks)-1].BlockHash], or)
 	return nil
-}
-
-func decodeSequencesElderberry(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
-	// Extract coded txs.
-	// Load contract ABI
-	smcAbi, err := abi.JSON(strings.NewReader(polygonzkevm.PolygonzkevmABI))
-	if err != nil {
-		return nil, err
-	}
-
-	// Recover Method from signature and ABI
-	method, err := smcAbi.MethodById(txData[:4])
-	if err != nil {
-		return nil, err
-	}
-
-	// Unpack method inputs
-	data, err := method.Inputs.Unpack(txData[4:])
-	if err != nil {
-		return nil, err
-	}
-	var sequences []polygonzkevm.PolygonRollupBaseEtrogBatchData
-	bytedata, err := json.Marshal(data[0])
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(bytedata, &sequences)
-	if err != nil {
-		return nil, err
-	}
-	maxSequenceTimestamp := data[1].(uint64)
-	initSequencedBatchNumber := data[2].(uint64)
-	coinbase := (data[3]).(common.Address)
-	sequencedBatches := make([]SequencedBatch, len(sequences))
-
-	for i, seq := range sequences {
-		elderberry := SequencedBatchElderberryData{
-			MaxSequenceTimestamp:     maxSequenceTimestamp,
-			InitSequencedBatchNumber: initSequencedBatchNumber,
-		}
-		bn := lastBatchNumber - uint64(len(sequences)-(i+1))
-		s := seq
-		sequencedBatches[i] = SequencedBatch{
-			BatchNumber:                     bn,
-			L1InfoRoot:                      &l1InfoRoot,
-			SequencerAddr:                   sequencer,
-			TxHash:                          txHash,
-			Nonce:                           nonce,
-			Coinbase:                        coinbase,
-			PolygonRollupBaseEtrogBatchData: &s,
-			SequencedBatchElderberryData:    &elderberry,
-		}
-	}
-
-	return sequencedBatches, nil
-}
-
-func decodeSequencesEtrog(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
-	// Extract coded txs.
-	// Load contract ABI
-	smcAbi, err := abi.JSON(strings.NewReader(etrogpolygonzkevm.EtrogpolygonzkevmABI))
-	if err != nil {
-		return nil, err
-	}
-
-	// Recover Method from signature and ABI
-	method, err := smcAbi.MethodById(txData[:4])
-	if err != nil {
-		return nil, err
-	}
-
-	// Unpack method inputs
-	data, err := method.Inputs.Unpack(txData[4:])
-	if err != nil {
-		return nil, err
-	}
-	var sequences []polygonzkevm.PolygonRollupBaseEtrogBatchData
-	bytedata, err := json.Marshal(data[0])
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(bytedata, &sequences)
-	if err != nil {
-		return nil, err
-	}
-	coinbase := (data[1]).(common.Address)
-	sequencedBatches := make([]SequencedBatch, len(sequences))
-	for i, seq := range sequences {
-		bn := lastBatchNumber - uint64(len(sequences)-(i+1))
-		s := seq
-		sequencedBatches[i] = SequencedBatch{
-			BatchNumber:                     bn,
-			L1InfoRoot:                      &l1InfoRoot,
-			SequencerAddr:                   sequencer,
-			TxHash:                          txHash,
-			Nonce:                           nonce,
-			Coinbase:                        coinbase,
-			PolygonRollupBaseEtrogBatchData: &s,
-		}
-	}
-
-	return sequencedBatches, nil
 }
 
 func decodeSequencesPreEtrog(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64) ([]SequencedBatch, error) {
