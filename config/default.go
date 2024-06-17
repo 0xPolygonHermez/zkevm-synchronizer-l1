@@ -25,4 +25,6 @@ const DefaultValues = `
 	GlobalExitRootManagerAddr = "0x2968D6d736178f8FE7393CC33C87f29D9C287e78"
 	RollupManagerAddr = "0xE2EF6215aDc132Df6913C8DD16487aBF118d1764"
 	ZkEVMAddr = "0x89BA0Ed947a88fe43c22Ae305C0713eC8a7Eb361"
+	[Etherman.Validium]
+		Enabled = false
 `

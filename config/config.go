@@ -68,10 +68,11 @@ func LoadFile(configFilePath string) (*Config, error) {
 		viper.SetConfigName(fileNameWithoutExtension)
 		viper.SetConfigType(fileExtension)
 	}
-	viper.AutomaticEnv()
+
 	replacer := strings.NewReplacer(".", "_")
 	viper.SetEnvKeyReplacer(replacer)
 	viper.SetEnvPrefix("ZKEVM_SYNCL1")
+	viper.AutomaticEnv()
 	err = viper.ReadInConfig()
 	if err != nil {
 		_, ok := err.(viper.ConfigFileNotFoundError)

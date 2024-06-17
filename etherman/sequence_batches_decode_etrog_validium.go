@@ -2,8 +2,14 @@ package etherman
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"strings"
 
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/etrogvalidiumpolygonzkevm"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -13,10 +19,17 @@ var (
 )
 
 type SequenceBatchesDecodeEtrogValidium struct {
+	da dataavailability.BatchDataProvider
 }
 
-func NewDecodeSequenceBatchesEtrogValidium() *SequenceBatchesDecodeEtrogValidium {
-	return &SequenceBatchesDecodeEtrogValidium{}
+type batchInfo struct {
+	num      uint64
+	hash     common.Hash
+	isForced bool
+}
+
+func NewDecodeSequenceBatchesEtrogValidium(da dataavailability.BatchDataProvider) *SequenceBatchesDecodeEtrogValidium {
+	return &SequenceBatchesDecodeEtrogValidium{da}
 }
 
 // MatchMethodId returns true if the methodId is the one for the sequenceBatchesEtrog method
@@ -32,26 +45,48 @@ func (s *SequenceBatchesDecodeEtrogValidium) NameMethodID(methodId []byte) strin
 }
 
 func (s *SequenceBatchesDecodeEtrogValidium) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
-	/*var (
-		sequencesValidium   []polygonzkevmvalidium.PolygonValidiumEtrogValidiumBatchData
-		dataAvailabilityMsg []byte
-	)
-	err := json.Unmarshal(txData, &sequencesValidium)
+	if s.da == nil {
+		return nil, fmt.Errorf("data availability backend not set")
+	}
+	// Extract coded txs.
+	// Load contract ABI
+	smcAbi, err := abi.JSON(strings.NewReader(etrogvalidiumpolygonzkevm.EtrogvalidiumpolygonzkevmABI))
+	if err != nil {
+		return nil, err
+	}
+	// Recover Method from signature and ABI
+	method, err := smcAbi.MethodById(txData[:4])
 	if err != nil {
 		return nil, err
 	}
 
-	switch forkID {
-	case state.FORKID_ETROG:
-		coinbase = data[1].(common.Address)
-		dataAvailabilityMsg = data[2].([]byte)
-
-	case state.FORKID_ELDERBERRY:
-		maxSequenceTimestamp = data[1].(uint64)
-		initSequencedBatchNumber = data[2].(uint64)
-		coinbase = data[3].(common.Address)
-		dataAvailabilityMsg = data[4].([]byte)
+	// Unpack method inputs
+	data, err := method.Inputs.Unpack(txData[4:])
+	if err != nil {
+		return nil, err
 	}
+	bytedata, err := json.Marshal(data[0])
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		maxSequenceTimestamp     uint64
+		initSequencedBatchNumber uint64
+		coinbase                 common.Address
+	)
+
+	var (
+		sequencesValidium   []etrogvalidiumpolygonzkevm.PolygonValidiumEtrogValidiumBatchData
+		dataAvailabilityMsg []byte
+	)
+	err = json.Unmarshal(bytedata, &sequencesValidium)
+	if err != nil {
+		return nil, err
+	}
+
+	coinbase = data[1].(common.Address)
+	dataAvailabilityMsg = data[2].([]byte)
 
 	// Pair the batch number, hash, and if it is forced. This will allow
 	// retrieval from different sources, and keep them in original order.
@@ -63,7 +98,7 @@ func (s *SequenceBatchesDecodeEtrogValidium) DecodeSequenceBatches(txData []byte
 		batchInfos = append(batchInfos, batchInfo{num: bn, hash: h, isForced: forced})
 	}
 
-	batchData, err := retrieveBatchData(da, st, batchInfos, dataAvailabilityMsg)
+	batchData, err := retrieveBatchData(s.da, batchInfos, dataAvailabilityMsg)
 	if err != nil {
 		return nil, err
 	}
@@ -86,17 +121,61 @@ func (s *SequenceBatchesDecodeEtrogValidium) DecodeSequenceBatches(txData []byte
 			Coinbase:                        coinbase,
 			PolygonRollupBaseEtrogBatchData: &s,
 		}
-		if forkID >= state.FORKID_ELDERBERRY {
-			elderberry := &SequencedBatchElderberryData{
-				MaxSequenceTimestamp:     maxSequenceTimestamp,
-				InitSequencedBatchNumber: initSequencedBatchNumber,
-			}
-			batch.SequencedBatchElderberryData = elderberry
+
+		elderberry := &SequencedBatchElderberryData{
+			MaxSequenceTimestamp:     maxSequenceTimestamp,
+			InitSequencedBatchNumber: initSequencedBatchNumber,
 		}
+		batch.SequencedBatchElderberryData = elderberry
 		sequencedBatches[i] = batch
 	}
 
 	return sequencedBatches, nil
-	*/
-	return nil, fmt.Errorf("Not implemented")
+
+}
+
+func retrieveBatchData(da dataavailability.BatchDataProvider, batchInfos []batchInfo, daMessage []byte) ([][]byte, error) {
+	validiumData, err := getBatchL2Data(da, batchInfos, daMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([][]byte, len(batchInfos))
+	for i, info := range batchInfos {
+		bn := info.num
+		data[i] = validiumData[bn]
+
+	}
+	return data, nil
+}
+
+func getBatchL2Data(da dataavailability.BatchDataProvider, batchInfos []batchInfo, daMessage []byte) (map[uint64][]byte, error) {
+	var batchNums []uint64
+	var batchHashes []common.Hash
+	for _, info := range batchInfos {
+		if !info.isForced {
+			batchNums = append(batchNums, info.num)
+			batchHashes = append(batchHashes, info.hash)
+		}
+	}
+	if len(batchNums) == 0 {
+		return nil, nil
+	}
+
+	batchL2Data, err := da.GetBatchL2Data(batchNums, batchHashes, daMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(batchL2Data) != len(batchNums) {
+		return nil,
+			fmt.Errorf("failed to retrieve all batch data. Expected %d, got %d", len(batchNums), len(batchL2Data))
+	}
+
+	data := make(map[uint64][]byte)
+	for i, bn := range batchNums {
+		data[bn] = batchL2Data[i]
+	}
+
+	return data, nil
 }

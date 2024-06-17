@@ -9,6 +9,12 @@ type Config struct {
 	ForkIDChunkSize      uint64         `mapstructure:"ForkIDChunkSize"`
 	L1ChainID            uint64         `mapstructure:"L1ChainID"`
 	PararellBlockRequest bool           `mapstructure:"pararellBlockRequest"`
+	Validium             ValidiumConfig `mapstructure:"Validium"`
+}
+
+type ValidiumConfig struct {
+	Enabled             bool   `mapstructure:"Enabled"`
+	TrustedSequencerURL string `mapstructure:"TrustedSequencerURL"`
 }
 
 type ContractConfig struct {
