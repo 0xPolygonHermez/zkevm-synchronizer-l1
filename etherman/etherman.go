@@ -237,7 +237,11 @@ func NewClient(cfg Config) (*Client, error) {
 			return nil, err
 		}
 	}
-
+	decodeEtrogValidium, err := NewDecodeSequenceBatchesEtrogValidium(validium.DataAvailabilityClient)
+	if err != nil {
+		log.Errorf("error creating NewDecodeSequenceBatchesEtrogValidium client. Error: %w", err)
+		return nil, err
+	}
 	client := &Client{
 		EthClient: ethClient,
 		ZkEVM:     zkevm,
@@ -250,7 +254,7 @@ func NewClient(cfg Config) (*Client, error) {
 		SCAddresses:              scAddresses,
 		RollupID:                 rollupID,
 		SequenceBatchesDecoders: []SequenceBatchesDecoder{
-			NewDecodeSequenceBatchesEtrogValidium(validium.DataAvailabilityClient),
+			decodeEtrogValidium,
 			NewDecodeSequenceBatchesEtrog(),
 			NewDecodeSequenceBatchesElderberry(),
 		},

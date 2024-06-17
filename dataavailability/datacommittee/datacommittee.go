@@ -35,6 +35,14 @@ type DataCommittee struct {
 	RequiredSignatures uint64
 }
 
+func (d *DataCommittee) String() string {
+	res := fmt.Sprintf("AddressesHash: %s,  RequiredSignatures: %d\n", d.AddressesHash, d.RequiredSignatures)
+	for i, m := range d.Members {
+		res += fmt.Sprintf("    Member[%d]: %s, %s\n", i, m.Addr.Hex(), m.URL)
+	}
+	return res
+}
+
 // DataCommitteeBackend implements the DAC integration
 type DataCommitteeBackend struct {
 	dataCommitteeContract      *polygondatacommittee.Polygondatacommittee
@@ -76,6 +84,7 @@ func (d *DataCommitteeBackend) Init() error {
 	if err != nil {
 		return err
 	}
+	log.Debugf("Data Committee: %s", committee)
 	selectedCommitteeMember := -1
 	if committee != nil {
 		d.committeeMembers = committee.Members

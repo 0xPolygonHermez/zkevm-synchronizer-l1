@@ -15,11 +15,19 @@ import (
 
 var (
 	// methodIDSequenceBatchesValidiumEtrog: MethodID for sequenceBatchesValidium in Etrog
+	// function sequenceBatchesValidium(
+	//     ValidiumBatchData[] calldata batches,
+	//     uint64 maxSequenceTimestamp,
+	//     uint64 initSequencedBatch,
+	//     address l2Coinbase,
+	//     bytes calldata dataAvailabilityMessage
+	// ) external onlyTrustedSequencer {
 	methodIDSequenceBatchesValidiumEtrog = []byte{0x2d, 0x72, 0xc2, 0x48} // 0x2d72c248 sequenceBatchesValidium((bytes32,bytes32,uint64,bytes32)[],address,bytes)
 )
 
 type SequenceBatchesDecodeEtrogValidium struct {
-	da dataavailability.BatchDataProvider
+	da     dataavailability.BatchDataProvider
+	SmcABI abi.ABI
 }
 
 type batchInfo struct {
@@ -28,8 +36,12 @@ type batchInfo struct {
 	isForced bool
 }
 
-func NewDecodeSequenceBatchesEtrogValidium(da dataavailability.BatchDataProvider) *SequenceBatchesDecodeEtrogValidium {
-	return &SequenceBatchesDecodeEtrogValidium{da}
+func NewDecodeSequenceBatchesEtrogValidium(da dataavailability.BatchDataProvider) (*SequenceBatchesDecodeEtrogValidium, error) {
+	smcAbi, err := abi.JSON(strings.NewReader(etrogvalidiumpolygonzkevm.EtrogvalidiumpolygonzkevmABI))
+	if err != nil {
+		return nil, err
+	}
+	return &SequenceBatchesDecodeEtrogValidium{da, smcAbi}, nil
 }
 
 // MatchMethodId returns true if the methodId is the one for the sequenceBatchesEtrog method
@@ -48,27 +60,12 @@ func (s *SequenceBatchesDecodeEtrogValidium) DecodeSequenceBatches(txData []byte
 	if s.da == nil {
 		return nil, fmt.Errorf("data availability backend not set")
 	}
-	// Extract coded txs.
-	// Load contract ABI
-	smcAbi, err := abi.JSON(strings.NewReader(etrogvalidiumpolygonzkevm.EtrogvalidiumpolygonzkevmABI))
+	decoded, err := decodeSequenceCallData(s.SmcABI, txData)
 	if err != nil {
 		return nil, err
 	}
-	// Recover Method from signature and ABI
-	method, err := smcAbi.MethodById(txData[:4])
-	if err != nil {
-		return nil, err
-	}
-
-	// Unpack method inputs
-	data, err := method.Inputs.Unpack(txData[4:])
-	if err != nil {
-		return nil, err
-	}
-	bytedata, err := json.Marshal(data[0])
-	if err != nil {
-		return nil, err
-	}
+	data := decoded.Data
+	bytedata := decoded.InputByteData
 
 	var (
 		maxSequenceTimestamp     uint64

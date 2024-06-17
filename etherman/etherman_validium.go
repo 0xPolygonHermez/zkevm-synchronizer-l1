@@ -115,6 +115,7 @@ func (ev *EthermanValidium) newDataAvailabilityClient() (*dataavailability.DataA
 	if err != nil {
 		return nil, fmt.Errorf("error getting data availability protocol name: %w", err)
 	}
+	log.Debugf("Data Availability Protocol: %s", daProtocolName)
 	var daBackend dataavailability.DABackender
 	switch daProtocolName {
 	case string(dataavailability.DataAvailabilityCommittee):
