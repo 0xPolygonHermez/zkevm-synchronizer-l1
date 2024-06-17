@@ -57,6 +57,7 @@ func New(
 		dataSourcePriority: priority,
 	}
 	if len(da.dataSourcePriority) == 0 {
+		log.Infof("Data availability priority not set, using default: %v", DefaultPriority)
 		da.dataSourcePriority = DefaultPriority
 	}
 	err := da.backend.Init()
@@ -87,7 +88,6 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 
 	for _, p := range d.dataSourcePriority {
 		switch p {
-
 		case Trusted:
 			if !d.isTrustedSequencer {
 				data, err := d.rpcData(batchNums, batchHashes, d.zkEVMClient.BatchesByNumbers)

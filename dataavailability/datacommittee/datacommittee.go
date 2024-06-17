@@ -13,6 +13,7 @@ import (
 	daTypes "github.com/0xPolygon/cdk-data-availability/types"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygondatacommittee"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/translator"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -21,6 +22,7 @@ import (
 )
 
 const unexpectedHashTemplate = "missmatch on transaction data. Expected hash %s, actual hash: %s"
+const translateContextName = "dataCommittee"
 
 // DataCommitteeMember represents a member of the Data Committee
 type DataCommitteeMember struct {
@@ -52,6 +54,7 @@ type DataCommitteeBackend struct {
 	committeeMembers        []DataCommitteeMember
 	selectedCommitteeMember int
 	ctx                     context.Context
+	Translator              translator.Translator
 }
 
 // New creates an instance of DataCommitteeBackend
@@ -60,6 +63,7 @@ func New(
 	dataCommitteeAddr common.Address,
 	privKey *ecdsa.PrivateKey,
 	dataCommitteeClientFactory client.Factory,
+	translator translator.Translator,
 ) (*DataCommitteeBackend, error) {
 	ethClient, err := ethclient.Dial(l1RPCURL)
 	if err != nil {
@@ -75,6 +79,7 @@ func New(
 		privKey:                    privKey,
 		dataCommitteeClientFactory: dataCommitteeClientFactory,
 		ctx:                        context.Background(),
+		Translator:                 translator,
 	}, nil
 }
 
@@ -116,7 +121,7 @@ func (d *DataCommitteeBackend) GetBatchL2Data(hash common.Hash) ([]byte, error) 
 	found := false
 	for !found && intialMember != -1 {
 		member := d.committeeMembers[d.selectedCommitteeMember]
-		log.Infof("trying to get data from %s at %s", member.Addr.Hex(), member.URL)
+		log.Debugf("trying to get data from %s at %s", member.Addr.Hex(), member.URL)
 		c := d.dataCommitteeClientFactory.New(member.URL)
 		data, err := c.GetOffChainData(d.ctx, hash)
 		if err != nil {
@@ -145,6 +150,7 @@ func (d *DataCommitteeBackend) GetBatchL2Data(hash common.Hash) ([]byte, error) 
 			}
 			continue
 		}
+		log.Debugf("got data from %s at %s: dataHash: %s", member.Addr.Hex(), member.URL, actualTransactionsHash.Hex())
 		return data, nil
 	}
 	if err := d.Init(); err != nil {
@@ -309,6 +315,7 @@ func (d *DataCommitteeBackend) getCurrentDataCommitteeMembers() ([]DataCommittee
 		if err != nil {
 			return nil, fmt.Errorf("error getting Members %d from L1 SC: %w", i, err)
 		}
+		member.Url = d.Translator.Translate(translateContextName, member.Url)
 		members = append(members, DataCommitteeMember{
 			Addr: member.Addr,
 			URL:  member.Url,

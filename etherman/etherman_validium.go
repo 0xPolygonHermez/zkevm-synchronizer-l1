@@ -11,6 +11,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/etrogvalidiumpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/jsonrpcclient"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/translator"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -39,6 +40,8 @@ func NewEthermanValidium(cfg Config, ethClient bind.ContractBackend) (*EthermanV
 	if err != nil {
 		return nil, err
 	}
+	translator := translator.NewTranslatorImpl()
+	translator.AddConfigRules(cfg.Validium.Translator)
 
 	res := &EthermanValidium{
 		Cfg:                              cfg,
@@ -46,7 +49,7 @@ func NewEthermanValidium(cfg Config, ethClient bind.ContractBackend) (*EthermanV
 		DataAvailabilityProtocolContract: daContract,
 		DataAvailabilityProtocolAddress:  DAProtocolAddr,
 	}
-	da, err := res.newDataAvailabilityClient()
+	da, err := res.newDataAvailabilityClient(translator, cfg.Validium.DataSourcePriority)
 	if err != nil {
 		return nil, err
 	}
@@ -96,19 +99,13 @@ func (ev *EthermanValidium) GetDAProtocolName() (string, error) {
 	return ev.DataAvailabilityProtocolContract.GetProcotolName(&bind.CallOpts{Pending: false})
 }
 
-func (ev *EthermanValidium) newDataAvailabilityClient() (*dataavailability.DataAvailability, error) {
-	var (
-		dataSourcePriority []dataavailability.DataSourcePriority
-	)
+func (ev *EthermanValidium) newDataAvailabilityClient(translator translator.Translator, dataSourcePriority []dataavailability.DataSourcePriority) (*dataavailability.DataAvailability, error) {
 	trustedURL, err := ev.GetTrustedSequencerURL()
 	if err != nil {
 		return nil, fmt.Errorf("error getting trusted sequencer URL: %w", err)
 	}
 	log.Debugf("Creating Trusted Sequencer Client with URL: %s", trustedURL)
 	trustedRPCClient := jsonrpcclient.NewClient(trustedURL)
-
-	// TODO: Configurable data source priority
-	dataSourcePriority = dataavailability.DefaultPriority
 
 	// Backend specific config
 	daProtocolName, err := ev.GetDAProtocolName()
@@ -131,6 +128,7 @@ func (ev *EthermanValidium) newDataAvailabilityClient() (*dataavailability.DataA
 			dacAddr,
 			pk,
 			dataCommitteeClient.NewFactory(),
+			translator,
 		)
 		if err != nil {
 			return nil, err

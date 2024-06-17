@@ -1,6 +1,10 @@
 package etherman
 
-import "github.com/ethereum/go-ethereum/common"
+import (
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/translator"
+	"github.com/ethereum/go-ethereum/common"
+)
 
 // Config represents the configuration of the etherman
 type Config struct {
@@ -15,6 +19,9 @@ type Config struct {
 type ValidiumConfig struct {
 	Enabled             bool   `mapstructure:"Enabled"`
 	TrustedSequencerURL string `mapstructure:"TrustedSequencerURL"`
+	// DataSourcePriority defines the order in which L2 batch should be retrieved: local, trusted, external
+	DataSourcePriority []dataavailability.DataSourcePriority `mapstructure:"DataSourcePriority"`
+	Translator         translator.Config                     `mapstructure:"Translator"`
 }
 
 type ContractConfig struct {
