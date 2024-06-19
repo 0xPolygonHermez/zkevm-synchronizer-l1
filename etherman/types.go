@@ -1,6 +1,8 @@
 package etherman
 
 import (
+	"encoding/hex"
+	"fmt"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/oldpolygonzkevm"
@@ -69,6 +71,10 @@ type SequencedBatchMetadata struct {
 
 }
 
+func (s *SequencedBatchMetadata) String() string {
+	return fmt.Sprintf("SourceBatchData: %s RollupFlavor: %s CallFunctionName: %s ForkName: %s", s.SourceBatchData, s.RollupFlavor, s.CallFunctionName, s.ForkName)
+}
+
 // SequencedBatch represents virtual batch
 type SequencedBatch struct {
 	BatchNumber   uint64
@@ -84,6 +90,43 @@ type SequencedBatch struct {
 	// Struct used in Elderberry
 	*SequencedBatchElderberryData
 	Metadata *SequencedBatchMetadata
+}
+
+func (s *SequencedBatch) String() string {
+	res := fmt.Sprintf("BatchNumber: %d\n", s.BatchNumber)
+	res += fmt.Sprintf("L1InfoRoot: %s\n", s.L1InfoRoot.String())
+	res += fmt.Sprintf("SequencerAddr: %s\n", s.SequencerAddr.String())
+	res += fmt.Sprintf("TxHash: %s\n", s.TxHash.String())
+	res += fmt.Sprintf("Nonce: %d\n", s.Nonce)
+	res += fmt.Sprintf("Coinbase: %s\n", s.Coinbase.String())
+	if s.PolygonZkEVMBatchData != nil {
+		res += fmt.Sprintf("PolygonZkEVMBatchData: %v\n", *s.PolygonZkEVMBatchData)
+	} else {
+		res += "PolygonZkEVMBatchData: nil\n"
+	}
+	if s.PolygonRollupBaseEtrogBatchData != nil {
+		res += fmt.Sprintf("___PolygonRollupBaseEtrogBatchData:ForcedTimestamp: %d\n", s.PolygonRollupBaseEtrogBatchData.ForcedTimestamp)
+		res += fmt.Sprintf("___PolygonRollupBaseEtrogBatchData:ForcedGlobalExitRoot: %s\n", hex.EncodeToString(s.PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot[:]))
+		res += fmt.Sprintf("___PolygonRollupBaseEtrogBatchData:ForcedBlockHashL1: %s\n", hex.EncodeToString(s.PolygonRollupBaseEtrogBatchData.ForcedBlockHashL1[:]))
+		res += fmt.Sprintf("___PolygonRollupBaseEtrogBatchData:Transactions: %s\n", hex.EncodeToString(s.PolygonRollupBaseEtrogBatchData.Transactions))
+
+	} else {
+		res += "PolygonRollupBaseEtrogBatchData: nil\n"
+	}
+	if s.SequencedBatchElderberryData != nil {
+		res += fmt.Sprintf("___SequencedBatchElderberryData:MaxSequenceTimestamp %d\n", s.SequencedBatchElderberryData.MaxSequenceTimestamp)
+		res += fmt.Sprintf("___SequencedBatchElderberryData:InitSequencedBatchNumber %d\n", s.SequencedBatchElderberryData.InitSequencedBatchNumber)
+
+	} else {
+		res += "SequencedBatchElderberryData: nil\n"
+	}
+	if s.Metadata != nil {
+		res += fmt.Sprintf("Metadata: %s\n", s.Metadata.String())
+	} else {
+		res += "Metadata: nil\n"
+
+	}
+	return res
 }
 
 func (s *SequencedBatch) BatchL2Data() []byte {

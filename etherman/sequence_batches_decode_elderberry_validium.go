@@ -71,7 +71,7 @@ func (s *SequenceBatchesDecodeElderberryValidium) DecodeSequenceBatches(txData [
 		return nil, err
 	}
 	SequencedBatchMetadata := &SequencedBatchMetadata{
-		CallFunctionName: methodIDSequenceBatchesValidiumElderberryName,
+		CallFunctionName: s.NameMethodID(txData[:4]),
 		ForkName:         "elderberry",
 		RollupFlavor:     RollupFlavorValidium,
 	}

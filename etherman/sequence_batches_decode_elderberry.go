@@ -20,26 +20,14 @@ func NewDecodeSequenceBatchesElderberry() (*SequenceBatchesDecodeElderberry, err
 }
 
 func (s *SequenceBatchesDecodeElderberry) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
-	// Extract coded txs.
-	// Load contract ABI
-	smcAbi := s.SmcABI()
-
-	// Recover Method from signature and ABI
-	method, err := smcAbi.MethodById(txData[:4])
+	decoded, err := decodeSequenceCallData(s.SmcABI(), txData)
 	if err != nil {
 		return nil, err
 	}
+	data := decoded.Data
+	bytedata := decoded.InputByteData
 
-	// Unpack method inputs
-	data, err := method.Inputs.Unpack(txData[4:])
-	if err != nil {
-		return nil, err
-	}
 	var sequences []polygonzkevm.PolygonRollupBaseEtrogBatchData
-	bytedata, err := json.Marshal(data[0])
-	if err != nil {
-		return nil, err
-	}
 	err = json.Unmarshal(bytedata, &sequences)
 	if err != nil {
 		return nil, err
@@ -74,6 +62,5 @@ func (s *SequenceBatchesDecodeElderberry) DecodeSequenceBatches(txData []byte, l
 			Metadata:                        SequencedBatchMetadata,
 		}
 	}
-
 	return sequencedBatches, nil
 }

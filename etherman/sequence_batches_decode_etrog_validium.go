@@ -72,18 +72,3 @@ func (s *SequenceBatchesDecodeEtrogValidium) DecodeSequenceBatches(txData []byte
 	return sequencedBatches, nil
 
 }
-
-func retrieveBatchData(da dataavailability.BatchDataProvider, batchInfos []batchInfo, daMessage []byte) ([]dataavailability.BatchL2Data, error) {
-	validiumData, err := getBatchL2Data(da, batchInfos, daMessage)
-	if err != nil {
-		return nil, err
-	}
-
-	data := make([]dataavailability.BatchL2Data, len(batchInfos))
-	for i, info := range batchInfos {
-		bn := info.num
-		data[i] = validiumData[bn]
-
-	}
-	return data, nil
-}
