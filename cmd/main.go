@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
-	"runtime"
 
 	zkevm_synchronizer_l1 "github.com/0xPolygonHermez/zkevm-synchronizer-l1"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/cmd/run"
@@ -25,7 +23,6 @@ var (
 )
 
 func main() {
-	fmt.Println("Versión de Go:", runtime.Version())
 	app := cli.NewApp()
 	app.Name = appName
 	app.Version = zkevm_synchronizer_l1.Version
