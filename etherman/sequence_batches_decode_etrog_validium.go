@@ -1,15 +1,12 @@
 package etherman
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/etrogvalidiumpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -20,37 +17,22 @@ var (
 
 type SequenceBatchesDecodeEtrogValidium struct {
 	SequenceBatchesBase
-	da     dataavailability.BatchDataProvider
-	SmcABI abi.ABI
+	da dataavailability.BatchDataProvider
 }
 
 func NewDecodeSequenceBatchesEtrogValidium(da dataavailability.BatchDataProvider) (*SequenceBatchesDecodeEtrogValidium, error) {
-	smcAbi, err := abi.JSON(strings.NewReader(etrogvalidiumpolygonzkevm.EtrogvalidiumpolygonzkevmABI))
+	base, err := NewSequenceBatchesBase(methodIDSequenceBatchesValidiumEtrog, "sequenceBatchesEtrogValidium", etrogvalidiumpolygonzkevm.EtrogvalidiumpolygonzkevmABI)
 	if err != nil {
 		return nil, err
 	}
-	return &SequenceBatchesDecodeEtrogValidium{
-		NewSequenceBatchesBase(methodIDSequenceBatchesValidiumEtrog, "sequenceBatchesEtrogValidium"),
-		da, smcAbi}, nil
-}
-
-// MatchMethodId returns true if the methodId is the one for the sequenceBatchesEtrog method
-func (s *SequenceBatchesDecodeEtrogValidium) MatchMethodId(methodId []byte) bool {
-	return bytes.Equal(methodId, methodIDSequenceBatchesValidiumEtrog)
-}
-
-func (s *SequenceBatchesDecodeEtrogValidium) NameMethodID(methodId []byte) string {
-	if s.MatchMethodId(methodId) {
-		return "sequenceBatchesEtrogValidium"
-	}
-	return ""
+	return &SequenceBatchesDecodeEtrogValidium{*base, da}, nil
 }
 
 func (s *SequenceBatchesDecodeEtrogValidium) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
 	if s.da == nil {
 		return nil, fmt.Errorf("data availability backend not set")
 	}
-	decoded, err := decodeSequenceCallData(s.SmcABI, txData)
+	decoded, err := decodeSequenceCallData(s.SmcABI(), txData)
 	if err != nil {
 		return nil, err
 	}

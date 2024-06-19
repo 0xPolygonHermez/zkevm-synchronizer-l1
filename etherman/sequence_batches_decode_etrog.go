@@ -2,11 +2,9 @@ package etherman
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/etrogpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -14,19 +12,18 @@ type SequenceBatchesDecodeEtrog struct {
 	SequenceBatchesBase
 }
 
-func NewDecodeSequenceBatchesEtrog() *SequenceBatchesDecodeEtrog {
-	return &SequenceBatchesDecodeEtrog{
-		NewSequenceBatchesBase(methodIDSequenceBatchesEtrog, "sequenceBatchesEtrog"),
+func NewDecodeSequenceBatchesEtrog() (*SequenceBatchesDecodeEtrog, error) {
+	base, err := NewSequenceBatchesBase(methodIDSequenceBatchesEtrog, "sequenceBatchesEtrog", etrogpolygonzkevm.EtrogpolygonzkevmABI)
+	if err != nil {
+		return nil, err
 	}
+	return &SequenceBatchesDecodeEtrog{*base}, nil
 }
 
 func (s *SequenceBatchesDecodeEtrog) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
 	// Extract coded txs.
 	// Load contract ABI
-	smcAbi, err := abi.JSON(strings.NewReader(etrogpolygonzkevm.EtrogpolygonzkevmABI))
-	if err != nil {
-		return nil, err
-	}
+	smcAbi := s.SmcABI()
 
 	// Recover Method from signature and ABI
 	method, err := smcAbi.MethodById(txData[:4])

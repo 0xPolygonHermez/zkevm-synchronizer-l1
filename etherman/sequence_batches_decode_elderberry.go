@@ -2,10 +2,8 @@ package etherman
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -13,19 +11,18 @@ type SequenceBatchesDecodeElderberry struct {
 	SequenceBatchesBase
 }
 
-func NewDecodeSequenceBatchesElderberry() *SequenceBatchesDecodeElderberry {
-	return &SequenceBatchesDecodeElderberry{
-		NewSequenceBatchesBase(methodIDSequenceBatchesElderberry, "sequenceBatchesElderberry"),
+func NewDecodeSequenceBatchesElderberry() (*SequenceBatchesDecodeElderberry, error) {
+	base, err := NewSequenceBatchesBase(methodIDSequenceBatchesElderberry, "sequenceBatchesElderberry", polygonzkevm.PolygonzkevmABI)
+	if err != nil {
+		return nil, err
 	}
+	return &SequenceBatchesDecodeElderberry{*base}, nil
 }
 
 func (s *SequenceBatchesDecodeElderberry) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
 	// Extract coded txs.
 	// Load contract ABI
-	smcAbi, err := abi.JSON(strings.NewReader(polygonzkevm.PolygonzkevmABI))
-	if err != nil {
-		return nil, err
-	}
+	smcAbi := s.SmcABI()
 
 	// Recover Method from signature and ABI
 	method, err := smcAbi.MethodById(txData[:4])

@@ -231,10 +231,18 @@ func NewClient(cfg Config) (*Client, error) {
 	log.Debug("rollupID: ", rollupID)
 	var validium *EthermanValidium
 
-	batchDecoders := []SequenceBatchesDecoder{
-		NewDecodeSequenceBatchesEtrog(),
-		NewDecodeSequenceBatchesElderberry(),
+	decodeEtrog, err := NewDecodeSequenceBatchesEtrog()
+	if err != nil {
+		log.Errorf("error creating NewDecodeSequenceBatchesEtrog client. Error: %w", err)
+		return nil, err
 	}
+	decodeElderberry, err := NewDecodeSequenceBatchesElderberry()
+	if err != nil {
+		log.Errorf("error creating NewDecodeSequenceBatchesElderberry client. Error: %w", err)
+		return nil, err
+	}
+
+	batchDecoders := []SequenceBatchesDecoder{decodeEtrog, decodeElderberry}
 	if cfg.Validium.Enabled {
 		log.Infof("Validium is enabled")
 		validium, err = NewEthermanValidium(cfg, ethClient)

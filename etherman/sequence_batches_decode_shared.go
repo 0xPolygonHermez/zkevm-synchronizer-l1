@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
@@ -23,25 +24,35 @@ type DecodedSequenceBatchesCallData struct {
 }
 
 type SequenceBatchesBase struct {
-	Signature []byte
-	Name      string
+	signature []byte
+	name      string
+	smcABI    abi.ABI
 }
 
-func NewSequenceBatchesBase(signature []byte, name string) SequenceBatchesBase {
-	return SequenceBatchesBase{Signature: signature, Name: name}
+func NewSequenceBatchesBase(signature []byte, name string, abiStr string) (*SequenceBatchesBase, error) {
+	smcAbi, err := abi.JSON(strings.NewReader(abiStr))
+	if err != nil {
+		return nil, err
+	}
+	return &SequenceBatchesBase{signature: signature, name: name, smcABI: smcAbi}, nil
 }
 
 // MatchMethodId returns true if the methodId is the one for the sequenceBatchesEtrog method
 func (s *SequenceBatchesBase) MatchMethodId(methodId []byte) bool {
-	return bytes.Equal(methodId, s.Signature)
+	return bytes.Equal(methodId, s.signature)
 }
 
 // NameMethodID returns name
 func (s *SequenceBatchesBase) NameMethodID(methodId []byte) string {
 	if s.MatchMethodId(methodId) {
-		return s.Name
+		return s.name
 	}
 	return ""
+}
+
+func (s *SequenceBatchesBase) SmcABI() abi.ABI {
+	return s.smcABI
+
 }
 
 func decodeSequenceCallData(smcAbi abi.ABI, txData []byte) (*DecodedSequenceBatchesCallData, error) {

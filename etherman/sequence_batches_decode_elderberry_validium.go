@@ -3,11 +3,9 @@ package etherman
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -34,25 +32,22 @@ var (
 
 type SequenceBatchesDecodeElderberryValidium struct {
 	SequenceBatchesBase
-	da     dataavailability.BatchDataProvider
-	SmcABI abi.ABI
+	da dataavailability.BatchDataProvider
 }
 
 func NewDecodeSequenceBatchesElderberryValidium(da dataavailability.BatchDataProvider) (*SequenceBatchesDecodeElderberryValidium, error) {
-	smcAbi, err := abi.JSON(strings.NewReader(polygonzkevm.PolygonzkevmABI))
+	base, err := NewSequenceBatchesBase(methodIDSequenceBatchesValidiumElderberry, methodIDSequenceBatchesValidiumElderberryName, polygonzkevm.PolygonzkevmABI)
 	if err != nil {
 		return nil, err
 	}
-	return &SequenceBatchesDecodeElderberryValidium{
-		NewSequenceBatchesBase(methodIDSequenceBatchesValidiumElderberry, methodIDSequenceBatchesValidiumElderberryName),
-		da, smcAbi}, nil
+	return &SequenceBatchesDecodeElderberryValidium{*base, da}, nil
 }
 
 func (s *SequenceBatchesDecodeElderberryValidium) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
 	if s.da == nil {
 		return nil, fmt.Errorf("data availability backend not set")
 	}
-	decoded, err := decodeSequenceCallData(s.SmcABI, txData)
+	decoded, err := decodeSequenceCallData(s.SmcABI(), txData)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +71,7 @@ func (s *SequenceBatchesDecodeElderberryValidium) DecodeSequenceBatches(txData [
 		return nil, err
 	}
 	SequencedBatchMetadata := &SequencedBatchMetadata{
-		CallFunctionName: "sequenceBatchesElderberryValidium",
+		CallFunctionName: methodIDSequenceBatchesValidiumElderberryName,
 		ForkName:         "elderberry",
 		RollupFlavor:     RollupFlavorValidium,
 	}
