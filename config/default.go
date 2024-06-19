@@ -23,7 +23,7 @@ const DefaultValues = `
 [Etherman]
 	L1URL = "http://localhost:8545"
 	ForkIDChunkSize = 100
-	L1ChainID = 1
+	L1ChainID = 0
 	PararellBlockRequest = false
 	[Etherman.Contracts]
 		GlobalExitRootManagerAddr = "0x2968D6d736178f8FE7393CC33C87f29D9C287e78"
