@@ -81,7 +81,7 @@ func (d *DataAvailability) PostSequence(ctx context.Context, sequences []types.S
 // 1. From local DB
 // 2. From Trusted Sequencer (if not self)
 // 3. From DA backend
-func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []common.Hash, dataAvailabilityMessage []byte) ([][]byte, error) {
+func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []common.Hash, dataAvailabilityMessage []byte) ([]BatchL2Data, error) {
 	if len(batchNums) != len(batchHashes) {
 		return nil, fmt.Errorf(invalidBatchRetrievalArgs, len(batchNums), len(batchHashes))
 	}
@@ -98,7 +98,13 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 				}
 			}
 		case External:
-			return d.backend.GetSequence(d.ctx, batchHashes, dataAvailabilityMessage)
+			batchl2dataRaw, err := d.backend.GetSequence(d.ctx, batchHashes, dataAvailabilityMessage)
+			if err != nil {
+				log.Warnf(failedDataRetrievalTemplate, batchNums, err.Error())
+				return nil, err
+			}
+			return createBatchL2DataResonses(batchl2dataRaw, External), nil
+
 		default:
 			log.Warnf("invalid data retrieval priority: %s", p)
 		}
@@ -107,11 +113,22 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 	return nil, errors.New("failed to retrieve l2 batch data")
 }
 
-func checkBatches(batchNumbers []uint64, expectedHashes []common.Hash, batchData map[uint64][]byte) ([][]byte, error) {
+func createBatchL2DataResonses(batchl2dataRaw [][]byte, source DataSourcePriority) []BatchL2Data {
+	result := make([]BatchL2Data, len(batchl2dataRaw))
+	for i, bd := range batchl2dataRaw {
+		result[i] = BatchL2Data{
+			Data:   bd,
+			Source: source,
+		}
+	}
+	return result
+}
+
+func checkBatches(batchNumbers []uint64, expectedHashes []common.Hash, batchData map[uint64][]byte, source DataSourcePriority) ([]BatchL2Data, error) {
 	if len(batchNumbers) != len(expectedHashes) {
 		return nil, fmt.Errorf("invalid batch parameters")
 	}
-	result := make([][]byte, len(batchNumbers))
+	result := make([]BatchL2Data, len(batchNumbers))
 	for i := 0; i < len(batchNumbers); i++ {
 		batchNumber := batchNumbers[i]
 		expectedHash := expectedHashes[i]
@@ -125,7 +142,10 @@ func checkBatches(batchNumbers []uint64, expectedHashes []common.Hash, batchData
 			log.Warnf("wrong local data for hash: %s", err.Error())
 			return nil, err
 		}
-		result[i] = bd
+		result[i] = BatchL2Data{
+			Data:   bd,
+			Source: source,
+		}
 	}
 	return result, nil
 }
@@ -133,7 +153,7 @@ func checkBatches(batchNumbers []uint64, expectedHashes []common.Hash, batchData
 type rpcBatchDataFunc func(ctx context.Context, numbers []*big.Int) ([]*jsonrpcclienttypes.BatchData, error)
 
 // rpcData retrieves batch data from rpcBatchDataFunc, returns an error unless all are found and correct
-func (d *DataAvailability) rpcData(batchNums []uint64, expectedHashes []common.Hash, rpcFunc rpcBatchDataFunc) ([][]byte, error) {
+func (d *DataAvailability) rpcData(batchNums []uint64, expectedHashes []common.Hash, rpcFunc rpcBatchDataFunc) ([]BatchL2Data, error) {
 	if len(batchNums) != len(expectedHashes) {
 		return nil, fmt.Errorf("invalid arguments, len of batch numbers does not equal length of expected hashes: %d != %d",
 			len(batchNums), len(expectedHashes))
@@ -160,7 +180,7 @@ func (d *DataAvailability) rpcData(batchNums []uint64, expectedHashes []common.H
 		}
 		result[number] = batch.BatchL2Data
 	}
-	checked, err := checkBatches(batchNums, expectedHashes, result)
+	checked, err := checkBatches(batchNums, expectedHashes, result, Trusted)
 	if err != nil {
 		return nil, err
 	}

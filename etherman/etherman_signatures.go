@@ -65,6 +65,7 @@ var (
 	// methodIDSequenceBatchesEtrog: MethodID for sequenceBatches in Etrog
 	methodIDSequenceBatchesEtrog = []byte{0xec, 0xef, 0x3f, 0x99} // 0xecef3f99
 	// methodIDSequenceBatchesElderberry: MethodID for sequenceBatches in Elderberry
+	// https://github.com/0xPolygonHermez/zkevm-contracts/blob/73758334f8568b74e9493fcc530b442bd73325dc/contracts/v2/lib/PolygonRollupBaseEtrog.sol#L32
 	methodIDSequenceBatchesElderberry = []byte{0xde, 0xf5, 0x7e, 0x54} // 0xdef57e54 sequenceBatches((bytes,bytes32,uint64,bytes32)[],uint64,uint64,address)
 
 	sginatures = []string{

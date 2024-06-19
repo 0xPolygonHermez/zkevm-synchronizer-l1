@@ -2,6 +2,8 @@ package config
 
 import (
 	"bytes"
+	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -19,6 +21,8 @@ const (
 	FlagYes = "yes"
 	// FlagCfg is the flag for cfg.
 	FlagCfg = "cfg"
+	// EnvPrefix is the prefix for the environment variables.
+	EnvVarPrefix = "ZKEVM_SYNCL1"
 )
 
 type Config struct {
@@ -52,39 +56,48 @@ func Load(ctx *cli.Context) (*Config, error) {
 }
 
 // Load loads the configuration
-func LoadFile(configFilePath string) (*Config, error) {
-	cfg, err := Default()
+func LoadFileFromString(configFileData string, configType string) (*Config, error) {
+	cfg := &Config{}
+	err := loadString(cfg, DefaultValues, "toml", true, EnvVarPrefix, nil)
 	if err != nil {
 		return nil, err
 	}
-
-	if configFilePath != "" {
-		dirName, fileName := filepath.Split(configFilePath)
-
-		fileExtension := strings.TrimPrefix(filepath.Ext(fileName), ".")
-		fileNameWithoutExtension := strings.TrimSuffix(fileName, "."+fileExtension)
-
-		viper.AddConfigPath(dirName)
-		viper.SetConfigName(fileNameWithoutExtension)
-		viper.SetConfigType(fileExtension)
-	}
-
-	replacer := strings.NewReplacer(".", "_")
-	viper.SetEnvKeyReplacer(replacer)
-	viper.SetEnvPrefix("ZKEVM_SYNCL1")
-	viper.AutomaticEnv()
-	err = viper.ReadInConfig()
+	expectedKeys := viper.AllKeys()
+	err = loadString(cfg, configFileData, configType, true, EnvVarPrefix, &expectedKeys)
 	if err != nil {
-		_, ok := err.(viper.ConfigFileNotFoundError)
-		if ok {
-			log.Infof("config file not found %s", configFilePath)
-			return nil, err
-		} else {
-			log.Infof("error reading config file: ", err)
-			return nil, err
-		}
+		return nil, err
 	}
+	return cfg, nil
+}
 
+// Load loads the configuration
+func LoadFile(configFilePath string) (*Config, error) {
+	_, fileName := filepath.Split(configFilePath)
+	fileExtension := strings.TrimPrefix(filepath.Ext(fileName), ".")
+	configData, err := os.ReadFile(configFilePath)
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := LoadFileFromString(string(configData), fileExtension)
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
+// Load loads the configuration
+func loadString(cfg *Config, configData string, configType string, allowEnvVars bool, envPrefix string, expectedKeys *[]string) error {
+	viper.SetConfigType(configType)
+	if allowEnvVars {
+		replacer := strings.NewReplacer(".", "_")
+		viper.SetEnvKeyReplacer(replacer)
+		viper.SetEnvPrefix(envPrefix)
+		viper.AutomaticEnv()
+	}
+	err := viper.ReadConfig(bytes.NewBuffer([]byte(configData)))
+	if err != nil {
+		return err
+	}
 	decodeHooks := []viper.DecoderConfigOption{
 		// this allows arrays to be decoded from env var separated by ",", example: MY_VAR="value1,value2,value3"
 		viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(mapstructure.TextUnmarshallerHookFunc(), mapstructure.StringToSliceHookFunc(","))),
@@ -92,8 +105,32 @@ func LoadFile(configFilePath string) (*Config, error) {
 
 	err = viper.Unmarshal(&cfg, decodeHooks...)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	if expectedKeys != nil {
+		configKeys := viper.AllKeys()
+		err = checkUnknownFieldsOnFile(configKeys, *expectedKeys)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-	return cfg, nil
+func checkUnknownFieldsOnFile(keysOnFile, expectedConfigKeys []string) error {
+	for _, key := range keysOnFile {
+		if !contains(expectedConfigKeys, key) {
+			return fmt.Errorf("unknown field %s on config file", key)
+		}
+	}
+	return nil
+}
+
+func contains(keys []string, key string) bool {
+	for _, k := range keys {
+		if k == key {
+			return true
+		}
+	}
+	return false
 }

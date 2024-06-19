@@ -45,6 +45,30 @@ type SequencedBatchElderberryData struct {
 	InitSequencedBatchNumber uint64 // Last sequenced batch number
 }
 
+type SourceBatchDataEnum = string
+
+const (
+	SourceBatchDataCalldata           = "calldata"
+	SourceBatchDataValidiumDAExternal = "DA/External"
+	SourceBatchDataValidiumDATrusted  = "DA/Trusted"
+)
+
+type RollupFlavorEnum = string
+
+const (
+	RollupFlavorZkEVM    = "kEVM"
+	RollupFlavorValidium = "Validium"
+)
+
+type SequencedBatchMetadata struct {
+	// SourceBatchData
+	SourceBatchData  SourceBatchDataEnum
+	RollupFlavor     RollupFlavorEnum
+	CallFunctionName string // Call function
+	ForkName         string // Fork name (elderberry / etrog)
+
+}
+
 // SequencedBatch represents virtual batch
 type SequencedBatch struct {
 	BatchNumber   uint64
@@ -59,6 +83,7 @@ type SequencedBatch struct {
 	*polygonzkevm.PolygonRollupBaseEtrogBatchData
 	// Struct used in Elderberry
 	*SequencedBatchElderberryData
+	Metadata *SequencedBatchMetadata
 }
 
 func (s *SequencedBatch) BatchL2Data() []byte {

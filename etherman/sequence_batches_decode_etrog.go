@@ -58,6 +58,13 @@ func (s *SequenceBatchesDecodeEtrog) DecodeSequenceBatches(txData []byte, lastBa
 	if err != nil {
 		return nil, err
 	}
+
+	SequencedBatchMetadata := &SequencedBatchMetadata{
+		CallFunctionName: "sequenceBatchesEtrog",
+		RollupFlavor:     RollupFlavorZkEVM,
+		ForkName:         "etrog",
+	}
+
 	coinbase := (data[1]).(common.Address)
 	sequencedBatches := make([]SequencedBatch, len(sequences))
 	for i, seq := range sequences {
@@ -71,6 +78,7 @@ func (s *SequenceBatchesDecodeEtrog) DecodeSequenceBatches(txData []byte, lastBa
 			Nonce:                           nonce,
 			Coinbase:                        coinbase,
 			PolygonRollupBaseEtrogBatchData: &s,
+			Metadata:                        SequencedBatchMetadata,
 		}
 	}
 

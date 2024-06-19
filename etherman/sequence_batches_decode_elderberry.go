@@ -62,6 +62,12 @@ func (s *SequenceBatchesDecodeElderberry) DecodeSequenceBatches(txData []byte, l
 	coinbase := (data[3]).(common.Address)
 	sequencedBatches := make([]SequencedBatch, len(sequences))
 
+	SequencedBatchMetadata := &SequencedBatchMetadata{
+		CallFunctionName: "sequenceBatchesElderberry",
+		RollupFlavor:     RollupFlavorZkEVM,
+		ForkName:         "elderberry",
+	}
+
 	for i, seq := range sequences {
 		elderberry := SequencedBatchElderberryData{
 			MaxSequenceTimestamp:     maxSequenceTimestamp,
@@ -78,6 +84,7 @@ func (s *SequenceBatchesDecodeElderberry) DecodeSequenceBatches(txData []byte, l
 			Coinbase:                        coinbase,
 			PolygonRollupBaseEtrogBatchData: &s,
 			SequencedBatchElderberryData:    &elderberry,
+			Metadata:                        SequencedBatchMetadata,
 		}
 	}
 

@@ -29,10 +29,15 @@ type SequenceRetriever interface {
 	GetSequence(ctx context.Context, batchHashes []common.Hash, dataAvailabilityMessage []byte) ([][]byte, error)
 }
 
+type BatchL2Data struct {
+	Data   []byte
+	Source DataSourcePriority
+}
+
 // BatchDataProvider is used to retrieve batch data
 type BatchDataProvider interface {
 	// GetBatchL2Data retrieve the data of a batch from the DA backend. The returned data must be the pre-image of the hash
-	GetBatchL2Data(batchNum []uint64, batchHashes []common.Hash, dataAvailabilityMessage []byte) ([][]byte, error)
+	GetBatchL2Data(batchNum []uint64, batchHashes []common.Hash, dataAvailabilityMessage []byte) ([]BatchL2Data, error)
 }
 
 // DataManager is an interface for components that send and retrieve batch data

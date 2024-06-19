@@ -251,6 +251,14 @@ func (s *L1SequentialSync) iteration(ctx context.Context, blockRange BlockRange,
 	return lastEthBlockSynced, false, nil
 }
 
+func logOrders(mapOrders map[common.Hash][]etherman.Order) {
+	for blockHash, orders := range mapOrders {
+		for i, order := range orders {
+			log.Debugf(" BlockHash: %s. Order[%d]: %s", blockHash.String(), i, order.String())
+		}
+	}
+}
+
 func (s *L1SequentialSync) retrieveDataFromL1AndValidate(ctx context.Context, blockRange BlockRange) ([]etherman.Block, map[common.Hash][]etherman.Order, error) {
 	toBlock := blockRange.ToBlock
 	blocks, order, err := s.etherMan.GetRollupInfoByBlockRange(ctx, blockRange.FromBlock, &toBlock)
@@ -258,6 +266,7 @@ func (s *L1SequentialSync) retrieveDataFromL1AndValidate(ctx context.Context, bl
 		log.Errorf("error getting rollup info by block range.  Err: %v", err)
 		return nil, nil, err
 	}
+	logOrders(order)
 	if blockRange.OverlappedFirstBlock {
 		err = s.checkResponseGetRollupInfoByBlockRangeForOverlappedFirstBlock(blocks, blockRange.FromBlock)
 		if err != nil {

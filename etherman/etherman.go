@@ -230,17 +230,31 @@ func NewClient(cfg Config) (*Client, error) {
 	}
 	log.Debug("rollupID: ", rollupID)
 	var validium *EthermanValidium
+
+	batchDecoders := []SequenceBatchesDecoder{
+		NewDecodeSequenceBatchesEtrog(),
+		NewDecodeSequenceBatchesElderberry(),
+	}
 	if cfg.Validium.Enabled {
+		log.Infof("Validium is enabled")
 		validium, err = NewEthermanValidium(cfg, ethClient)
 		if err != nil {
 			log.Errorf("error creating NewEthermanValidium client. Error: %w", err)
 			return nil, err
 		}
-	}
-	decodeEtrogValidium, err := NewDecodeSequenceBatchesEtrogValidium(validium.DataAvailabilityClient)
-	if err != nil {
-		log.Errorf("error creating NewDecodeSequenceBatchesEtrogValidium client. Error: %w", err)
-		return nil, err
+
+		decodeEtrogValidium, err := NewDecodeSequenceBatchesEtrogValidium(validium.DataAvailabilityClient)
+		if err != nil {
+			log.Errorf("error creating NewDecodeSequenceBatchesEtrogValidium client. Error: %w", err)
+			return nil, err
+		}
+
+		decodeElderberryValidium, err := NewDecodeSequenceBatchesElderberryValidium(validium.DataAvailabilityClient)
+		if err != nil {
+			log.Errorf("error creating NewDecodeSequenceBatchesElderberryValidium client. Error: %w", err)
+			return nil, err
+		}
+		batchDecoders = append(batchDecoders, decodeEtrogValidium, decodeElderberryValidium)
 	}
 	client := &Client{
 		EthClient: ethClient,
@@ -253,14 +267,10 @@ func NewClient(cfg Config) (*Client, error) {
 		OldGlobalExitRootManager: oldGlobalExitRoot,
 		SCAddresses:              scAddresses,
 		RollupID:                 rollupID,
-		SequenceBatchesDecoders: []SequenceBatchesDecoder{
-			decodeEtrogValidium,
-			NewDecodeSequenceBatchesEtrog(),
-			NewDecodeSequenceBatchesElderberry(),
-		},
-		cfg:      cfg,
-		auth:     map[common.Address]bind.TransactOpts{},
-		validium: validium,
+		SequenceBatchesDecoders:  batchDecoders,
+		cfg:                      cfg,
+		auth:                     map[common.Address]bind.TransactOpts{},
+		validium:                 validium,
 	}
 	if cfg.Validium.Enabled {
 		validium, err := NewEthermanValidium(cfg, ethClient)
@@ -532,6 +542,10 @@ type Order struct {
 	Pos  int
 }
 
+func (o Order) String() string {
+	return fmt.Sprintf("Name: %s, Pos: %d", o.Name, o.Pos)
+}
+
 func (etherMan *Client) RetrieveBlocksInParallel(ctx context.Context, blocksHash []common.Hash) (map[common.Hash]Block, error) {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -610,7 +624,7 @@ func (etherMan *Client) readEvents(ctx context.Context, query ethereum.FilterQue
 func logEvents(logs []types.Log) {
 	log.Debug("Events detected: ", len(logs))
 	for _, vLog := range logs {
-		log.Debugf("Event detected: topic:%s blockHash:%s blockNumber:%s txHash: %s",
+		log.Debugf("Event detected: topic:%s blockHash:%s blockNumber:%d txHash: %s",
 			translateSignatureHash(vLog.Topics[0]), vLog.BlockHash.String(), vLog.BlockNumber, vLog.TxHash.String())
 	}
 }
