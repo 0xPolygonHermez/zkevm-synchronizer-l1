@@ -1,6 +1,7 @@
 package etherman
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -19,6 +20,28 @@ type batchInfo struct {
 type DecodedSequenceBatchesCallData struct {
 	InputByteData []byte
 	Data          []interface{}
+}
+
+type SequenceBatchesBase struct {
+	Signature []byte
+	Name      string
+}
+
+func NewSequenceBatchesBase(signature []byte, name string) SequenceBatchesBase {
+	return SequenceBatchesBase{Signature: signature, Name: name}
+}
+
+// MatchMethodId returns true if the methodId is the one for the sequenceBatchesEtrog method
+func (s *SequenceBatchesBase) MatchMethodId(methodId []byte) bool {
+	return bytes.Equal(methodId, s.Signature)
+}
+
+// NameMethodID returns name
+func (s *SequenceBatchesBase) NameMethodID(methodId []byte) string {
+	if s.MatchMethodId(methodId) {
+		return s.Name
+	}
+	return ""
 }
 
 func decodeSequenceCallData(smcAbi abi.ABI, txData []byte) (*DecodedSequenceBatchesCallData, error) {

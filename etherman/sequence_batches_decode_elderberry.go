@@ -1,7 +1,6 @@
 package etherman
 
 import (
-	"bytes"
 	"encoding/json"
 	"strings"
 
@@ -11,22 +10,13 @@ import (
 )
 
 type SequenceBatchesDecodeElderberry struct {
+	SequenceBatchesBase
 }
 
 func NewDecodeSequenceBatchesElderberry() *SequenceBatchesDecodeElderberry {
-	return &SequenceBatchesDecodeElderberry{}
-}
-
-// MatchMethodId returns true if the methodId is the one for the sequenceBatchesEtrog method
-func (s *SequenceBatchesDecodeElderberry) MatchMethodId(methodId []byte) bool {
-	return bytes.Equal(methodId, methodIDSequenceBatchesElderberry)
-}
-
-func (s *SequenceBatchesDecodeElderberry) NameMethodID(methodId []byte) string {
-	if s.MatchMethodId(methodId) {
-		return "sequenceBatchesElderberry"
+	return &SequenceBatchesDecodeElderberry{
+		NewSequenceBatchesBase(methodIDSequenceBatchesElderberry, "sequenceBatchesElderberry"),
 	}
-	return ""
 }
 
 func (s *SequenceBatchesDecodeElderberry) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
@@ -63,7 +53,7 @@ func (s *SequenceBatchesDecodeElderberry) DecodeSequenceBatches(txData []byte, l
 	sequencedBatches := make([]SequencedBatch, len(sequences))
 
 	SequencedBatchMetadata := &SequencedBatchMetadata{
-		CallFunctionName: "sequenceBatchesElderberry",
+		CallFunctionName: s.NameMethodID(txData[:4]),
 		RollupFlavor:     RollupFlavorZkEVM,
 		ForkName:         "elderberry",
 	}

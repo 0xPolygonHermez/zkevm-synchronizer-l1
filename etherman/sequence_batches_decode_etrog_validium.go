@@ -19,6 +19,7 @@ var (
 )
 
 type SequenceBatchesDecodeEtrogValidium struct {
+	SequenceBatchesBase
 	da     dataavailability.BatchDataProvider
 	SmcABI abi.ABI
 }
@@ -28,7 +29,9 @@ func NewDecodeSequenceBatchesEtrogValidium(da dataavailability.BatchDataProvider
 	if err != nil {
 		return nil, err
 	}
-	return &SequenceBatchesDecodeEtrogValidium{da, smcAbi}, nil
+	return &SequenceBatchesDecodeEtrogValidium{
+		NewSequenceBatchesBase(methodIDSequenceBatchesValidiumEtrog, "sequenceBatchesEtrogValidium"),
+		da, smcAbi}, nil
 }
 
 // MatchMethodId returns true if the methodId is the one for the sequenceBatchesEtrog method
@@ -76,7 +79,7 @@ func (s *SequenceBatchesDecodeEtrogValidium) DecodeSequenceBatches(txData []byte
 	}
 
 	SequencedBatchMetadata := &SequencedBatchMetadata{
-		CallFunctionName: "sequenceBatchesEtrogValidium",
+		CallFunctionName: s.NameMethodID(txData[:4]),
 		RollupFlavor:     RollupFlavorValidium,
 		ForkName:         "etrog",
 	}

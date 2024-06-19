@@ -1,7 +1,6 @@
 package etherman
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -29,10 +28,12 @@ var (
 	//     uint64 forcedTimestamp;
 	//     bytes32 forcedBlockHashL1;
 	// }
-	methodIDSequenceBatchesValidiumElderberry = []byte{0xdb, 0x5b, 0x0e, 0xd7} // 0xdb5b0ed7 sequenceBatchesValidium((bytes32,bytes32,uint64,bytes32)[],uint64,uint64,address,bytes)
+	methodIDSequenceBatchesValidiumElderberry     = []byte{0xdb, 0x5b, 0x0e, 0xd7} // 0xdb5b0ed7 sequenceBatchesValidium((bytes32,bytes32,uint64,bytes32)[],uint64,uint64,address,bytes)
+	methodIDSequenceBatchesValidiumElderberryName = "sequenceBatchesElderberryValidium"
 )
 
 type SequenceBatchesDecodeElderberryValidium struct {
+	SequenceBatchesBase
 	da     dataavailability.BatchDataProvider
 	SmcABI abi.ABI
 }
@@ -42,19 +43,9 @@ func NewDecodeSequenceBatchesElderberryValidium(da dataavailability.BatchDataPro
 	if err != nil {
 		return nil, err
 	}
-	return &SequenceBatchesDecodeElderberryValidium{da, smcAbi}, nil
-}
-
-// MatchMethodId returns true if the methodId is the one for the sequenceBatchesEtrog method
-func (s *SequenceBatchesDecodeElderberryValidium) MatchMethodId(methodId []byte) bool {
-	return bytes.Equal(methodId, methodIDSequenceBatchesValidiumElderberry)
-}
-
-func (s *SequenceBatchesDecodeElderberryValidium) NameMethodID(methodId []byte) string {
-	if s.MatchMethodId(methodId) {
-		return "sequenceBatchesElderberryValidium"
-	}
-	return ""
+	return &SequenceBatchesDecodeElderberryValidium{
+		NewSequenceBatchesBase(methodIDSequenceBatchesValidiumElderberry, methodIDSequenceBatchesValidiumElderberryName),
+		da, smcAbi}, nil
 }
 
 func (s *SequenceBatchesDecodeElderberryValidium) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {

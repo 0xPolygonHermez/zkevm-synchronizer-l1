@@ -1,7 +1,6 @@
 package etherman
 
 import (
-	"bytes"
 	"encoding/json"
 	"strings"
 
@@ -12,22 +11,13 @@ import (
 )
 
 type SequenceBatchesDecodeEtrog struct {
+	SequenceBatchesBase
 }
 
 func NewDecodeSequenceBatchesEtrog() *SequenceBatchesDecodeEtrog {
-	return &SequenceBatchesDecodeEtrog{}
-}
-
-// MatchMethodId returns true if the methodId is the one for the sequenceBatchesEtrog method
-func (s *SequenceBatchesDecodeEtrog) MatchMethodId(methodId []byte) bool {
-	return bytes.Equal(methodId, methodIDSequenceBatchesEtrog)
-}
-
-func (s *SequenceBatchesDecodeEtrog) NameMethodID(methodId []byte) string {
-	if s.MatchMethodId(methodId) {
-		return "sequenceBatchesEtrog"
+	return &SequenceBatchesDecodeEtrog{
+		NewSequenceBatchesBase(methodIDSequenceBatchesEtrog, "sequenceBatchesEtrog"),
 	}
-	return ""
 }
 
 func (s *SequenceBatchesDecodeEtrog) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
@@ -60,7 +50,7 @@ func (s *SequenceBatchesDecodeEtrog) DecodeSequenceBatches(txData []byte, lastBa
 	}
 
 	SequencedBatchMetadata := &SequencedBatchMetadata{
-		CallFunctionName: "sequenceBatchesEtrog",
+		CallFunctionName: s.NameMethodID(txData[:4]),
 		RollupFlavor:     RollupFlavorZkEVM,
 		ForkName:         "etrog",
 	}
