@@ -219,7 +219,7 @@ func StringToBlockNumber(str string) (BlockNumber, error) {
 		return FinalizedBlockNumber, nil
 	}
 
-	n, err := encoding.DecodeUint64orHex(&str)
+	n, err := encoding.DecodeInt64orHex(&str)
 	if err != nil {
 		return 0, err
 	}
