@@ -14,9 +14,6 @@ type batchInfo struct {
 	num      uint64
 	hash     common.Hash
 	isForced bool
-	// Source of the batch data
-	// -
-	source *dataavailability.DataSourcePriority
 }
 
 type DecodedSequenceBatchesCallData struct {

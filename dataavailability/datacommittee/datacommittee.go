@@ -315,7 +315,9 @@ func (d *DataCommitteeBackend) getCurrentDataCommitteeMembers() ([]DataCommittee
 		if err != nil {
 			return nil, fmt.Errorf("error getting Members %d from L1 SC: %w", i, err)
 		}
-		member.Url = d.Translator.Translate(translateContextName, member.Url)
+		if d.Translator != nil {
+			member.Url = d.Translator.Translate(translateContextName, member.Url)
+		}
 		members = append(members, DataCommitteeMember{
 			Addr: member.Addr,
 			URL:  member.Url,
