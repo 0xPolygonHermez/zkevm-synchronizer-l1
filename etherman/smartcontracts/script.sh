@@ -12,6 +12,7 @@ gen oldpolygonzkevmglobalexitroot
 gen oldpolygonzkevmbridge
 gen oldpolygonzkevm
 gen etrogpolygonzkevm
+gen etrogvalidiumpolygonzkevm
 gen polygonzkevm
 gen polygonzkevmbridge
 gen pol

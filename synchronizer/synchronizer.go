@@ -151,6 +151,7 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 		log.Error(err)
 		return nil, err
 	}
+
 	etherman, err := etherman.NewClient(config.Etherman)
 	if err != nil {
 		log.Error("Error creating etherman", err)

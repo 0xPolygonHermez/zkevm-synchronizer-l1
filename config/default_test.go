@@ -6,10 +6,12 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/config"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/config/types"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	storage "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage"
 	syncconfig "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/config"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/translator"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
@@ -38,11 +40,19 @@ func TestDefault(t *testing.T) {
 			OverrideStorageCheck: false,
 		},
 		Etherman: etherman.Config{
-			L1URL: "http://localhost:8545",
+			L1URL:           "http://localhost:8545",
+			ForkIDChunkSize: 100,
+			L1ChainID:       0,
 			Contracts: etherman.ContractConfig{
 				GlobalExitRootManagerAddr: common.HexToAddress("0x2968D6d736178f8FE7393CC33C87f29D9C287e78"),
 				RollupManagerAddr:         common.HexToAddress("0xE2EF6215aDc132Df6913C8DD16487aBF118d1764"),
 				ZkEVMAddr:                 common.HexToAddress("0x89BA0Ed947a88fe43c22Ae305C0713eC8a7Eb361"),
+			},
+			Validium: etherman.ValidiumConfig{
+				Enabled:             false,
+				TrustedSequencerURL: "",
+				DataSourcePriority:  []dataavailability.DataSourcePriority{dataavailability.Trusted, dataavailability.External},
+				Translator:          translator.Config{},
 			},
 		},
 	}
