@@ -1,13 +1,11 @@
 package etherman
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -46,13 +44,6 @@ func NewDecodeSequenceBatchesElderberryValidium(da dataavailability.BatchDataPro
 }
 
 func (s *SequenceBatchesDecodeElderberryValidium) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
-	hexStr := hex.EncodeToString(txData)
-	log.Debug("txData=", hexStr)
-	log.Debug("lastBatchNumber=", lastBatchNumber)
-	log.Debug("sequencer=", sequencer.String())
-	log.Debug("txHash=", txHash.String())
-	log.Debug("nonce=", nonce)
-	log.Debug("l1InfoRoot=", l1InfoRoot.String())
 	if s.da == nil {
 		return nil, fmt.Errorf("data availability backend not set")
 	}
@@ -86,10 +77,5 @@ func (s *SequenceBatchesDecodeElderberryValidium) DecodeSequenceBatches(txData [
 	}
 
 	sequencedBatches := createSequencedBatchList(sequencesValidium, batchInfos, batchData, l1InfoRoot, sequencer, txHash, nonce, coinbase, maxSequenceTimestamp, initSequencedBatchNumber, SequencedBatchMetadata)
-
-	for i, _ := range sequencedBatches {
-		log.Debug("sequencedBatches[", i, "]=", sequencedBatches[i].String())
-	}
-
 	return sequencedBatches, nil
 }
