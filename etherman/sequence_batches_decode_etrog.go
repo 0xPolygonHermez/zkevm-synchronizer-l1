@@ -55,6 +55,5 @@ func (s *SequenceBatchesDecodeEtrog) DecodeSequenceBatches(txData []byte, lastBa
 			Metadata:                        SequencedBatchMetadata,
 		}
 	}
-
 	return sequencedBatches, nil
 }
