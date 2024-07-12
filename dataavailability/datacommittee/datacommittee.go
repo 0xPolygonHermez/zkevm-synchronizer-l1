@@ -188,7 +188,10 @@ func (s *DataCommitteeBackend) PostSequence(ctx context.Context, batchesData [][
 	ch := make(chan signatureMsg, len(committee.Members))
 	signatureCtx, cancelSignatureCollection := context.WithCancel(ctx)
 	for _, member := range committee.Members {
-		go requestSignatureFromMember(signatureCtx, *signedSequence, member, ch)
+		go requestSignatureFromMember(signatureCtx, daTypes.SignedSequence{
+			Sequence:  sequence,
+			Signature: signedSequence,
+		}, member, ch)
 	}
 
 	// Collect signatures
@@ -223,7 +226,7 @@ func requestSignatureFromMember(ctx context.Context, signedSequence daTypes.Sign
 	// request
 	c := client.New(member.URL)
 	log.Infof("sending request to sign the sequence to %s at %s", member.Addr.Hex(), member.URL)
-	signature, err := c.SignSequence(signedSequence)
+	signature, err := c.SignSequence(ctx, signedSequence)
 	if err != nil {
 		ch <- signatureMsg{
 			addr: member.Addr,
