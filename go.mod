@@ -3,7 +3,7 @@ module github.com/0xPolygonHermez/zkevm-synchronizer-l1
 go 1.21.3
 
 require (
-	github.com/0xPolygon/cdk-data-availability v0.0.7
+	github.com/0xPolygon/cdk-data-availability v0.0.8-0.20240712072318-72ae67613cbf
 	github.com/ethereum/go-ethereum v1.14.5
 	github.com/hermeznetwork/tracerr v0.3.2
 	github.com/iden3/go-iden3-crypto v0.0.16
