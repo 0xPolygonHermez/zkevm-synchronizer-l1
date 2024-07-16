@@ -767,6 +767,9 @@ func (etherMan *Client) processEvent(ctx context.Context, vLog types.Log, blocks
 	case setBatchFeeSignatureHash:
 		log.Debug("SetBatchFee event detected. Ignoring...")
 		return nil
+	case setDataAvailabilityProtocolSignatureHash:
+		log.Debug("setDataAvailabilityProtocol event detected. Ignoring...")
+		return nil
 	}
 	log.Warnf("Event not registered: %+v", vLog)
 	return nil
