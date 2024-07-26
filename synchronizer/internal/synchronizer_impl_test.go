@@ -16,6 +16,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestSyncImplNoL1BlockYet(t *testing.T) {
+	testData := newTestDataSyncImpl(t)
+	testData.mockStorage.EXPECT().GetLastBlock(mock.Anything, mock.Anything).Return(nil, entities.ErrNotFound)
+	// It returns block=nil but is synced and no error
+	testData.mockL1Syncer.EXPECT().SyncBlocks(testData.ctx, mock.Anything).Return(nil, true, nil)
+	err := testData.sut.Sync(FlagReturnBeforeReorg | FlagReturnOnSync)
+	require.NoError(t, err)
+}
+
 // TestFirstExecutionIsSynced
 // This test is that receive 1 block and is synced
 // is called to return on sync to it returns with no error
