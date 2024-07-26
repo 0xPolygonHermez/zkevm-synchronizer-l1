@@ -248,7 +248,7 @@ func (s *SynchronizerImpl) Sync(executionFlags SyncExecutionFlags) error {
 			}
 			s.setSyncedStatus(isSynced)
 			if s.synced {
-				log.Infof("NetworkID %d Synced!   lastBlockSynced:%d ", s.networkID, lastBlockSynced.BlockNumber)
+				log.Infof("NetworkID %d Synced!   lastBlockSynced:%s", s.networkID, lastBlockSynced.String())
 				if (executionFlags & FlagReturnOnSync) != 0 {
 					log.Infof("NetworkID: %d, Synchronization finished, returning because returnOnSync=true", s.networkID)
 					return nil
