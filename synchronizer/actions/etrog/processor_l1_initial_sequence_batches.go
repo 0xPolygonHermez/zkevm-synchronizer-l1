@@ -22,7 +22,7 @@ func NewProcessorL1InitialSequenceBatches(state stateOnSequencedBatchesInterface
 	return &ProcessorL1InitialSequenceBatches{
 		ProcessorBase: actions.ProcessorBase[ProcessorL1InitialSequenceBatches]{
 			SupportedEvent:    []etherman.EventOrder{etherman.InitialSequenceBatchesOrder},
-			SupportedForkdIds: &actions.ForksIdOnlyEtrogAndElderberry},
+			SupportedForkdIds: &actions.ForksIdEtrogElderberryBanana},
 		state: state,
 	}
 }
