@@ -71,7 +71,7 @@ func TrustedVerifyBatchesSigHash() common.Hash { return verifyBatchesTrustedAggr
 
 func createMapSignatures() map[common.Hash]string {
 	signatureMap := make(map[common.Hash]string)
-	for _, signature := range sginatures {
+	for _, signature := range signatures {
 		signatureMap[crypto.Keccak256Hash([]byte(signature))] = signature
 	}
 	return signatureMap
@@ -766,6 +766,18 @@ func (etherMan *Client) processEvent(ctx context.Context, vLog types.Log, blocks
 		return nil
 	case setBatchFeeSignatureHash:
 		log.Debug("SetBatchFee event detected. Ignoring...")
+		return nil
+	case setDataAvailabilitySignatureHash:
+		log.Debug("SetDataAvailability event detected. Ignoring...")
+		return nil
+	case rollbackBatchesSignatureHash:
+		log.Debug("RollbackBatches event detected. Ignoring...") // Might need to handle this properly
+		return nil
+	case updateL1InfoTreeV2SignatureHash:
+		log.Debug("UpdateL1InfoTreeV2 event detected. Ignoring...") // Might need to handle this properly
+		return nil
+	case initL1InfoRootMapSignatureHash:
+		log.Debug("InitL1InfoRootMap event detected. Ignoring...")
 		return nil
 	}
 	log.Warnf("Event not registered: %+v", vLog)

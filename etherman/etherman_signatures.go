@@ -35,6 +35,10 @@ var (
 	sequenceBatchesSignatureHash        = crypto.Keccak256Hash([]byte("SequenceBatches(uint64,bytes32)"))          // Used in oldZkEvm as well
 	initialSequenceBatchesSignatureHash = crypto.Keccak256Hash([]byte("InitialSequenceBatches(bytes,bytes32,address)"))
 	updateEtrogSequenceSignatureHash    = crypto.Keccak256Hash([]byte("UpdateEtrogSequence(uint64,bytes,bytes32,address)"))
+	rollbackBatchesSignatureHash        = crypto.Keccak256Hash([]byte("RollbackBatches(uint64,bytes32)"))
+
+	// Extra RollupValidiumEtrog
+	setDataAvailabilitySignatureHash = crypto.Keccak256Hash([]byte("SetDataAvailabilityProtocol(address)"))
 
 	// Extra RollupManager
 	initializedSignatureHash               = crypto.Keccak256Hash([]byte("Initialized(uint64)"))                       // Initializable. Used in RollupBase as well
@@ -44,8 +48,10 @@ var (
 	emergencyStateActivatedSignatureHash   = crypto.Keccak256Hash([]byte("EmergencyStateActivated()"))                 // EmergencyManager. Used in oldZkEvm as well
 	emergencyStateDeactivatedSignatureHash = crypto.Keccak256Hash([]byte("EmergencyStateDeactivated()"))               // EmergencyManager. Used in oldZkEvm as well
 
-	// New GER event Etrog
-	updateL1InfoTreeSignatureHash = crypto.Keccak256Hash([]byte("UpdateL1InfoTree(bytes32,bytes32)"))
+	// New GER event
+	updateL1InfoTreeSignatureHash   = crypto.Keccak256Hash([]byte("UpdateL1InfoTree(bytes32,bytes32)"))
+	updateL1InfoTreeV2SignatureHash = crypto.Keccak256Hash([]byte("UpdateL1InfoTreeV2(bytes32,uint32,uint256,uint64)"))
+	initL1InfoRootMapSignatureHash  = crypto.Keccak256Hash([]byte("InitL1InfoRootMap(uint32,bytes32)"))
 
 	// PreLxLy events
 	updateGlobalExitRootSignatureHash              = crypto.Keccak256Hash([]byte("UpdateGlobalExitRoot(bytes32,bytes32)"))
@@ -68,7 +74,7 @@ var (
 	// https://github.com/0xPolygonHermez/zkevm-contracts/blob/73758334f8568b74e9493fcc530b442bd73325dc/contracts/v2/lib/PolygonRollupBaseEtrog.sol#L32
 	methodIDSequenceBatchesElderberry = []byte{0xde, 0xf5, 0x7e, 0x54} // 0xdef57e54 sequenceBatches((bytes,bytes32,uint64,bytes32)[],uint64,uint64,address)
 
-	sginatures = []string{
+	signatures = []string{
 		"SetBatchFee(uint256)",
 		"SetTrustedAggregator(address)",
 		"SetVerifyBatchTimeTarget(uint64)",
@@ -116,5 +122,9 @@ var (
 		"AdminChanged(address,address)",
 		"BeaconUpgraded(address)",
 		"Upgraded(address)",
+		"RollbackBatches(uint64,bytes32)",
+		"SetDataAvailabilityProtocol(address)",
+		"UpdateL1InfoTreeV2(bytes32,uint32,uint256,uint64)",
+		"InitL1InfoRootMap(uint32,bytes32)",
 	}
 )
