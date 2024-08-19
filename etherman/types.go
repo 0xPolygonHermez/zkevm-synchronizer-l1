@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/0xPolygon/cdk-contracts-tooling/contracts/banana/polygonzkevmetrog"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/oldpolygonzkevm"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -86,7 +86,7 @@ type SequencedBatch struct {
 	// Struct used in preEtrog forks
 	*oldpolygonzkevm.PolygonZkEVMBatchData
 	// Struct used in Etrog + Elderberry
-	*polygonzkevm.PolygonRollupBaseEtrogBatchData
+	*polygonzkevmetrog.PolygonRollupBaseEtrogBatchData
 	// Struct used in Elderberry
 	*SequencedBatchElderberryData
 	Metadata *SequencedBatchMetadata
@@ -146,7 +146,7 @@ type UpdateEtrogSequence struct {
 	TxHash        common.Hash
 	Nonce         uint64
 	// Struct used in Etrog
-	*polygonzkevm.PolygonRollupBaseEtrogBatchData
+	*polygonzkevmetrog.PolygonRollupBaseEtrogBatchData
 }
 
 // ForcedBatch represents a ForcedBatch
@@ -175,7 +175,7 @@ type SequencedForceBatch struct {
 	TxHash      common.Hash
 	Timestamp   time.Time
 	Nonce       uint64
-	polygonzkevm.PolygonRollupBaseEtrogBatchData
+	polygonzkevmetrog.PolygonRollupBaseEtrogBatchData
 }
 
 // ForkID is a sturct to track the ForkID event.

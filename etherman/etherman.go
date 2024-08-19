@@ -13,13 +13,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/0xPolygon/cdk-contracts-tooling/contracts/banana/polygonrollupmanager"
+	"github.com/0xPolygon/cdk-contracts-tooling/contracts/banana/polygonzkevmetrog"
+	"github.com/0xPolygon/cdk-contracts-tooling/contracts/banana/polygonzkevmglobalexitrootv2"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/metrics"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/etrogpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/oldpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/oldpolygonzkevmglobalexitroot"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonrollupmanager"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevmglobalexitroot"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -145,9 +145,9 @@ type Client struct {
 	EthClient                ethereumClient
 	OldZkEVM                 *oldpolygonzkevm.Oldpolygonzkevm
 	EtrogZKEVM               *etrogpolygonzkevm.Etrogpolygonzkevm
-	ZkEVM                    *polygonzkevm.Polygonzkevm
+	ZkEVM                    *polygonzkevmetrog.Polygonzkevmetrog
 	RollupManager            *polygonrollupmanager.Polygonrollupmanager
-	GlobalExitRootManager    *polygonzkevmglobalexitroot.Polygonzkevmglobalexitroot
+	GlobalExitRootManager    *polygonzkevmglobalexitrootv2.Polygonzkevmglobalexitrootv2
 	OldGlobalExitRootManager *oldpolygonzkevmglobalexitroot.Oldpolygonzkevmglobalexitroot
 	SCAddresses              []common.Address
 	SequenceBatchesDecoders  []SequenceBatchesDecoder
@@ -186,7 +186,7 @@ func NewClient(cfg Config) (*Client, error) {
 	}
 
 	// Create smc clients
-	zkevm, err := polygonzkevm.NewPolygonzkevm(cfg.Contracts.ZkEVMAddr, ethClient)
+	zkevm, err := polygonzkevmetrog.NewPolygonzkevmetrog(cfg.Contracts.ZkEVMAddr, ethClient)
 	if err != nil {
 		log.Errorf("error creating Polygonzkevm client (%s). Error: %w", cfg.Contracts.ZkEVMAddr.String(), err)
 		return nil, err
@@ -207,7 +207,7 @@ func NewClient(cfg Config) (*Client, error) {
 		log.Errorf("error creating NewPolygonrollupmanager client (%s). Error: %w", cfg.Contracts.RollupManagerAddr.String(), err)
 		return nil, err
 	}
-	globalExitRoot, err := polygonzkevmglobalexitroot.NewPolygonzkevmglobalexitroot(cfg.Contracts.GlobalExitRootManagerAddr, ethClient)
+	globalExitRoot, err := polygonzkevmglobalexitrootv2.NewPolygonzkevmglobalexitrootv2(cfg.Contracts.GlobalExitRootManagerAddr, ethClient)
 	if err != nil {
 		log.Errorf("error creating NewPolygonzkevmglobalexitroot client (%s). Error: %w", cfg.Contracts.GlobalExitRootManagerAddr.String(), err)
 		return nil, err
@@ -864,7 +864,7 @@ func (etherMan *Client) updateEtrogSequence(ctx context.Context, vLog types.Log,
 		SequencerAddr: updateEtrogSequence.Sequencer,
 		TxHash:        vLog.TxHash,
 		Nonce:         msg.Nonce,
-		PolygonRollupBaseEtrogBatchData: &polygonzkevm.PolygonRollupBaseEtrogBatchData{
+		PolygonRollupBaseEtrogBatchData: &polygonzkevmetrog.PolygonRollupBaseEtrogBatchData{
 			Transactions:         updateEtrogSequence.Transactions,
 			ForcedGlobalExitRoot: updateEtrogSequence.LastGlobalExitRoot,
 			ForcedTimestamp:      fullBlock.Time(),
@@ -922,7 +922,7 @@ func (etherMan *Client) initialSequenceBatches(ctx context.Context, vLog types.L
 		SequencerAddr: initialSequenceBatches.Sequencer,
 		TxHash:        vLog.TxHash,
 		Nonce:         msg.Nonce,
-		PolygonRollupBaseEtrogBatchData: &polygonzkevm.PolygonRollupBaseEtrogBatchData{
+		PolygonRollupBaseEtrogBatchData: &polygonzkevmetrog.PolygonRollupBaseEtrogBatchData{
 			Transactions:         initialSequenceBatches.Transactions,
 			ForcedGlobalExitRoot: initialSequenceBatches.LastGlobalExitRoot,
 			ForcedTimestamp:      fullBlock.Time(),
@@ -1171,7 +1171,7 @@ func (etherMan *Client) forcedBatchEvent(ctx context.Context, vLog types.Log, bl
 		txData := tx.Data()
 		// Extract coded txs.
 		// Load contract ABI
-		abi, err := abi.JSON(strings.NewReader(polygonzkevm.PolygonzkevmABI))
+		abi, err := abi.JSON(strings.NewReader(polygonzkevmetrog.PolygonzkevmetrogABI))
 		if err != nil {
 			return err
 		}
@@ -1482,7 +1482,7 @@ func (etherMan *Client) forceSequencedBatchesEvent(ctx context.Context, vLog typ
 func decodeSequencedForceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, block *types.Block, nonce uint64) ([]SequencedForceBatch, error) {
 	// Extract coded txs.
 	// Load contract ABI
-	abi, err := abi.JSON(strings.NewReader(polygonzkevm.PolygonzkevmABI))
+	abi, err := abi.JSON(strings.NewReader(polygonzkevmetrog.PolygonzkevmetrogABI))
 	if err != nil {
 		return nil, err
 	}
@@ -1499,7 +1499,7 @@ func decodeSequencedForceBatches(txData []byte, lastBatchNumber uint64, sequence
 		return nil, err
 	}
 
-	var forceBatches []polygonzkevm.PolygonRollupBaseEtrogBatchData
+	var forceBatches []polygonzkevmetrog.PolygonRollupBaseEtrogBatchData
 	bytedata, err := json.Marshal(data[0])
 	if err != nil {
 		return nil, err

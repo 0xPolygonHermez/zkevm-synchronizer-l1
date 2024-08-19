@@ -3,6 +3,7 @@ package etherman
 import (
 	"encoding/json"
 
+	"github.com/0xPolygon/cdk-contracts-tooling/contracts/banana/polygonzkevmetrog"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -27,7 +28,7 @@ func (s *SequenceBatchesDecodeElderberry) DecodeSequenceBatches(txData []byte, l
 	data := decoded.Data
 	bytedata := decoded.InputByteData
 
-	var sequences []polygonzkevm.PolygonRollupBaseEtrogBatchData
+	var sequences []polygonzkevmetrog.PolygonRollupBaseEtrogBatchData
 	err = json.Unmarshal(bytedata, &sequences)
 	if err != nil {
 		return nil, err

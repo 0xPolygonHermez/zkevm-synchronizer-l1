@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/0xPolygon/cdk-contracts-tooling/contracts/banana/polygonzkevmetrog"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -96,7 +97,7 @@ func createSequencedBatchList(sequencesValidium []polygonzkevm.PolygonValidiumEt
 	sequencedBatches := make([]SequencedBatch, len(sequencesValidium))
 	for i, info := range batchInfos {
 		bn := info.num
-		s := polygonzkevm.PolygonRollupBaseEtrogBatchData{
+		s := polygonzkevmetrog.PolygonRollupBaseEtrogBatchData{
 			Transactions:         batchData[i].Data,
 			ForcedGlobalExitRoot: sequencesValidium[i].ForcedGlobalExitRoot,
 			ForcedTimestamp:      sequencesValidium[i].ForcedTimestamp,
