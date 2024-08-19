@@ -7,6 +7,7 @@ on:
       - 'release/**'
       - 'feature/**'
       - 'fix/**'
+      - '**'
 jobs:
   unittest:
     runs-on: ubuntu-latest

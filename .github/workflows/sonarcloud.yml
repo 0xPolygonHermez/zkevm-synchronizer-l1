@@ -7,6 +7,7 @@ on:
       - update-external-dependencies
       - 'release/**'
       - 'feature/**'
+      - '**'
 jobs:
   unittest:
     runs-on: ubuntu-latest
