@@ -1,5 +1,5 @@
 
-DOCKER_COMPOSE := docker-compose -f docker-compose.yml
+DOCKER_COMPOSE := docker compose -f docker-compose.yml
 DOCKER_COMPOSE_STATE_DB := zkevm-state-db
 DOCKER_COMPOSE_POOL_DB := zkevm-pool-db
 DOCKER_COMPOSE_RPC_DB := zkevm-rpc-db
