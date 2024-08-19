@@ -131,7 +131,7 @@ func (ev *EthermanValidium) newDataAvailabilityClient(translator translator.Tran
 			dataCommitteeClient.NewFactory(),
 			translator,
 			&utils.DefaultTimeProvider{},
-			ev.Cfg.Validium.SkipRequestsDACTimeAfterError.Duration,
+			ev.Cfg.Validium.RetryOnDACErrorInterval.Duration,
 			ev.Cfg.Validium.RateLimit,
 		)
 		if err != nil {

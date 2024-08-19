@@ -22,10 +22,10 @@ type ValidiumConfig struct {
 	Enabled             bool   `mapstructure:"Enabled"`
 	TrustedSequencerURL string `mapstructure:"TrustedSequencerURL"`
 	// DataSourcePriority defines the order in which L2 batch should be retrieved: local, trusted, external
-	DataSourcePriority            []dataavailability.DataSourcePriority `mapstructure:"DataSourcePriority"`
-	Translator                    translator.Config
-	SkipRequestsDACTimeAfterError types.Duration `mapstructure:"SkipRequestsDACTimeAfterError"`
-	RateLimit                     utils.RateLimitConfig
+	DataSourcePriority      []dataavailability.DataSourcePriority `mapstructure:"DataSourcePriority"`
+	Translator              translator.Config
+	RetryOnDACErrorInterval types.Duration `mapstructure:"RetryOnDACErrorInterval"`
+	RateLimit               utils.RateLimitConfig
 }
 
 type ContractConfig struct {

@@ -32,7 +32,7 @@ const DefaultValues = `
 	[Etherman.Validium]
 		Enabled = false
 		TrustedSequencerURL = ""
-		SkipRequestsDACTimeAfterError = "1m"
+		RetryOnDACErrorInterval = "1m"
 		DataSourcePriority = ["trusted", "external"]
 		[Etherman.Validium.Translator]
 			FullMatchRules = []

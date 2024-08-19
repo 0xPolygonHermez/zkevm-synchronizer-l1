@@ -50,12 +50,12 @@ func TestDefault(t *testing.T) {
 				ZkEVMAddr:                 common.HexToAddress("0x89BA0Ed947a88fe43c22Ae305C0713eC8a7Eb361"),
 			},
 			Validium: etherman.ValidiumConfig{
-				Enabled:                       false,
-				TrustedSequencerURL:           "",
-				DataSourcePriority:            []dataavailability.DataSourcePriority{dataavailability.Trusted, dataavailability.External},
-				Translator:                    translator.Config{},
-				SkipRequestsDACTimeAfterError: types.Duration{Duration: time.Minute},
-				RateLimit:                     utils.NewRateLimitConfig(900, time.Second),
+				Enabled:                 false,
+				TrustedSequencerURL:     "",
+				DataSourcePriority:      []dataavailability.DataSourcePriority{dataavailability.Trusted, dataavailability.External},
+				Translator:              translator.Config{},
+				RetryOnDACErrorInterval: types.Duration{Duration: time.Minute},
+				RateLimit:               utils.NewRateLimitConfig(900, time.Second),
 			},
 		},
 	}

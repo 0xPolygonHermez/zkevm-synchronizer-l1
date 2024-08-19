@@ -33,22 +33,22 @@ type DataCommitteeMember struct {
 }
 
 type DataCommitteeMemberControl struct {
-	data            map[string]*DataCommitteeMemberRequestData // map [URL]
-	timeProvider    utils.TimeProvider
-	skipOnErrorTime time.Duration // If a member returns an error it's skipped this amount of time
-	rateLimit       utils.RateLimitConfig
+	data                    map[string]*DataCommitteeMemberRequestData // map [URL]
+	timeProvider            utils.TimeProvider
+	retryOnDACErrorInterval time.Duration // If a member returns an error it's skipped this amount of time
+	rateLimit               utils.RateLimitConfig
 }
 
 func NewDataCommitteeMemberControl(timeProvider utils.TimeProvider,
-	skipOnErrorTime time.Duration,
+	retryOnDACErrorInterval time.Duration,
 	rateLimit utils.RateLimitConfig,
 ) *DataCommitteeMemberControl {
-	log.Infof("DataCommitteeMemberControl: skipOnErrorTime=%s, rateLimit=%s", skipOnErrorTime, rateLimit.String())
+	log.Infof("DataCommitteeMemberControl: retryOnDACErrorInterval=%s, rateLimit=%s", retryOnDACErrorInterval, rateLimit.String())
 	return &DataCommitteeMemberControl{
-		data:            make(map[string]*DataCommitteeMemberRequestData),
-		timeProvider:    timeProvider,
-		skipOnErrorTime: skipOnErrorTime,
-		rateLimit:       rateLimit,
+		data:                    make(map[string]*DataCommitteeMemberRequestData),
+		timeProvider:            timeProvider,
+		retryOnDACErrorInterval: retryOnDACErrorInterval,
+		rateLimit:               rateLimit,
 	}
 }
 
@@ -63,7 +63,7 @@ func (d *DataCommitteeMemberControl) ErrorIfNeedToBeSkippedDueError(url string) 
 	}
 	now := d.timeProvider.Now()
 	if data.LastRequestErr != nil {
-		if now.Sub(data.LastRequestTime) < d.skipOnErrorTime {
+		if now.Sub(data.LastRequestTime) < d.retryOnDACErrorInterval {
 			return fmt.Errorf("can't use member %s because returned an error (elapsed time=%s) ", url, now.Sub(data.LastRequestTime))
 		}
 	}
@@ -142,7 +142,7 @@ func New(
 	dataCommitteeClientFactory client.Factory,
 	translator translator.Translator,
 	timeProvider utils.TimeProvider,
-	skipRequestsDACTimeAfterError time.Duration,
+	retryOnDACErrorInterval time.Duration,
 	rateLimit utils.RateLimitConfig,
 ) (*DataCommitteeBackend, error) {
 	ethClient, err := ethclient.Dial(l1RPCURL)
@@ -160,7 +160,7 @@ func New(
 		dataCommitteeClientFactory: dataCommitteeClientFactory,
 		ctx:                        context.Background(),
 		Translator:                 translator,
-		committeeMemberControl:     NewDataCommitteeMemberControl(timeProvider, skipRequestsDACTimeAfterError, rateLimit),
+		committeeMemberControl:     NewDataCommitteeMemberControl(timeProvider, retryOnDACErrorInterval, rateLimit),
 	}, nil
 }
 
