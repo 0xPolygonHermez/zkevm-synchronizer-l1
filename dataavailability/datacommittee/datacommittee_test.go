@@ -1,11 +1,16 @@
 package datacommittee
 
 import (
+	"context"
 	"math/big"
 	"testing"
+	"time"
 
+	"github.com/0xPolygon/cdk-data-availability/client"
+	mock_dataavailability "github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability/mocks"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygondatacommittee"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -14,6 +19,113 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type MockFactory struct {
+	MockClient map[string]*mock_dataavailability.DACClientMock
+}
+
+func (m *MockFactory) New(url string) client.Client {
+	return m.MockClient[url]
+}
+
+type testDataCommitteeBackend struct {
+	mockTimeProvider *utils.MockTimerProvider
+	mockFactory      *MockFactory
+	ctx              context.Context
+	skipOnErrorTime  time.Duration
+	hashData         []common.Hash
+	batchData        [][]byte
+	sut              *DataCommitteeBackend
+}
+
+func newTestDataCommiteeBackend(t *testing.T) *testDataCommitteeBackend {
+	mockTimeProvider := &utils.MockTimerProvider{}
+	skipOnErrorTime := time.Second
+	mock := &MockFactory{
+		MockClient: map[string]*mock_dataavailability.DACClientMock{
+			"url1": mock_dataavailability.NewDACClientMock(t),
+			"url2": mock_dataavailability.NewDACClientMock(t),
+		},
+	}
+	sut := DataCommitteeBackend{
+		dataCommitteeContract:      nil,
+		dataCommitteeClientFactory: mock,
+		committeeMembers: []DataCommitteeMember{
+			{
+				URL:  "url1",
+				Addr: common.HexToAddress("0x1"),
+			},
+			{
+				URL:  "url2",
+				Addr: common.HexToAddress("0x2"),
+			},
+		},
+
+		NoReloadCommitteMembersOnError: true,
+		committeeMemberControl:         NewDataCommitteeMemberControl(mockTimeProvider, skipOnErrorTime, utils.RateLimitConfig{}),
+	}
+	ctx := context.TODO()
+	batchData := [][]byte{{0, 1, 2, 3}, {4, 5, 6, 7}}
+	hashes := []common.Hash{
+		crypto.Keccak256Hash(batchData[0]),
+		crypto.Keccak256Hash(batchData[1]),
+	}
+	return &testDataCommitteeBackend{
+		mockTimeProvider: mockTimeProvider,
+		mockFactory:      mock,
+		ctx:              ctx,
+		skipOnErrorTime:  skipOnErrorTime,
+		hashData:         hashes,
+		batchData:        batchData,
+		sut:              &sut,
+	}
+}
+
+func TestDACServerNoError(t *testing.T) {
+	testData := newTestDataCommiteeBackend(t)
+	testData.mockFactory.MockClient["url1"].EXPECT().GetOffChainData(testData.ctx, testData.hashData[0]).Return(testData.batchData[0], nil)
+	testData.mockFactory.MockClient["url1"].EXPECT().GetOffChainData(testData.ctx, testData.hashData[1]).Return(testData.batchData[1], nil)
+	_, err := testData.sut.GetSequence(testData.ctx, testData.hashData, []byte{0, 1, 2, 3})
+	require.NoError(t, err)
+}
+
+func TestDACServerErrorServer1ButServer2ReturnsOk(t *testing.T) {
+	testData := newTestDataCommiteeBackend(t)
+	testData.mockFactory.MockClient["url1"].EXPECT().GetOffChainData(testData.ctx, testData.hashData[0]).Return(testData.batchData[0], assert.AnError)
+	testData.mockFactory.MockClient["url2"].EXPECT().GetOffChainData(testData.ctx, testData.hashData[0]).Return(testData.batchData[0], nil)
+	testData.mockFactory.MockClient["url2"].EXPECT().GetOffChainData(testData.ctx, testData.hashData[1]).Return(testData.batchData[1], nil)
+	_, err := testData.sut.GetSequence(testData.ctx, testData.hashData, []byte{0, 1, 2, 3})
+	require.NoError(t, err)
+}
+
+func TestDACServerErrorServer1AndServer2(t *testing.T) {
+	testData := newTestDataCommiteeBackend(t)
+	testData.mockFactory.MockClient["url1"].EXPECT().GetOffChainData(testData.ctx, testData.hashData[0]).Return(testData.batchData[0], assert.AnError)
+	testData.mockFactory.MockClient["url2"].EXPECT().GetOffChainData(testData.ctx, testData.hashData[0]).Return(testData.batchData[0], assert.AnError)
+	_, err := testData.sut.GetSequence(testData.ctx, testData.hashData, []byte{0, 1, 2, 3})
+	require.Error(t, err)
+}
+
+func TestDACServerErrorServer1AndServer2NoFastRetries(t *testing.T) {
+	testData := newTestDataCommiteeBackend(t)
+	testData.mockTimeProvider.SetNow(time.Now())
+
+	testData.mockFactory.MockClient["url1"].EXPECT().GetOffChainData(testData.ctx, testData.hashData[0]).Return(testData.batchData[0], assert.AnError).Once()
+	testData.mockFactory.MockClient["url2"].EXPECT().GetOffChainData(testData.ctx, testData.hashData[0]).Return(testData.batchData[0], assert.AnError).Once()
+	_, err := testData.sut.GetSequence(testData.ctx, testData.hashData, []byte{0, 1, 2, 3})
+	require.Error(t, err)
+	// This doesnt call to clients because < SkipOnErrorTime
+	_, err = testData.sut.GetSequence(testData.ctx, testData.hashData, []byte{0, 1, 2, 3})
+	require.Error(t, err)
+
+	// We pass the SkipOnErrorTime skip period and must request again to the DAC server
+	testData.mockTimeProvider.SetNow(time.Now().Add(testData.skipOnErrorTime))
+	testData.mockFactory.MockClient["url1"].EXPECT().GetOffChainData(testData.ctx, testData.hashData[0]).Return(testData.batchData[0], nil).Once()
+	testData.mockFactory.MockClient["url1"].EXPECT().GetOffChainData(testData.ctx, testData.hashData[1]).Return(testData.batchData[1], nil).Once()
+	_, err = testData.sut.GetSequence(testData.ctx, testData.hashData, []byte{0, 1, 2, 3})
+	require.NoError(t, err)
+
+}
 
 func TestUpdateDataCommitteeEvent(t *testing.T) {
 	// Set up testing environment

@@ -1,8 +1,10 @@
 package etherman
 
 import (
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/config/types"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/translator"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/utils"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -20,8 +22,10 @@ type ValidiumConfig struct {
 	Enabled             bool   `mapstructure:"Enabled"`
 	TrustedSequencerURL string `mapstructure:"TrustedSequencerURL"`
 	// DataSourcePriority defines the order in which L2 batch should be retrieved: local, trusted, external
-	DataSourcePriority []dataavailability.DataSourcePriority `mapstructure:"DataSourcePriority"`
-	Translator         translator.Config                     `mapstructure:"Translator"`
+	DataSourcePriority            []dataavailability.DataSourcePriority `mapstructure:"DataSourcePriority"`
+	Translator                    translator.Config
+	SkipRequestsDACTimeAfterError types.Duration `mapstructure:"SkipRequestsDACTimeAfterError"`
+	RateLimit                     utils.RateLimitConfig
 }
 
 type ContractConfig struct {

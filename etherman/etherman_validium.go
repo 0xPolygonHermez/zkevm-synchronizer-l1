@@ -12,6 +12,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/jsonrpcclient"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/translator"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -129,6 +130,9 @@ func (ev *EthermanValidium) newDataAvailabilityClient(translator translator.Tran
 			pk,
 			dataCommitteeClient.NewFactory(),
 			translator,
+			&utils.DefaultTimeProvider{},
+			ev.Cfg.Validium.SkipRequestsDACTimeAfterError.Duration,
+			ev.Cfg.Validium.RateLimit,
 		)
 		if err != nil {
 			return nil, err

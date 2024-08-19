@@ -8,12 +8,14 @@ import (
 	"math/rand"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/0xPolygon/cdk-data-availability/client"
 	daTypes "github.com/0xPolygon/cdk-data-availability/types"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygondatacommittee"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/translator"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -28,6 +30,79 @@ const translateContextName = "dataCommittee"
 type DataCommitteeMember struct {
 	Addr common.Address
 	URL  string
+}
+
+type DataCommitteeMemberControl struct {
+	data            map[string]*DataCommitteeMemberRequestData // map [URL]
+	timeProvider    utils.TimeProvider
+	skipOnErrorTime time.Duration // If a member returns an error it's skipped this amount of time
+	rateLimit       utils.RateLimitConfig
+}
+
+func NewDataCommitteeMemberControl(timeProvider utils.TimeProvider,
+	skipOnErrorTime time.Duration,
+	rateLimit utils.RateLimitConfig,
+) *DataCommitteeMemberControl {
+	log.Infof("DataCommitteeMemberControl: skipOnErrorTime=%s, rateLimit=%s", skipOnErrorTime, rateLimit.String())
+	return &DataCommitteeMemberControl{
+		data:            make(map[string]*DataCommitteeMemberRequestData),
+		timeProvider:    timeProvider,
+		skipOnErrorTime: skipOnErrorTime,
+		rateLimit:       rateLimit,
+	}
+}
+
+func (d *DataCommitteeMemberControl) RateLimit() {
+	d.data = make(map[string]*DataCommitteeMemberRequestData)
+}
+
+func (d *DataCommitteeMemberControl) ErrorIfNeedToBeSkippedDueError(url string) error {
+	data, ok := d.data[url]
+	if !ok {
+		return nil
+	}
+	now := d.timeProvider.Now()
+	if data.LastRequestErr != nil {
+		if now.Sub(data.LastRequestTime) < d.skipOnErrorTime {
+			return fmt.Errorf("can't use member %s because returned an error (elapsed time=%s) ", url, now.Sub(data.LastRequestTime))
+		}
+	}
+	return nil
+}
+
+func (d *DataCommitteeMemberControl) ApplyRateLimit(url string) {
+	data, ok := d.data[url]
+	if !ok {
+		data = &DataCommitteeMemberRequestData{
+			RateLimit: utils.NewRateLimit(d.rateLimit, d.timeProvider),
+		}
+		d.data[url] = data
+	}
+	data.RateLimit.Call(fmt.Sprintf("get batch data from %s", url), true)
+}
+
+func (d *DataCommitteeMemberControl) SetCallResult(url string, err error) {
+	data, ok := d.data[url]
+	if !ok {
+		data = &DataCommitteeMemberRequestData{
+			RateLimit: utils.NewRateLimit(d.rateLimit, d.timeProvider),
+		}
+		d.data[url] = data
+	}
+	now := d.timeProvider.Now()
+
+	data.LastRequestTime = now
+	if err != nil {
+		data.LastRequestErr = fmt.Errorf("%s", err.Error())
+	} else {
+		data.LastRequestErr = nil
+	}
+}
+
+type DataCommitteeMemberRequestData struct {
+	LastRequestTime time.Time
+	LastRequestErr  error
+	RateLimit       utils.RateLimit
 }
 
 // DataCommittee represents a specific committee
@@ -51,10 +126,12 @@ type DataCommitteeBackend struct {
 	privKey                    *ecdsa.PrivateKey
 	dataCommitteeClientFactory client.Factory
 
-	committeeMembers        []DataCommitteeMember
-	selectedCommitteeMember int
-	ctx                     context.Context
-	Translator              translator.Translator
+	committeeMembers               []DataCommitteeMember
+	committeeMemberControl         *DataCommitteeMemberControl
+	selectedCommitteeMember        int
+	ctx                            context.Context
+	Translator                     translator.Translator
+	NoReloadCommitteMembersOnError bool
 }
 
 // New creates an instance of DataCommitteeBackend
@@ -64,6 +141,9 @@ func New(
 	privKey *ecdsa.PrivateKey,
 	dataCommitteeClientFactory client.Factory,
 	translator translator.Translator,
+	timeProvider utils.TimeProvider,
+	skipRequestsDACTimeAfterError time.Duration,
+	rateLimit utils.RateLimitConfig,
 ) (*DataCommitteeBackend, error) {
 	ethClient, err := ethclient.Dial(l1RPCURL)
 	if err != nil {
@@ -80,6 +160,7 @@ func New(
 		dataCommitteeClientFactory: dataCommitteeClientFactory,
 		ctx:                        context.Background(),
 		Translator:                 translator,
+		committeeMemberControl:     NewDataCommitteeMemberControl(timeProvider, skipRequestsDACTimeAfterError, rateLimit),
 	}, nil
 }
 
@@ -106,7 +187,7 @@ func (d *DataCommitteeBackend) GetSequence(ctx context.Context, hashes []common.
 	// TODO: optimize this on the DAC side by implementing a multi batch retrieve api
 	var batchData [][]byte
 	for _, h := range hashes {
-		data, err := d.GetBatchL2Data(h)
+		data, err := d.GetBatchL2Data(ctx, h)
 		if err != nil {
 			return nil, err
 		}
@@ -116,14 +197,21 @@ func (d *DataCommitteeBackend) GetSequence(ctx context.Context, hashes []common.
 }
 
 // GetBatchL2Data returns the data from the DAC. It checks that it matches with the expected hash
-func (d *DataCommitteeBackend) GetBatchL2Data(hash common.Hash) ([]byte, error) {
+func (d *DataCommitteeBackend) GetBatchL2Data(ctx context.Context, hash common.Hash) ([]byte, error) {
+	var err error
+	var data []byte
 	intialMember := d.selectedCommitteeMember
 	found := false
 	for !found && intialMember != -1 {
 		member := d.committeeMembers[d.selectedCommitteeMember]
-		log.Debugf("trying to get data from %s at %s", member.Addr.Hex(), member.URL)
-		c := d.dataCommitteeClientFactory.New(member.URL)
-		data, err := c.GetOffChainData(d.ctx, hash)
+		err = d.committeeMemberControl.ErrorIfNeedToBeSkippedDueError(member.URL)
+		if err == nil {
+			d.committeeMemberControl.ApplyRateLimit(member.URL)
+			log.Debugf("trying to get data from %s at %s", member.Addr.Hex(), member.URL)
+			c := d.dataCommitteeClientFactory.New(member.URL)
+			data, err = c.GetOffChainData(ctx, hash)
+			d.committeeMemberControl.SetCallResult(member.URL, err)
+		}
 		if err != nil {
 			log.Warnf(
 				"error getting data from DAC node %s at %s: %s",
@@ -144,6 +232,7 @@ func (d *DataCommitteeBackend) GetBatchL2Data(hash common.Hash) ([]byte, error) 
 				"error getting data from DAC node %s at %s: %s",
 				member.Addr.Hex(), member.URL, unexpectedHash,
 			)
+			d.committeeMemberControl.SetCallResult(member.URL, err)
 			d.selectedCommitteeMember = (d.selectedCommitteeMember + 1) % len(d.committeeMembers)
 			if d.selectedCommitteeMember == intialMember {
 				break
@@ -153,8 +242,10 @@ func (d *DataCommitteeBackend) GetBatchL2Data(hash common.Hash) ([]byte, error) 
 		log.Debugf("got data from %s at %s: dataHash: %s", member.Addr.Hex(), member.URL, actualTransactionsHash.Hex())
 		return data, nil
 	}
-	if err := d.Init(); err != nil {
-		return nil, fmt.Errorf("error loading data committee: %s", err)
+	if !d.NoReloadCommitteMembersOnError {
+		if err := d.Init(); err != nil {
+			return nil, fmt.Errorf("error loading data committee: %s", err)
+		}
 	}
 	return nil, fmt.Errorf("couldn't get the data from any committee member")
 }

@@ -23,7 +23,6 @@ const (
 type DataSourcePriority string
 
 const (
-
 	// Trusted indicates data stored in the Trusted Sequencer
 	Trusted DataSourcePriority = "trusted"
 	// External indicates data stored in the Data Availability layer
