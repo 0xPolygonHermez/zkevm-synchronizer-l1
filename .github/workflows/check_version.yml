@@ -5,7 +5,9 @@ on:
       - 'release/**'
       - 'feature/**'
       - 'fix/**'
-    pull_request:
+      - '**'
+  pull_request:
+
 jobs:
     check_version:
         runs-on: ubuntu-latest

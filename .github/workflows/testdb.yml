@@ -9,6 +9,7 @@ on:
       - 'release/**'
       - 'feature/**'
       - 'fix/**'
+      - '**'
 jobs:
   test_db:
     runs-on: ubuntu-latest
