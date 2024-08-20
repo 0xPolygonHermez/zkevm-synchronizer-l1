@@ -75,6 +75,13 @@ func (s *SequencedBatchMetadata) String() string {
 	return fmt.Sprintf("SourceBatchData: %s RollupFlavor: %s CallFunctionName: %s ForkName: %s", s.SourceBatchData, s.RollupFlavor, s.CallFunctionName, s.ForkName)
 }
 
+type BananaSequenceData struct {
+	CounterL1InfoRoot         uint32
+	MaxSequenceTimestamp      uint64
+	ExpectedFinalAccInputHash common.Hash
+	DataAvailabilityMsg       []byte
+}
+
 // SequencedBatch represents virtual batch
 type SequencedBatch struct {
 	BatchNumber   uint64
@@ -89,7 +96,8 @@ type SequencedBatch struct {
 	*polygonzkevm.PolygonRollupBaseEtrogBatchData
 	// Struct used in Elderberry
 	*SequencedBatchElderberryData
-	Metadata *SequencedBatchMetadata
+	BananaData BananaSequenceData
+	Metadata   *SequencedBatchMetadata
 }
 
 func (s *SequencedBatch) String() string {

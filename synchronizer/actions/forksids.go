@@ -27,6 +27,9 @@ var (
 	// ForksIdAll support all forkIds
 	ForksIdAll = []ForkIdType{WildcardForkId}
 
+	// ForksIdOnlyBanana support only banana forkId
+	ForksIdOnlyBanana = []ForkIdType{ForkIDBanana}
+
 	// ForksIdOnlyEtrogAndElderberry support ETROG and ELDERBERRY
 	ForksIdOnlyEtrogAndElderberry = []ForkIdType{ForkIDEtrog, ForkIDElderberry, ForkID9, ForkID10, ForkID11}
 

@@ -7,5 +7,5 @@ type ConfigRuleFullMatch struct {
 }
 
 type Config struct {
-	FullMatchRules []ConfigRuleFullMatch `mapstructure:"UniversalFullRules"`
+	FullMatchRules []ConfigRuleFullMatch `mapstructure:"FullMatchRules"`
 }

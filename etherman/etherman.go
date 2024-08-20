@@ -262,7 +262,13 @@ func NewClient(cfg Config) (*Client, error) {
 			log.Errorf("error creating NewDecodeSequenceBatchesElderberryValidium client. Error: %w", err)
 			return nil, err
 		}
-		batchDecoders = append(batchDecoders, decodeEtrogValidium, decodeElderberryValidium)
+
+		decodeBananaValidium, err := NewSequenceBatchesDecoderBananaValidium(validium.DataAvailabilityClient)
+		if err != nil {
+			log.Errorf("error creating NewSequenceBatchesDecoderBananaValidium client. Error: %w", err)
+			return nil, err
+		}
+		batchDecoders = append(batchDecoders, decodeEtrogValidium, decodeElderberryValidium, decodeBananaValidium)
 	}
 	client := &Client{
 		EthClient: ethClient,
