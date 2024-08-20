@@ -35,7 +35,7 @@ const DefaultValues = `
 		RetryOnDACErrorInterval = "1m"
 		DataSourcePriority = ["trusted", "external"]
 		[Etherman.Validium.Translator]
-			FullMatchRules = [{Old="http://zkevm-dac-001:8484", New="http://127.0.0.1:32794"}]
+			FullMatchRules = []
 		[Etherman.Validium.RateLimit]
 			NumRequests = 900
 			Interval = "1s"

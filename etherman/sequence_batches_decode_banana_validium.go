@@ -76,12 +76,14 @@ func (s *SequenceBatchesDecoderBananaValidium) DecodeSequenceBatches(txData []by
 	expectedFinalAccInputHash := common.Hash(expectedFinalAccInputHashraw)
 	coinbase := data[4].(common.Address)
 	dataAvailabilityMsg := data[5].([]byte)
-	bananaData := BananaSequenceData{
-		CounterL1InfoRoot:         counterL1InfoRoot,
-		MaxSequenceTimestamp:      maxSequenceTimestamp,
-		ExpectedFinalAccInputHash: expectedFinalAccInputHash,
-		DataAvailabilityMsg:       dataAvailabilityMsg,
-	}
+	/*
+		bananaData := BananaSequenceData{
+			CounterL1InfoRoot:         counterL1InfoRoot,
+			MaxSequenceTimestamp:      maxSequenceTimestamp,
+			ExpectedFinalAccInputHash: expectedFinalAccInputHash,
+			DataAvailabilityMsg:       dataAvailabilityMsg,
+		}
+	*/
 	batchInfos := createBatchInfoBanana(sequencesValidium, lastBatchNumber)
 
 	batchData, err := retrieveBatchData(s.da, batchInfos, dataAvailabilityMsg)
