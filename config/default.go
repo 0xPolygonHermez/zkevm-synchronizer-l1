@@ -38,5 +38,5 @@ const DefaultValues = `
 			FullMatchRules = []
 		[Etherman.Validium.RateLimit]
 			NumRequests = 900
-			Period = "1s"
+			Interval = "1s"
 `

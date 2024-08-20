@@ -10,22 +10,22 @@ import (
 
 type RateLimitConfig struct {
 	NumRequests int
-	Period      types.Duration
+	Interval    types.Duration
 }
 
 func NewRateLimitConfig(numRequests int, period time.Duration) RateLimitConfig {
 	return RateLimitConfig{
 		NumRequests: numRequests,
-		Period:      types.Duration{Duration: period},
+		Interval:    types.Duration{Duration: period},
 	}
 }
 
 func (r RateLimitConfig) String() string {
-	return fmt.Sprintf("RateLimitConfig{NumRequests: %d, Period: %s}", r.NumRequests, r.Period)
+	return fmt.Sprintf("RateLimitConfig{NumRequests: %d, Period: %s}", r.NumRequests, r.Interval)
 }
 
 func (r RateLimitConfig) Enabled() bool {
-	return r.NumRequests > 0 && r.Period.Duration > 0
+	return r.NumRequests > 0 && r.Interval.Duration > 0
 }
 
 type RateLimit struct {
@@ -52,7 +52,7 @@ func (r *RateLimit) Call(msg string, allowToSleep bool) *time.Duration {
 	now := r.timeProvider.Now()
 	r.cleanOutdatedCalls(now)
 	if len(r.bucket) >= r.cfg.NumRequests {
-		sleepTime := r.cfg.Period.Duration - r.timeProvider.Now().Sub(r.bucket[0])
+		sleepTime := r.cfg.Interval.Duration - r.timeProvider.Now().Sub(r.bucket[0])
 		if allowToSleep {
 			if msg != "" {
 				log.Debugf("Rate limit reached, sleeping for %s for %s", sleepTime, msg)
@@ -71,7 +71,7 @@ func (r *RateLimit) Call(msg string, allowToSleep bool) *time.Duration {
 func (r *RateLimit) cleanOutdatedCalls(now time.Time) {
 	for i, call := range r.bucket {
 		diff := now.Sub(call)
-		if diff < r.cfg.Period.Duration {
+		if diff < r.cfg.Interval.Duration {
 			r.bucket = r.bucket[i:]
 			return
 		}
