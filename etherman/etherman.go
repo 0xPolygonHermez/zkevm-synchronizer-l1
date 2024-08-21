@@ -792,7 +792,7 @@ func (etherMan *Client) processEvent(ctx context.Context, vLog types.Log, blocks
 		log.Debug("InitL1InfoRootMap event detected. Ignoring...")
 		return nil
 	}
-	log.Warnf("Event not registered: %+v", vLog)
+	log.Infof("Event not registered: %+v", vLog)
 	return nil
 }
 
