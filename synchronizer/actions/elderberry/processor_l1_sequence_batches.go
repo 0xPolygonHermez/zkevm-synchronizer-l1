@@ -34,7 +34,7 @@ func NewProcessorL1SequenceBatchesElderberry(previousProcessor PreviousProcessor
 	return &ProcessorL1SequenceBatchesElderberry{
 		ProcessorBase: actions.ProcessorBase[ProcessorL1SequenceBatchesElderberry]{
 			SupportedEvent:    []etherman.EventOrder{etherman.SequenceBatchesOrder},
-			SupportedForkdIds: &actions.ForksIdElderberryAndBanana},
+			SupportedForkdIds: &actions.ForksIdOnlyElderberry},
 		previousProcessor: previousProcessor,
 	}
 }

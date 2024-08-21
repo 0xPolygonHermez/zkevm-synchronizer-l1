@@ -242,7 +242,13 @@ func NewClient(cfg Config) (*Client, error) {
 		return nil, err
 	}
 
-	batchDecoders := []SequenceBatchesDecoder{decodeEtrog, decodeElderberry}
+	decodeBanana, err := NewDecodeSequenceBatchesBanana()
+	if err != nil {
+		log.Errorf("error creating NewDecodeSequenceBatchesBanana client. Error: %w", err)
+		return nil, err
+	}
+
+	batchDecoders := []SequenceBatchesDecoder{decodeEtrog, decodeElderberry, decodeBanana}
 	if cfg.Validium.Enabled {
 		log.Infof("Validium is enabled")
 		validium, err = NewEthermanValidium(cfg, ethClient)
@@ -262,7 +268,13 @@ func NewClient(cfg Config) (*Client, error) {
 			log.Errorf("error creating NewDecodeSequenceBatchesElderberryValidium client. Error: %w", err)
 			return nil, err
 		}
-		batchDecoders = append(batchDecoders, decodeEtrogValidium, decodeElderberryValidium)
+
+		decodeBananaValidium, err := NewSequenceBatchesDecoderBananaValidium(validium.DataAvailabilityClient)
+		if err != nil {
+			log.Errorf("error creating NewSequenceBatchesDecoderBananaValidium client. Error: %w", err)
+			return nil, err
+		}
+		batchDecoders = append(batchDecoders, decodeEtrogValidium, decodeElderberryValidium, decodeBananaValidium)
 	}
 	client := &Client{
 		EthClient: ethClient,
@@ -780,7 +792,7 @@ func (etherMan *Client) processEvent(ctx context.Context, vLog types.Log, blocks
 		log.Debug("InitL1InfoRootMap event detected. Ignoring...")
 		return nil
 	}
-	log.Warnf("Event not registered: %+v", vLog)
+	log.Infof("Event not registered: %+v", vLog)
 	return nil
 }
 
@@ -864,7 +876,7 @@ func (etherMan *Client) updateEtrogSequence(ctx context.Context, vLog types.Log,
 		SequencerAddr: updateEtrogSequence.Sequencer,
 		TxHash:        vLog.TxHash,
 		Nonce:         msg.Nonce,
-		PolygonRollupBaseEtrogBatchData: &polygonzkevm.PolygonRollupBaseEtrogBatchData{
+		EtrogSequenceData: &EtrogSequenceData{
 			Transactions:         updateEtrogSequence.Transactions,
 			ForcedGlobalExitRoot: updateEtrogSequence.LastGlobalExitRoot,
 			ForcedTimestamp:      fullBlock.Time(),
@@ -922,7 +934,7 @@ func (etherMan *Client) initialSequenceBatches(ctx context.Context, vLog types.L
 		SequencerAddr: initialSequenceBatches.Sequencer,
 		TxHash:        vLog.TxHash,
 		Nonce:         msg.Nonce,
-		PolygonRollupBaseEtrogBatchData: &polygonzkevm.PolygonRollupBaseEtrogBatchData{
+		EtrogSequenceData: &EtrogSequenceData{
 			Transactions:         initialSequenceBatches.Transactions,
 			ForcedGlobalExitRoot: initialSequenceBatches.LastGlobalExitRoot,
 			ForcedTimestamp:      fullBlock.Time(),
@@ -1513,12 +1525,17 @@ func decodeSequencedForceBatches(txData []byte, lastBatchNumber uint64, sequence
 	for i, force := range forceBatches {
 		bn := lastBatchNumber - uint64(len(forceBatches)-(i+1))
 		sequencedForcedBatches[i] = SequencedForceBatch{
-			BatchNumber:                     bn,
-			Coinbase:                        sequencer,
-			TxHash:                          txHash,
-			Timestamp:                       time.Unix(int64(block.Time()), 0),
-			Nonce:                           nonce,
-			PolygonRollupBaseEtrogBatchData: force,
+			BatchNumber: bn,
+			Coinbase:    sequencer,
+			TxHash:      txHash,
+			Timestamp:   time.Unix(int64(block.Time()), 0),
+			Nonce:       nonce,
+			EtrogSequenceData: EtrogSequenceData{
+				Transactions:         force.Transactions,
+				ForcedGlobalExitRoot: force.ForcedGlobalExitRoot,
+				ForcedTimestamp:      force.ForcedTimestamp,
+				ForcedBlockHashL1:    force.ForcedBlockHashL1,
+			},
 		}
 	}
 	return sequencedForcedBatches, nil

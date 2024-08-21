@@ -9,6 +9,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/model"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/banana"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/elderberry"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/etrog"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/incaberry"
@@ -142,6 +143,7 @@ func newL1EventProcessor(state syncinterfaces.StateInterface) *processor_manager
 	builder.Register(etrog.NewProcessorL1InitialSequenceBatches(state))
 	builder.Register(elderberry.NewProcessorL1SequenceBatchesElderberry(etrogSequenceBatchesProcessor))
 	builder.Register(etrog.NewProcessorL1UpdateEtrogSequence(state))
+	builder.Register(banana.NewProcessorL1SequenceBatchesBanana(state))
 	return builder.Build()
 }
 

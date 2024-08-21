@@ -60,6 +60,8 @@ func TestLoadConfigCommentedUnknownFieldOk(t *testing.T) {
 }
 func TestLoadConfigValdiumTranslatorOk(t *testing.T) {
 	fileExtension := "toml"
-	_, err := config.LoadFileFromString(string(ConfigFileValidiumTranslatorTest), fileExtension)
+	cfg, err := config.LoadFileFromString(string(ConfigFileValidiumTranslatorTest), fileExtension)
 	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	require.Equal(t, 3, len(cfg.Etherman.Validium.Translator.FullMatchRules))
 }

@@ -53,7 +53,7 @@ func TestDefault(t *testing.T) {
 				Enabled:                 false,
 				TrustedSequencerURL:     "",
 				DataSourcePriority:      []dataavailability.DataSourcePriority{dataavailability.Trusted, dataavailability.External},
-				Translator:              translator.Config{},
+				Translator:              translator.Config{FullMatchRules: []translator.ConfigRuleFullMatch{}},
 				RetryOnDACErrorInterval: types.Duration{Duration: time.Minute},
 				RateLimit:               utils.NewRateLimitConfig(900, time.Second),
 			},
