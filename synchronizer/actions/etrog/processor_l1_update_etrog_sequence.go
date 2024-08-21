@@ -37,7 +37,7 @@ func (p *ProcessorL1UpdateEtrogSequence) Process(ctx context.Context, forkId For
 }
 
 func (p *ProcessorL1UpdateEtrogSequence) processUpdateEtrogSequence(ctx context.Context, forkId ForkIdType, order etherman.Order, updateEtrogSequence etherman.UpdateEtrogSequence, blockNumber uint64, l1BlockTimestamp time.Time, dbTx stateTxType) error {
-	l1inforoot := common.Hash(updateEtrogSequence.PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot)
+	l1inforoot := common.Hash(updateEtrogSequence.EtrogSequenceData.ForcedGlobalExitRoot)
 	seq := SequenceOfBatches{}
 	seq.Sequence = *entities.NewSequencedBatches(
 		updateEtrogSequence.BatchNumber, updateEtrogSequence.BatchNumber,
@@ -45,11 +45,11 @@ func (p *ProcessorL1UpdateEtrogSequence) processUpdateEtrogSequence(ctx context.
 		l1BlockTimestamp, time.Now(),
 		l1inforoot, string(order.Name))
 	ethSeqBatch := etherman.SequencedBatch{
-		BatchNumber:                     updateEtrogSequence.BatchNumber,
-		L1InfoRoot:                      &l1inforoot,
-		SequencerAddr:                   updateEtrogSequence.SequencerAddr,
-		TxHash:                          updateEtrogSequence.TxHash,
-		PolygonRollupBaseEtrogBatchData: updateEtrogSequence.PolygonRollupBaseEtrogBatchData,
+		BatchNumber:       updateEtrogSequence.BatchNumber,
+		L1InfoRoot:        &l1inforoot,
+		SequencerAddr:     updateEtrogSequence.SequencerAddr,
+		TxHash:            updateEtrogSequence.TxHash,
+		EtrogSequenceData: updateEtrogSequence.EtrogSequenceData,
 	}
 
 	batch := entities.NewVirtualBatchFromL1(blockNumber, seq.Sequence.FromBatchNumber, uint64(forkId), ethSeqBatch)

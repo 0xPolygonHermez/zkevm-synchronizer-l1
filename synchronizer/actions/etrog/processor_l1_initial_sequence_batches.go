@@ -46,8 +46,8 @@ func (p *ProcessorL1InitialSequenceBatches) ProcessSequenceBatches(ctx context.C
 		return fmt.Errorf("invalid initial batch number, expected 1 , received %d", sequencedBatches[0].BatchNumber)
 	}
 
-	l1inforoot := sequencedBatches[0].PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot
-	l1BlockTimestamp := time.Unix(int64(sequencedBatches[0].PolygonRollupBaseEtrogBatchData.ForcedTimestamp), 0)
+	l1inforoot := sequencedBatches[0].EtrogSequenceData.ForcedGlobalExitRoot
+	l1BlockTimestamp := time.Unix(int64(sequencedBatches[0].EtrogSequenceData.ForcedTimestamp), 0)
 	seq := SequenceOfBatches{}
 
 	seq.Sequence = *entities.NewSequencedBatches(

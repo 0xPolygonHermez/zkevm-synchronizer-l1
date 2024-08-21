@@ -1,10 +1,12 @@
 package etherman
 
 import (
-	"fmt"
+	"encoding/json"
 
 	"github.com/0xPolygon/cdk-contracts-tooling/contracts/banana/polygonvalidiumetrog"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 var (
@@ -27,67 +29,85 @@ var (
 		sequenceBatches((bytes,bytes32,uint64,bytes32)[],uint32,uint64,bytes32,address)
 
 	*/
-	methodIDSequenceBatchesBanana     = []byte{0xdb, 0x5b, 0x0e, 0xd7} // 165e8a8d sequenceBatches((bytes,bytes32,uint64,bytes32)[],uint32,uint64,bytes32,address)
+	methodIDSequenceBatchesBanana     = crypto.Keccak256Hash([]byte("sequenceBatches((bytes,bytes32,uint64,bytes32)[],uint32,uint64,bytes32,address)")).Bytes()[:4] // b910e0f9
 	methodIDSequenceBatchesBananaName = "sequenceBatchesBanana"
 )
 
-type DecodeSequenceBatchesDecodeBanana struct {
+type DecodeSequenceBatchesBanana struct {
 	SequenceBatchesBase
 }
 
-func NewDecodeSequenceBatchesDecodeBanana() (*DecodeSequenceBatchesDecodeBanana, error) {
+func NewDecodeSequenceBatchesBanana() (*DecodeSequenceBatchesBanana, error) {
 	base, err := NewSequenceBatchesBase(methodIDSequenceBatchesBanana, methodIDSequenceBatchesBananaName, polygonvalidiumetrog.PolygonvalidiumetrogABI)
 	if err != nil {
 		return nil, err
 	}
-	return &DecodeSequenceBatchesDecodeBanana{*base}, nil
+	return &DecodeSequenceBatchesBanana{*base}, nil
 }
 
-func (s *DecodeSequenceBatchesDecodeBanana) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
-	//decoded, err := decodeSequenceCallData(s.SmcABI(), txData)
-	_, err := decodeSequenceCallData(s.SmcABI(), txData)
+func (s *DecodeSequenceBatchesBanana) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
+	decoded, err := decodeSequenceCallData(s.SmcABI(), txData)
 	if err != nil {
 		return nil, err
 	}
-	return nil, fmt.Errorf("not implemented")
-	/*
-		data := decoded.Data
-		bytedata := decoded.InputByteData
-		var sequences []polygonvalidiumetrog.PolygonRollupBaseEtrogBatchData
-		err = json.Unmarshal(bytedata, &sequences)
-		if err != nil {
-			return nil, err
-		}
-		maxSequenceTimestamp := data[1].(uint64)
-		initSequencedBatchNumber := data[2].(uint64)
-		coinbase := (data[3]).(common.Address)
-		sequencedBatches := make([]SequencedBatch, len(sequences))
+	data := decoded.Data
+	bytedata := decoded.InputByteData
+	var sequences []polygonvalidiumetrog.PolygonRollupBaseEtrogBatchData
+	err = json.Unmarshal(bytedata, &sequences)
+	if err != nil {
+		return nil, err
+	}
 
-		SequencedBatchMetadata := &SequencedBatchMetadata{
-			CallFunctionName: s.NameMethodID(txData[:4]),
-			RollupFlavor:     RollupFlavorZkEVM,
-			ForkName:         "elderberry",
-		}
+	counterL1InfoRoot := data[1].(uint32)
+	maxSequenceTimestamp := data[2].(uint64)
+	//expectedFinalAccInputHash := data[3].(common.Hash)
+	expectedFinalAccInputHashraw := data[3].([common.HashLength]byte)
+	expectedFinalAccInputHash := common.Hash(expectedFinalAccInputHashraw)
+	coinbase := data[4].(common.Address)
 
-		for i, seq := range sequences {
-			elderberry := SequencedBatchElderberryData{
-				MaxSequenceTimestamp:     maxSequenceTimestamp,
-				InitSequencedBatchNumber: initSequencedBatchNumber,
-			}
-			bn := lastBatchNumber - uint64(len(sequences)-(i+1))
-			s := seq
-			sequencedBatches[i] = SequencedBatch{
-				BatchNumber:                     bn,
-				L1InfoRoot:                      &l1InfoRoot,
-				SequencerAddr:                   sequencer,
-				TxHash:                          txHash,
-				Nonce:                           nonce,
-				Coinbase:                        coinbase,
-				PolygonRollupBaseEtrogBatchData: &s,
-				SequencedBatchElderberryData:    &elderberry,
-				Metadata:                        SequencedBatchMetadata,
-			}
+	bananaData := BananaSequenceData{
+		CounterL1InfoRoot:         counterL1InfoRoot,
+		MaxSequenceTimestamp:      maxSequenceTimestamp,
+		ExpectedFinalAccInputHash: expectedFinalAccInputHash,
+		DataAvailabilityMsg:       []byte{},
+	}
+	SequencedBatchMetadata := &SequencedBatchMetadata{
+		CallFunctionName: s.NameMethodID(txData[:4]),
+		ForkName:         "banana",
+		RollupFlavor:     RollupFlavorZkEVM,
+	}
+
+	log.Debugf("Decoded %s: event(lastBatchNumber:%d, sequencer:%s, txHash:%s, nonce:%d, l1InfoRoot:%s)  bananaData:%s",
+		methodIDSequenceBatchesBananaName,
+		lastBatchNumber, sequencer.String(), txHash.String(), nonce, l1InfoRoot.String(),
+		bananaData.String())
+	log.Debugf("%s batchNum: %d Data:%s", methodIDSequenceBatchesBananaName, lastBatchNumber+1, common.Bytes2Hex(txData))
+	for i, d := range sequences {
+		log.Debugf("%s    BatchData[%d]: %s", methodIDSequenceBatchesBananaName, i, common.Bytes2Hex(d.Transactions))
+	}
+	sequencedBatches := make([]SequencedBatch, len(sequences))
+
+	for i, seq := range sequences {
+
+		bn := lastBatchNumber - uint64(len(sequences)-(i+1))
+		s := EtrogSequenceData{
+			Transactions:         seq.Transactions,
+			ForcedGlobalExitRoot: seq.ForcedGlobalExitRoot,
+			ForcedTimestamp:      seq.ForcedTimestamp,
+			ForcedBlockHashL1:    seq.ForcedBlockHashL1,
 		}
-		return sequencedBatches, nil
-	*/
+		sequencedBatches[i] = SequencedBatch{
+			BatchNumber:       bn,
+			L1InfoRoot:        &l1InfoRoot,
+			SequencerAddr:     sequencer,
+			TxHash:            txHash,
+			Nonce:             nonce,
+			Coinbase:          coinbase,
+			EtrogSequenceData: &s,
+			BananaData:        &bananaData,
+			Metadata:          SequencedBatchMetadata,
+		}
+	}
+	return sequencedBatches, nil
+
 }

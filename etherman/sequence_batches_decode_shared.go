@@ -96,7 +96,7 @@ func createSequencedBatchList(sequencesValidium []polygonzkevm.PolygonValidiumEt
 	sequencedBatches := make([]SequencedBatch, len(sequencesValidium))
 	for i, info := range batchInfos {
 		bn := info.num
-		s := polygonzkevm.PolygonRollupBaseEtrogBatchData{
+		s := EtrogSequenceData{
 			Transactions:         batchData[i].Data,
 			ForcedGlobalExitRoot: sequencesValidium[i].ForcedGlobalExitRoot,
 			ForcedTimestamp:      sequencesValidium[i].ForcedTimestamp,
@@ -113,14 +113,14 @@ func createSequencedBatchList(sequencesValidium []polygonzkevm.PolygonValidiumEt
 			}
 		}
 		batch := SequencedBatch{
-			BatchNumber:                     bn,
-			L1InfoRoot:                      &l1InfoRoot,
-			SequencerAddr:                   sequencer,
-			TxHash:                          txHash,
-			Nonce:                           nonce,
-			Coinbase:                        coinbase,
-			PolygonRollupBaseEtrogBatchData: &s,
-			Metadata:                        metaData,
+			BatchNumber:       bn,
+			L1InfoRoot:        &l1InfoRoot,
+			SequencerAddr:     sequencer,
+			TxHash:            txHash,
+			Nonce:             nonce,
+			Coinbase:          coinbase,
+			EtrogSequenceData: &s,
+			Metadata:          metaData,
 		}
 
 		elderberry := &SequencedBatchElderberryData{

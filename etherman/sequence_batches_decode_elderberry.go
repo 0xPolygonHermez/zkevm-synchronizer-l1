@@ -49,17 +49,22 @@ func (s *SequenceBatchesDecodeElderberry) DecodeSequenceBatches(txData []byte, l
 			InitSequencedBatchNumber: initSequencedBatchNumber,
 		}
 		bn := lastBatchNumber - uint64(len(sequences)-(i+1))
-		s := seq
+		s := EtrogSequenceData{
+			Transactions:         seq.Transactions,
+			ForcedGlobalExitRoot: seq.ForcedGlobalExitRoot,
+			ForcedTimestamp:      seq.ForcedTimestamp,
+			ForcedBlockHashL1:    seq.ForcedBlockHashL1,
+		}
 		sequencedBatches[i] = SequencedBatch{
-			BatchNumber:                     bn,
-			L1InfoRoot:                      &l1InfoRoot,
-			SequencerAddr:                   sequencer,
-			TxHash:                          txHash,
-			Nonce:                           nonce,
-			Coinbase:                        coinbase,
-			PolygonRollupBaseEtrogBatchData: &s,
-			SequencedBatchElderberryData:    &elderberry,
-			Metadata:                        SequencedBatchMetadata,
+			BatchNumber:                  bn,
+			L1InfoRoot:                   &l1InfoRoot,
+			SequencerAddr:                sequencer,
+			TxHash:                       txHash,
+			Nonce:                        nonce,
+			Coinbase:                     coinbase,
+			EtrogSequenceData:            &s,
+			SequencedBatchElderberryData: &elderberry,
+			Metadata:                     SequencedBatchMetadata,
 		}
 	}
 	return sequencedBatches, nil

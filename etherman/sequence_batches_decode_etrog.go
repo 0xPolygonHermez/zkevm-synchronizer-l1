@@ -43,16 +43,21 @@ func (s *SequenceBatchesDecodeEtrog) DecodeSequenceBatches(txData []byte, lastBa
 	sequencedBatches := make([]SequencedBatch, len(sequences))
 	for i, seq := range sequences {
 		bn := lastBatchNumber - uint64(len(sequences)-(i+1))
-		s := seq
+		s := EtrogSequenceData{
+			Transactions:         seq.Transactions,
+			ForcedGlobalExitRoot: seq.ForcedGlobalExitRoot,
+			ForcedTimestamp:      seq.ForcedTimestamp,
+			ForcedBlockHashL1:    seq.ForcedBlockHashL1,
+		}
 		sequencedBatches[i] = SequencedBatch{
-			BatchNumber:                     bn,
-			L1InfoRoot:                      &l1InfoRoot,
-			SequencerAddr:                   sequencer,
-			TxHash:                          txHash,
-			Nonce:                           nonce,
-			Coinbase:                        coinbase,
-			PolygonRollupBaseEtrogBatchData: &s,
-			Metadata:                        SequencedBatchMetadata,
+			BatchNumber:       bn,
+			L1InfoRoot:        &l1InfoRoot,
+			SequencerAddr:     sequencer,
+			TxHash:            txHash,
+			Nonce:             nonce,
+			Coinbase:          coinbase,
+			EtrogSequenceData: &s,
+			Metadata:          SequencedBatchMetadata,
 		}
 	}
 	return sequencedBatches, nil
