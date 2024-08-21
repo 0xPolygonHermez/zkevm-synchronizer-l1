@@ -24,7 +24,7 @@ PolygonZkEVMBatchData: nil
 ___EtrogSequenceData:ForcedTimestamp: 0
 ___EtrogSequenceData:ForcedGlobalExitRoot: 0000000000000000000000000000000000000000000000000000000000000000
 ___EtrogSequenceData:ForcedBlockHashL1: 0000000000000000000000000000000000000000000000000000000000000000
-___EtrogSequenceData:Transactions: 01020304
+___EtrogSequenceData:Transactions: 0b0000008b000000000b00000006000000000b0000000600000000
 SequencedBatchElderberryData: nil
 BananaData: CounterL1InfoRoot: 1 MaxSequenceTimestamp: 1724136334 ExpectedFinalAccInputHash: 0x443448cabd1b7808f64eb3f2737180b7ef27a0a28e19afebb2981714a6492c9b DataAvailabilityMsg(85): f10249e353edebbaa84755e6216d6bf44a1be5e5b140ed6cd94f56dcd7611ad2202708675673a014fcea40c1519ae920ed7652e23e43bf837e11fc5c403539fd1b5951f5b2604c9b42e478d5e2b2437f44073ef9a6
 Metadata: SourceBatchData: DA/External RollupFlavor: Validium CallFunctionName: sequenceBatchesBananaValidium ForkName: banana
@@ -46,17 +46,24 @@ func TestSequencedBatchBananaValidiumDecode(t *testing.T) {
 	require.NotNil(t, sut)
 
 	txData, err := hex.DecodeString(txDataBananaValidiumHex)
+	require.NoError(t, err)
+	batchData := make([][]byte, len(batchDataBananaValidiumHex))
+	for i, v := range batchDataBananaValidiumHex {
+		batchData[i], err = hex.DecodeString(v)
+		require.NoError(t, err)
+	}
+
 	resultGetBatchL2Data := []dataavailability.BatchL2Data{
 		{
-			Data:   []byte{0x01, 0x02, 0x03, 0x04},
+			Data:   batchData[0],
 			Source: dataavailability.External,
 		},
 		{
-			Data:   []byte{0x01, 0x02, 0x03, 0x04},
+			Data:   batchData[0],
 			Source: dataavailability.External,
 		},
 		{
-			Data:   []byte{0x01, 0x02, 0x03, 0x04},
+			Data:   batchData[0],
 			Source: dataavailability.External,
 		},
 	}
@@ -74,5 +81,4 @@ func TestSequencedBatchBananaValidiumDecode(t *testing.T) {
 	res0 := res[0].String()
 	log.Debug(res0)
 	require.Equal(t, expectedSeqBananaValidium, res0)
-
 }
