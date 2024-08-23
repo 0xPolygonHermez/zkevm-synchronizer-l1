@@ -45,6 +45,8 @@ func (p *ProcessorL1InfoTreeUpdate) Process(ctx context.Context, forkId ForkIdTy
 		log.Errorf("error storing the l1InfoTree(etrog). BlockNumber: %d, error: %v", l1Block.BlockNumber, err)
 		return err
 	}
-	log.Infof("L1InfoTree(etrog) stored. BlockNumber: %d,GER:%s L1InfoTreeIndex: %d L1InfoRoot:%s", l1Block.BlockNumber, entry.GlobalExitRoot, entry.L1InfoTreeIndex, entry.L1InfoTreeRoot)
+	log.Infof("L1InfoTree(etrog) stored. BlockNumber: %d,GER:%s L1InfoTreeIndex: %d L1InfoRoot:%s event_data:%s",
+		l1Block.BlockNumber, entry.GlobalExitRoot, entry.L1InfoTreeIndex, entry.L1InfoTreeRoot,
+		l1InfoTree.String())
 	return nil
 }

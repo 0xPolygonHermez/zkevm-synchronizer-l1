@@ -72,6 +72,10 @@ func (s *L1InfoTreeState) BuildL1InfoTreeCacheIfNeed(ctx context.Context, dbTx s
 
 func (s *L1InfoTreeState) AddL1InfoTreeLeafAndAssignIndex(ctx context.Context, exitRoot *L1InfoTreeLeaf, dbTx stateTxType) (*L1InfoTreeLeaf, error) {
 	var newIndex uint32
+	dbTx.AddRollbackCallback(func(tx Tx, err error) {
+		s.l1InfoTree = nil
+	})
+
 	lastLeaf, err := s.storage.GetLatestL1InfoTreeLeaf(ctx, dbTx)
 	if err != nil {
 		log.Error("error getting latest l1InfoTree index. Error: ", err)
@@ -101,6 +105,7 @@ func (s *L1InfoTreeState) AddL1InfoTreeLeafAndAssignIndex(ctx context.Context, e
 		log.Error("error adding L1InfoRoot to ExitRoot. Error: ", err)
 		return nil, err
 	}
+
 	tmp := L1InfoTreeLeaf(entry)
 	return &tmp, nil
 }
