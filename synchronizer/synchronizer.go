@@ -114,7 +114,7 @@ type SynchronizerReorgSupporter interface {
 	SetCallbackOnReorgDone(callback func(reorgData ReorgExecutionResult))
 }
 
-type rollbackBatchesData struct {
+type RollbackBatchesData struct {
 	LastBatchNumber       uint64
 	LastBatchAccInputHash common.Hash
 }
@@ -123,7 +123,7 @@ type rollbackBatchesData struct {
 type SynchronizerRollbackBatchesSupporter interface {
 	// SetCallbackOnRollbackBatches sets a callback that will be called when the rollbackBatches  is done
 	// to disable it you can set nil
-	SetCallbackOnRollbackBatches(callback func(data rollbackBatchesData))
+	SetCallbackOnRollbackBatches(callback func(data RollbackBatchesData))
 }
 
 type Synchronizer interface {

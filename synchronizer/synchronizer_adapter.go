@@ -24,7 +24,9 @@ func (s *SynchronizerAdapter) SetCallbackOnReorgDone(callback func(reorgData Reo
 				ReasonError:                       nreorgData.ReasonError,
 			})
 		})
+}
 
+func (s *SynchronizerAdapter) SetCallbackOnRollbackBatches(callback func(data RollbackBatchesData)) {
 }
 
 func (s *SynchronizerAdapter) Sync(returnOnSync bool) error {
