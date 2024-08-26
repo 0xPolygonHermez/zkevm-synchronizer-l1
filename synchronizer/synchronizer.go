@@ -134,6 +134,7 @@ type Synchronizer interface {
 	SynchronizerReorgSupporter
 	SynchronizerVirtualBatchesQuerier
 	SynchronizerBlockQuerier
+	SynchronizerRollbackBatchesSupporter
 }
 
 func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Synchronizer, error) {
