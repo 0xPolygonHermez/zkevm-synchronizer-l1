@@ -114,6 +114,18 @@ type SynchronizerReorgSupporter interface {
 	SetCallbackOnReorgDone(callback func(reorgData ReorgExecutionResult))
 }
 
+type rollbackBatchesData struct {
+	LastBatchNumber       uint64
+	LastBatchAccInputHash common.Hash
+}
+
+// SynchronizerRollbackSupporter is an interface that give support to the banna rollbackBatches
+type SynchronizerRollbackBatchesSupporter interface {
+	// SetCallbackOnRollbackBatches sets a callback that will be called when the rollbackBatches  is done
+	// to disable it you can set nil
+	SetCallbackOnRollbackBatches(callback func(data rollbackBatchesData))
+}
+
 type Synchronizer interface {
 	SynchronizerRunner
 	SynchornizerStatusQuerier
