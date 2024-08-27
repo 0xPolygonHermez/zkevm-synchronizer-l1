@@ -371,6 +371,54 @@ func (_c *Storer_BeginTransaction_Call) RunAndReturn(run func(context.Context) (
 	return _c
 }
 
+// DeleteSequencesGreatestOrEqualBatchNumber provides a mock function with given fields: ctx, batchNumber, dbTx
+func (_m *Storer) DeleteSequencesGreatestOrEqualBatchNumber(ctx context.Context, batchNumber uint64, dbTx entities.Tx) error {
+	ret := _m.Called(ctx, batchNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteSequencesGreatestOrEqualBatchNumber")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) error); ok {
+		r0 = rf(ctx, batchNumber, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Storer_DeleteSequencesGreatestOrEqualBatchNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteSequencesGreatestOrEqualBatchNumber'
+type Storer_DeleteSequencesGreatestOrEqualBatchNumber_Call struct {
+	*mock.Call
+}
+
+// DeleteSequencesGreatestOrEqualBatchNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - batchNumber uint64
+//   - dbTx entities.Tx
+func (_e *Storer_Expecter) DeleteSequencesGreatestOrEqualBatchNumber(ctx interface{}, batchNumber interface{}, dbTx interface{}) *Storer_DeleteSequencesGreatestOrEqualBatchNumber_Call {
+	return &Storer_DeleteSequencesGreatestOrEqualBatchNumber_Call{Call: _e.mock.On("DeleteSequencesGreatestOrEqualBatchNumber", ctx, batchNumber, dbTx)}
+}
+
+func (_c *Storer_DeleteSequencesGreatestOrEqualBatchNumber_Call) Run(run func(ctx context.Context, batchNumber uint64, dbTx entities.Tx)) *Storer_DeleteSequencesGreatestOrEqualBatchNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *Storer_DeleteSequencesGreatestOrEqualBatchNumber_Call) Return(_a0 error) *Storer_DeleteSequencesGreatestOrEqualBatchNumber_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Storer_DeleteSequencesGreatestOrEqualBatchNumber_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) error) *Storer_DeleteSequencesGreatestOrEqualBatchNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetAllL1InfoTreeLeaves provides a mock function with given fields: ctx, dbTx
 func (_m *Storer) GetAllL1InfoTreeLeaves(ctx context.Context, dbTx entities.Tx) ([]entities.L1InfoTreeLeaf, error) {
 	ret := _m.Called(ctx, dbTx)
@@ -1071,6 +1119,66 @@ func (_c *Storer_GetSequenceByBatchNumber_Call) Return(_a0 *entities.SequencedBa
 }
 
 func (_c *Storer_GetSequenceByBatchNumber_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) (*entities.SequencedBatches, error)) *Storer_GetSequenceByBatchNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetSequencesGreatestOrEqualBatchNumber provides a mock function with given fields: ctx, batchNumber, dbTx
+func (_m *Storer) GetSequencesGreatestOrEqualBatchNumber(ctx context.Context, batchNumber uint64, dbTx entities.Tx) (*entities.SequencesBatchesSlice, error) {
+	ret := _m.Called(ctx, batchNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSequencesGreatestOrEqualBatchNumber")
+	}
+
+	var r0 *entities.SequencesBatchesSlice
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) (*entities.SequencesBatchesSlice, error)); ok {
+		return rf(ctx, batchNumber, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) *entities.SequencesBatchesSlice); ok {
+		r0 = rf(ctx, batchNumber, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entities.SequencesBatchesSlice)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, entities.Tx) error); ok {
+		r1 = rf(ctx, batchNumber, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Storer_GetSequencesGreatestOrEqualBatchNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSequencesGreatestOrEqualBatchNumber'
+type Storer_GetSequencesGreatestOrEqualBatchNumber_Call struct {
+	*mock.Call
+}
+
+// GetSequencesGreatestOrEqualBatchNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - batchNumber uint64
+//   - dbTx entities.Tx
+func (_e *Storer_Expecter) GetSequencesGreatestOrEqualBatchNumber(ctx interface{}, batchNumber interface{}, dbTx interface{}) *Storer_GetSequencesGreatestOrEqualBatchNumber_Call {
+	return &Storer_GetSequencesGreatestOrEqualBatchNumber_Call{Call: _e.mock.On("GetSequencesGreatestOrEqualBatchNumber", ctx, batchNumber, dbTx)}
+}
+
+func (_c *Storer_GetSequencesGreatestOrEqualBatchNumber_Call) Run(run func(ctx context.Context, batchNumber uint64, dbTx entities.Tx)) *Storer_GetSequencesGreatestOrEqualBatchNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *Storer_GetSequencesGreatestOrEqualBatchNumber_Call) Return(_a0 *entities.SequencesBatchesSlice, _a1 error) *Storer_GetSequencesGreatestOrEqualBatchNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Storer_GetSequencesGreatestOrEqualBatchNumber_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) (*entities.SequencesBatchesSlice, error)) *Storer_GetSequencesGreatestOrEqualBatchNumber_Call {
 	_c.Call.Return(run)
 	return _c
 }

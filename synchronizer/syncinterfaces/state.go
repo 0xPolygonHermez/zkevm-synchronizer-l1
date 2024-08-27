@@ -33,6 +33,7 @@ type StateForkIdQuerier interface {
 
 type StateRollbackBatchesExecutor interface {
 	ExecuteRollbackBatches(ctx context.Context, rollbackBatchesRequest model.RollbackBatchesRequest, dbTx stateTxType) (*model.RollbackBatchesExecutionResult, error)
+	AddOnRollbackBatchesCallback(f model.RollbackBatchesCallbackType)
 }
 
 type StateInterface interface {

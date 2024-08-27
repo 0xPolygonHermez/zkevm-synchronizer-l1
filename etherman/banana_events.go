@@ -9,6 +9,9 @@ import (
 )
 
 func (etherMan *Client) processBananaEvent(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) (bool, error) {
+	if len(vLog.Topics) == 0 {
+		return false, nil
+	}
 	switch vLog.Topics[0] {
 	case rollbackBatchesSignatureHash:
 		return true, etherMan.rollbackBatchesManagerEvent(ctx, vLog, blocks, blocksOrder)
@@ -21,7 +24,6 @@ func (etherMan *Client) processBananaEvent(ctx context.Context, vLog types.Log, 
 func (etherMan *Client) rollbackBatchesManagerEvent(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) error {
 	/*
 			   event RollbackBatches(
-		        uint32 indexed rollupID,
 		        uint64 indexed targetBatch,
 		        bytes32 accInputHashToRollback
 		    );

@@ -24,6 +24,39 @@ func (_m *StateRollbackBatchesExecutor) EXPECT() *StateRollbackBatchesExecutor_E
 	return &StateRollbackBatchesExecutor_Expecter{mock: &_m.Mock}
 }
 
+// AddOnRollbackBatchesCallback provides a mock function with given fields: f
+func (_m *StateRollbackBatchesExecutor) AddOnRollbackBatchesCallback(f func(model.RollbackBatchesExecutionResult)) {
+	_m.Called(f)
+}
+
+// StateRollbackBatchesExecutor_AddOnRollbackBatchesCallback_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddOnRollbackBatchesCallback'
+type StateRollbackBatchesExecutor_AddOnRollbackBatchesCallback_Call struct {
+	*mock.Call
+}
+
+// AddOnRollbackBatchesCallback is a helper method to define mock.On call
+//   - f func(model.RollbackBatchesExecutionResult)
+func (_e *StateRollbackBatchesExecutor_Expecter) AddOnRollbackBatchesCallback(f interface{}) *StateRollbackBatchesExecutor_AddOnRollbackBatchesCallback_Call {
+	return &StateRollbackBatchesExecutor_AddOnRollbackBatchesCallback_Call{Call: _e.mock.On("AddOnRollbackBatchesCallback", f)}
+}
+
+func (_c *StateRollbackBatchesExecutor_AddOnRollbackBatchesCallback_Call) Run(run func(f func(model.RollbackBatchesExecutionResult))) *StateRollbackBatchesExecutor_AddOnRollbackBatchesCallback_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(func(model.RollbackBatchesExecutionResult)))
+	})
+	return _c
+}
+
+func (_c *StateRollbackBatchesExecutor_AddOnRollbackBatchesCallback_Call) Return() *StateRollbackBatchesExecutor_AddOnRollbackBatchesCallback_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *StateRollbackBatchesExecutor_AddOnRollbackBatchesCallback_Call) RunAndReturn(run func(func(model.RollbackBatchesExecutionResult))) *StateRollbackBatchesExecutor_AddOnRollbackBatchesCallback_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ExecuteRollbackBatches provides a mock function with given fields: ctx, rollbackBatchesRequest, dbTx
 func (_m *StateRollbackBatchesExecutor) ExecuteRollbackBatches(ctx context.Context, rollbackBatchesRequest model.RollbackBatchesRequest, dbTx entities.Tx) (*model.RollbackBatchesExecutionResult, error) {
 	ret := _m.Called(ctx, rollbackBatchesRequest, dbTx)

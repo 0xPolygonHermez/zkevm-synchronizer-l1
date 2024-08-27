@@ -37,7 +37,8 @@ type SynchronizerImpl struct {
 	l1Sync              syncinterfaces.L1Syncer
 	storageChecker      syncinterfaces.StorageCompatibilityChecker
 
-	reorgCallback func(nreorgData ReorgExecutionResult)
+	reorgCallback           func(nreorgData ReorgExecutionResult)
+	rollbackBatchesCallback func(data RollbackBatchesData)
 }
 
 // NewSynchronizer creates and initializes an instance of Synchronizer
@@ -111,6 +112,7 @@ func NewSynchronizerImpl(
 		blockRangeProcessor: blockRangeProcessor,
 	}
 	state.AddOnReorgCallback(sync.OnReorgExecuted)
+	state.AddOnRollbackBatchesCallback(sync.OnRollbackBatchesExecuted)
 
 	err = sync.CheckStorage(ctx)
 	if err != nil {
@@ -162,6 +164,10 @@ func (s *SynchronizerImpl) SetCallbackOnReorgDone(callback func(reorgData ReorgE
 	s.reorgCallback = callback
 }
 
+func (s *SynchronizerImpl) SetCallbackOnRollbackBatches(callback func(data RollbackBatchesData)) {
+	s.rollbackBatchesCallback = callback
+}
+
 // OnReorgExecuted this is a CB setted to state reorg
 func (s *SynchronizerImpl) OnReorgExecuted(reorg model.ReorgExecutionResult) {
 	log.Infof("Reorg executed! %s", reorg.String())
@@ -174,6 +180,19 @@ func (s *SynchronizerImpl) OnReorgExecuted(reorg model.ReorgExecutionResult) {
 		go s.reorgCallback(param)
 	}
 
+}
+
+// OnReorgExecuted this is a CB setted to state reorg
+func (s *SynchronizerImpl) OnRollbackBatchesExecuted(data model.RollbackBatchesExecutionResult) {
+	log.Infof("RollbackBatches executed! %s", data.String())
+	if s.rollbackBatchesCallback != nil {
+		param := RollbackBatchesData{
+			LastBatchNumber:       data.Request.LastBatchNumber,
+			LastBatchAccInputHash: data.Request.LastBatchAccInputHash,
+		}
+		log.Infof("Executing reorg callback in a goroutine")
+		go s.rollbackBatchesCallback(param)
+	}
 }
 
 func (s *SynchronizerImpl) CheckStorage(ctx context.Context) error {

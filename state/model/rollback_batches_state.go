@@ -25,7 +25,12 @@ type StorageRollbackBatchesInterface interface {
 }
 
 type RollbackBatchesExecutionResult struct {
-	ExecutionError error
+	Request       RollbackBatchesRequest
+	RollbackEntry *RollbackBatchesLogEntry
+}
+
+func (r *RollbackBatchesExecutionResult) String() string {
+	return fmt.Sprintf("RollbackBatchesExecutionResult{Request: %v, RollbackEntry: %v}", r.Request, r.RollbackEntry)
 }
 
 type RollbackBatchesCallbackType = func(RollbackBatchesExecutionResult)
@@ -48,18 +53,25 @@ func (s *RollbackBatchesState) AddOnRollbackBatchesCallback(f RollbackBatchesCal
 	s.onRollbackBatchesCallbacks = append(s.onRollbackBatchesCallbacks, f)
 }
 
-func (s *RollbackBatchesState) ExecuteRollbackBatches(ctx context.Context, rollbackBatchesRequest RollbackBatchesRequest, dbTx storageTxType) (*RollbackBatchesExecutionResult, error) {
-	// GetSequences affected
-	// GetBatches affected
-	// sanity check
-	// delete sequences and batches
-	// write entry on rollback_batches_logs
-	// call callbacks
-	reponse := &RollbackBatchesExecutionResult{}
+func (s *RollbackBatchesState) onTxCommit(data *RollbackBatchesExecutionResult, _ storageTxType, err error) {
+	if err == nil {
+		for _, f := range s.onRollbackBatchesCallbacks {
+			f(*data)
+		}
+	}
+}
 
-	affectedSequences, err := s.storage.GetSequencesGreatestOrEqualBatchNumber(ctx, rollbackBatchesRequest.LastBatchNumber, dbTx)
+func (s *RollbackBatchesState) ExecuteRollbackBatches(ctx context.Context, rollbackBatchesRequest RollbackBatchesRequest, dbTx storageTxType) (*RollbackBatchesExecutionResult, error) {
+	if dbTx == nil {
+		return nil, fmt.Errorf("for execute rollback batches, dbTx must be not nil because is used for callback")
+	}
+	response := &RollbackBatchesExecutionResult{
+		Request: rollbackBatchesRequest,
+	}
+
+	affectedSequences, err := s.storage.GetSequencesGreatestOrEqualBatchNumber(ctx, rollbackBatchesRequest.LastBatchNumber+1, dbTx)
 	if err != nil {
-		err = fmt.Errorf("error getting affected sequences (batchNumber>=%d): %w", rollbackBatchesRequest.LastBatchNumber, err)
+		err = fmt.Errorf("error getting affected sequences (batchNumber>=%d): %w", rollbackBatchesRequest.LastBatchNumber+1, err)
 		log.Error(err.Error())
 		return nil, err
 	}
@@ -83,12 +95,14 @@ func (s *RollbackBatchesState) ExecuteRollbackBatches(ctx context.Context, rollb
 		return nil, err
 	}
 	// Delete sequences delete also virtual batches (on cascade)
-	err = s.storage.DeleteSequencesGreatestOrEqualBatchNumber(ctx, rollbackBatchesRequest.LastBatchNumber, dbTx)
+	err = s.storage.DeleteSequencesGreatestOrEqualBatchNumber(ctx, rollbackBatchesRequest.LastBatchNumber+1, dbTx)
 	if err != nil {
-		err = fmt.Errorf("error deleting affected sequences (batchNumber>=%d): %w", rollbackBatchesRequest.LastBatchNumber, err)
+		err = fmt.Errorf("error deleting affected sequences (batchNumber>=%d): %w", rollbackBatchesRequest.LastBatchNumber+1, err)
 		log.Error(err.Error())
 		return nil, err
 	}
-
-	return reponse, nil
+	response.RollbackEntry = rollbackBatchesEntry
+	// Add commit callback to execute the onRollbackBatchesCallbacks
+	dbTx.AddCommitCallback(func(dbTx storageTxType, err error) { s.onTxCommit(response, dbTx, err) })
+	return response, nil
 }
