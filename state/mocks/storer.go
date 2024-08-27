@@ -169,6 +169,54 @@ func (_c *Storer_AddL1InfoTreeLeaf_Call) RunAndReturn(run func(context.Context, 
 	return _c
 }
 
+// AddRollbackBatchesLogEntry provides a mock function with given fields: ctx, entry, dbTx
+func (_m *Storer) AddRollbackBatchesLogEntry(ctx context.Context, entry *entities.RollbackBatchesLogEntry, dbTx entities.Tx) error {
+	ret := _m.Called(ctx, entry, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddRollbackBatchesLogEntry")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *entities.RollbackBatchesLogEntry, entities.Tx) error); ok {
+		r0 = rf(ctx, entry, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Storer_AddRollbackBatchesLogEntry_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddRollbackBatchesLogEntry'
+type Storer_AddRollbackBatchesLogEntry_Call struct {
+	*mock.Call
+}
+
+// AddRollbackBatchesLogEntry is a helper method to define mock.On call
+//   - ctx context.Context
+//   - entry *entities.RollbackBatchesLogEntry
+//   - dbTx entities.Tx
+func (_e *Storer_Expecter) AddRollbackBatchesLogEntry(ctx interface{}, entry interface{}, dbTx interface{}) *Storer_AddRollbackBatchesLogEntry_Call {
+	return &Storer_AddRollbackBatchesLogEntry_Call{Call: _e.mock.On("AddRollbackBatchesLogEntry", ctx, entry, dbTx)}
+}
+
+func (_c *Storer_AddRollbackBatchesLogEntry_Call) Run(run func(ctx context.Context, entry *entities.RollbackBatchesLogEntry, dbTx entities.Tx)) *Storer_AddRollbackBatchesLogEntry_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*entities.RollbackBatchesLogEntry), args[2].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *Storer_AddRollbackBatchesLogEntry_Call) Return(_a0 error) *Storer_AddRollbackBatchesLogEntry_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Storer_AddRollbackBatchesLogEntry_Call) RunAndReturn(run func(context.Context, *entities.RollbackBatchesLogEntry, entities.Tx) error) *Storer_AddRollbackBatchesLogEntry_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // AddSequencedBatches provides a mock function with given fields: ctx, sequence, dbTx
 func (_m *Storer) AddSequencedBatches(ctx context.Context, sequence *entities.SequencedBatches, dbTx entities.Tx) error {
 	ret := _m.Called(ctx, sequence, dbTx)
@@ -903,6 +951,66 @@ func (_c *Storer_GetPreviousBlock_Call) Return(_a0 *entities.L1Block, _a1 error)
 }
 
 func (_c *Storer_GetPreviousBlock_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) (*entities.L1Block, error)) *Storer_GetPreviousBlock_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber provides a mock function with given fields: ctx, l1BlockNumber, dbTx
+func (_m *Storer) GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber(ctx context.Context, l1BlockNumber uint64, dbTx entities.Tx) ([]entities.RollbackBatchesLogEntry, error) {
+	ret := _m.Called(ctx, l1BlockNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber")
+	}
+
+	var r0 []entities.RollbackBatchesLogEntry
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) ([]entities.RollbackBatchesLogEntry, error)); ok {
+		return rf(ctx, l1BlockNumber, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, entities.Tx) []entities.RollbackBatchesLogEntry); ok {
+		r0 = rf(ctx, l1BlockNumber, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entities.RollbackBatchesLogEntry)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, entities.Tx) error); ok {
+		r1 = rf(ctx, l1BlockNumber, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Storer_GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber'
+type Storer_GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber_Call struct {
+	*mock.Call
+}
+
+// GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - l1BlockNumber uint64
+//   - dbTx entities.Tx
+func (_e *Storer_Expecter) GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber(ctx interface{}, l1BlockNumber interface{}, dbTx interface{}) *Storer_GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber_Call {
+	return &Storer_GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber_Call{Call: _e.mock.On("GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber", ctx, l1BlockNumber, dbTx)}
+}
+
+func (_c *Storer_GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber_Call) Run(run func(ctx context.Context, l1BlockNumber uint64, dbTx entities.Tx)) *Storer_GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *Storer_GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber_Call) Return(_a0 []entities.RollbackBatchesLogEntry, _a1 error) *Storer_GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Storer_GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber_Call) RunAndReturn(run func(context.Context, uint64, entities.Tx) ([]entities.RollbackBatchesLogEntry, error)) *Storer_GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber_Call {
 	_c.Call.Return(run)
 	return _c
 }

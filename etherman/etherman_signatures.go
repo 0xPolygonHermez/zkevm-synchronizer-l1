@@ -9,7 +9,7 @@ var (
 	addExistingRollupSignatureHash              = crypto.Keccak256Hash([]byte("AddExistingRollup(uint32,uint64,address,uint64,uint8,uint64)"))
 	createNewRollupSignatureHash                = crypto.Keccak256Hash([]byte("CreateNewRollup(uint32,uint32,address,uint64,address)"))
 	// https://github.com/0xPolygonHermez/zkevm-contracts/blob/949b0b96c10056fa7be9632bcc2f26202a9c3a9c/contracts/v2/PolygonRollupManager.sol#L328
-	rollbackBatchesManagerSignatureHash = crypto.Keccak256Hash([]byte("RollbackBatches(uint32,uint64,bytes32)"))
+	//rollbackBatchesManagerSignatureHash = crypto.Keccak256Hash([]byte("RollbackBatches(uint32,uint64,bytes32)"))
 	// Events new ZkEvm/RollupBase
 	sequenceForceBatchesSignatureHash   = crypto.Keccak256Hash([]byte("SequenceForceBatches(uint64)"))             // Used in oldZkEvm as well
 	forceBatchSignatureHash             = crypto.Keccak256Hash([]byte("ForceBatch(uint64,bytes32,address,bytes)")) // Used in oldZkEvm as well
@@ -22,7 +22,7 @@ var (
 	// New GER event
 	updateL1InfoTreeSignatureHash   = crypto.Keccak256Hash([]byte("UpdateL1InfoTree(bytes32,bytes32)"))
 	updateL1InfoTreeV2SignatureHash = crypto.Keccak256Hash([]byte("UpdateL1InfoTreeV2(bytes32,uint32,uint256,uint64)"))
-	initL1InfoRootMapSignatureHash  = crypto.Keccak256Hash([]byte("InitL1InfoRootMap(uint32,bytes32)"))
+	//initL1InfoRootMapSignatureHash  = crypto.Keccak256Hash([]byte("InitL1InfoRootMap(uint32,bytes32)"))
 
 	// PreLxLy events
 	updateGlobalExitRootSignatureHash              = crypto.Keccak256Hash([]byte("UpdateGlobalExitRoot(bytes32,bytes32)"))

@@ -6,6 +6,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+type SequencesBatchesSlice []SequencedBatches
+
 type SequencedBatches struct {
 	FromBatchNumber uint64
 	ToBatchNumber   uint64
@@ -44,4 +46,26 @@ func NewSequencedBatches(fromBatchNumber, toBatchNumber, l1BlockNumber, forkID u
 		L1InfoRoot:      l1InfoRoot,
 		Source:          source,
 	}
+}
+
+func (seq SequencesBatchesSlice) GetMinimumBlockNumber() uint64 {
+	minBlockNumber := uint64(0)
+	for _, s := range seq {
+		if s.L1BlockNumber < minBlockNumber || minBlockNumber == 0 {
+			minBlockNumber = s.L1BlockNumber
+		}
+	}
+	return minBlockNumber
+}
+
+func (seq SequencesBatchesSlice) Len() int {
+	return len(seq)
+}
+
+func (seq SequencesBatchesSlice) NumBatchesIncluded() int {
+	numBatches := 0
+	for _, s := range seq {
+		numBatches += int(s.ToBatchNumber - s.FromBatchNumber + 1)
+	}
+	return numBatches
 }

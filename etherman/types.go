@@ -22,9 +22,12 @@ func (l *L1InfoTreeV2Data) String() string {
 }
 
 type RollbackBatchesData struct {
-	RollupID               uint32
 	TargetBatch            uint64
 	AccInputHashToRollback common.Hash
+}
+
+func (r *RollbackBatchesData) String() string {
+	return fmt.Sprintf("TargetBatch: %d AccInputHashToRollback: %s", r.TargetBatch, r.AccInputHashToRollback.String())
 }
 
 // Block struct

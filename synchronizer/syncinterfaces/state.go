@@ -31,6 +31,10 @@ type StateForkIdQuerier interface {
 	GetForkIDByBlockNumber(ctx context.Context, blockNumber uint64, dbTx stateTxType) uint64
 }
 
+type StateRollbackBatchesExecutor interface {
+	ExecuteRollbackBatches(ctx context.Context, rollbackBatchesRequest model.RollbackBatchesRequest, dbTx stateTxType) (*model.RollbackBatchesExecutionResult, error)
+}
+
 type StateInterface interface {
 	AddL1InfoTreeLeafAndAssignIndex(ctx context.Context, exitRoot *entities.L1InfoTreeLeaf, dbTx stateTxType) (*entities.L1InfoTreeLeaf, error)
 
@@ -46,6 +50,7 @@ type StateInterface interface {
 	stateOnSequencedBatchesManager
 	StorageBlockReaderInterface
 	stateReorgManager
+	StateRollbackBatchesExecutor
 }
 
 type StateStorageCompatibilityCheckerInterface interface {

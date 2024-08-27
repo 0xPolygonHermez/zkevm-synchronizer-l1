@@ -12,6 +12,7 @@ type State struct {
 	*model.BatchState
 	*model.ReorgState
 	*model.StorageCompatibilityState
+	*model.RollbackBatchesState
 	storage.BlockStorer
 }
 
@@ -24,6 +25,7 @@ func NewState(storageImpl storage.Storer) *State {
 		model.NewBatchState(storageImpl),
 		model.NewReorgState(storageImpl),
 		model.NewStorageCompatibilityState(storageImpl),
+		model.NewRollbackBatchesState(storageImpl),
 		storageImpl,
 	}
 	// Connect cache invalidation on Reorg

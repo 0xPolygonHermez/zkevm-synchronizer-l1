@@ -162,6 +162,6 @@ func (s *L1InfoTreeState) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot c
 	return res, nil
 }
 
-func (s *L1InfoTreeState) GetL1InfoLeafPerIndex(ctx context.Context, L1InfoTreeIndex uint32, dbTx storageTxType) (*pgstorage.L1InfoTreeLeaf, error) {
+func (s *L1InfoTreeState) GetL1InfoLeafPerIndex(ctx context.Context, L1InfoTreeIndex uint32, dbTx stateTxType) (*L1InfoTreeLeaf, error) {
 	return s.storage.GetL1InfoLeafPerIndex(ctx, L1InfoTreeIndex, dbTx)
 }

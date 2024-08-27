@@ -6,17 +6,18 @@ import (
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
 )
 
 type ProcessorRollbackBatches struct {
 	actions.ProcessorBase[ProcessorRollbackBatches]
-	state stateOnSequencedBatchesInterface
+	state stateOnRollbackBatchesInterface
 }
 
 // NewProcessorRollbackBatches returns instance of a processor for RollbackBatchesOrder
-func NewProcessorRollbackBatches(state stateOnSequencedBatchesInterface) *ProcessorRollbackBatches {
+func NewProcessorRollbackBatches(state stateOnRollbackBatchesInterface) *ProcessorRollbackBatches {
 	return &ProcessorRollbackBatches{
 		ProcessorBase: actions.ProcessorBase[ProcessorRollbackBatches]{
 			SupportedEvent:    []etherman.EventOrder{etherman.RollbackBatchesOrder},
@@ -36,6 +37,17 @@ func (g *ProcessorRollbackBatches) Process(ctx context.Context, forkId actions.F
 
 // ProcessSequenceBatches process sequence of batches
 func (p *ProcessorRollbackBatches) ProcessRollbackBatches(ctx context.Context, forkId ForkIdType, rollbackData etherman.RollbackBatchesData, blockNumber uint64, l1BlockTimestamp time.Time, dbTx stateTxType) error {
+	log.Warnf("Processing RollbackBatches: %s", rollbackData.String())
+	req := RollbackBatchesRequest{
+		LastBatchNumber:       rollbackData.TargetBatch,
+		LastBatchAccInputHash: rollbackData.AccInputHashToRollback,
+		L1BlockNumber:         blockNumber,
+		L1BlockTimestamp:      l1BlockTimestamp,
+	}
+	_, err := p.state.ExecuteRollbackBatches(ctx, req, dbTx)
+	if err != nil {
+		return err
+	}
 
 	return fmt.Errorf("not implemented")
 }

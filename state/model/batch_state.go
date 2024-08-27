@@ -8,6 +8,8 @@ import (
 
 type VirtualBatch = entities.VirtualBatch
 type SequencedBatches = entities.SequencedBatches
+type SequencesBatchesSlice = entities.SequencesBatchesSlice
+type RollbackBatchesLogEntry = entities.RollbackBatchesLogEntry
 type dbTxType = entities.Tx
 
 type SequenceOfBatches struct {

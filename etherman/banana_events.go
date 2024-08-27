@@ -10,7 +10,7 @@ import (
 
 func (etherMan *Client) processBananaEvent(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) (bool, error) {
 	switch vLog.Topics[0] {
-	case rollbackBatchesManagerSignatureHash:
+	case rollbackBatchesSignatureHash:
 		return true, etherMan.rollbackBatchesManagerEvent(ctx, vLog, blocks, blocksOrder)
 	case updateL1InfoTreeV2SignatureHash:
 		return true, etherMan.updateL1InfoTreeV2Event(ctx, vLog, blocks, blocksOrder)
@@ -26,22 +26,18 @@ func (etherMan *Client) rollbackBatchesManagerEvent(ctx context.Context, vLog ty
 		        bytes32 accInputHashToRollback
 		    );
 	*/
-	eventData, err := etherMan.RollupManager.ParseRollbackBatches(vLog)
+	eventData, err := etherMan.BananaZkEVM.ParseRollbackBatches(vLog)
 	if err != nil {
 		log.Warnf("error parsing RollbackBatches event: %v", err)
 		return err
 	}
-	if eventData.RollupID != etherMan.RollupID {
-		log.Infof("skipped RollbackBatches for rollupID %d that is not %d: event_data: %+v", eventData.RollupID, etherMan.RollupID, eventData)
-		return nil
-	}
+
 	block, err := addNewBlockToResult(ctx, etherMan, vLog, blocks, blocksOrder)
 	if err != nil {
 		log.Warnf("error addNewBlockToResult RollbackBatches event: %v", err)
 		return err
 	}
 	rollbackBatchesData := RollbackBatchesData{
-		RollupID:               eventData.RollupID,
 		TargetBatch:            eventData.TargetBatch,
 		AccInputHashToRollback: eventData.AccInputHashToRollback,
 	}
