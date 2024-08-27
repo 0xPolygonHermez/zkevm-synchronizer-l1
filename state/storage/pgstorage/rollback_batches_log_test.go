@@ -26,8 +26,8 @@ func TestAddRollbackBatches(t *testing.T) {
 		BlockNumber:           123,
 		LastBatchNumber:       123,
 		LastBatchAccInputHash: common.HexToHash("0x123"),
-		L1EventAt:             time.Now(),
-		ReceivedAt:            time.Now(),
+		L1EventAt:             time.Now().Truncate(time.Second),
+		ReceivedAt:            time.Now().Truncate(time.Second),
 		UndoFirstBlockNumber:  123,
 		Description:           "this is a unittest entry",
 		SequencesDeleted: []entities.SequencedBatches{
@@ -41,6 +41,7 @@ func TestAddRollbackBatches(t *testing.T) {
 			},
 		},
 	}
+	entry.SetSyncVersion("version-unittest")
 	err = storage.AddRollbackBatchesLogEntry(ctx, entry, dbTx)
 	require.NoError(t, err)
 

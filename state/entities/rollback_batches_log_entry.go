@@ -40,5 +40,8 @@ func (r *RollbackBatchesLogEntry) SetSyncVersion(syncVersion string) {
 }
 
 func (r *RollbackBatchesLogEntry) SyncVersion() string {
-	return zkevm_synchronizer_l1.Version
+	if r.syncVersion == nil || len(*r.syncVersion) == 0 {
+		return zkevm_synchronizer_l1.Version
+	}
+	return *r.syncVersion
 }
