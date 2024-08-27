@@ -3,12 +3,13 @@ package etherman
 import (
 	"context"
 
+	ethtypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-func (etherMan *Client) processBananaEvent(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) (bool, error) {
+func (etherMan *Client) processBananaEvent(ctx context.Context, vLog types.Log, blocks *[]ethtypes.Block, blocksOrder *map[common.Hash][]ethtypes.Order) (bool, error) {
 	if len(vLog.Topics) == 0 {
 		return false, nil
 	}
@@ -21,7 +22,7 @@ func (etherMan *Client) processBananaEvent(ctx context.Context, vLog types.Log, 
 	return false, nil
 }
 
-func (etherMan *Client) rollbackBatchesManagerEvent(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) error {
+func (etherMan *Client) rollbackBatchesManagerEvent(ctx context.Context, vLog types.Log, blocks *[]ethtypes.Block, blocksOrder *map[common.Hash][]ethtypes.Order) error {
 	/*
 			   event RollbackBatches(
 		        uint64 indexed targetBatch,
@@ -36,23 +37,23 @@ func (etherMan *Client) rollbackBatchesManagerEvent(ctx context.Context, vLog ty
 
 	block, err := addNewBlockToResult(ctx, etherMan, vLog, blocks, blocksOrder)
 	if err != nil {
-		log.Warnf("error addNewBlockToResult RollbackBatches event: %v", err)
+		log.Warnf("error addNewethtypes.BlockToResult RollbackBatches event: %v", err)
 		return err
 	}
-	rollbackBatchesData := RollbackBatchesData{
+	rollbackBatchesData := ethtypes.RollbackBatchesData{
 		TargetBatch:            eventData.TargetBatch,
 		AccInputHashToRollback: eventData.AccInputHashToRollback,
 	}
 	block.RollbackBatches = append(block.RollbackBatches, rollbackBatchesData)
-	order := Order{
-		Name: RollbackBatchesOrder,
+	order := ethtypes.Order{
+		Name: ethtypes.RollbackBatchesOrder,
 		Pos:  len(block.RollbackBatches) - 1,
 	}
 	addNewOrder(&order, block.BlockHash, blocksOrder)
 	return nil
 }
 
-func (etherMan *Client) updateL1InfoTreeV2Event(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) error {
+func (etherMan *Client) updateL1InfoTreeV2Event(ctx context.Context, vLog types.Log, blocks *[]ethtypes.Block, blocksOrder *map[common.Hash][]ethtypes.Order) error {
 
 	/* https://github.com/0xPolygonHermez/zkevm-contracts/blob/949b0b96c10056fa7be9632bcc2f26202a9c3a9c/contracts/v2/PolygonZkEVMGlobalExitRootV2.sol#L39C1-L44C7
 
@@ -71,16 +72,16 @@ func (etherMan *Client) updateL1InfoTreeV2Event(ctx context.Context, vLog types.
 	if err != nil {
 		return err
 	}
-	L1InfoTreeV2Data := L1InfoTreeV2Data{
+	L1InfoTreeV2Data := ethtypes.L1InfoTreeV2Data{
 		CurrentL1InfoRoot: eventData.CurrentL1InfoRoot,
 		LeafCount:         eventData.LeafCount,
 		// TODO: Fix this type
-		//BlockHash:         eventData.Blockhash,
+		//ethtypes.BlockHash:         eventData.ethtypes.Blockhash,
 		MinTimestamp: eventData.MinTimestamp,
 	}
 	block.L1InfoTreeV2 = append(block.L1InfoTreeV2, L1InfoTreeV2Data)
-	order := Order{
-		Name: UpdateL1InfoTreeV2Order,
+	order := ethtypes.Order{
+		Name: ethtypes.UpdateL1InfoTreeV2Order,
 		Pos:  len(block.L1InfoTreeV2) - 1,
 	}
 	addNewOrder(&order, block.BlockHash, blocksOrder)

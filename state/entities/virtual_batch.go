@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	ethtypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -54,7 +54,7 @@ func (b *VirtualBatch) String() string {
 	return res
 }
 
-func NewVirtualBatchFromL1(l1BlockNumber, seqFromBatchNumber, forkID uint64, ethSeqBatch etherman.SequencedBatch) *VirtualBatch {
+func NewVirtualBatchFromL1(l1BlockNumber, seqFromBatchNumber, forkID uint64, ethSeqBatch ethtypes.SequencedBatch) *VirtualBatch {
 	res := &VirtualBatch{
 		BatchNumber:             ethSeqBatch.BatchNumber,
 		ForkID:                  forkID,

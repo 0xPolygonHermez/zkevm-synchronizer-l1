@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	ethtypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
@@ -13,8 +15,8 @@ func TestBananaEventsNoTopics(t *testing.T) {
 	sut := Client{}
 	ctx := context.TODO()
 	vLog := types.Log{}
-	blocks := &[]Block{}
-	blocksOrder := &map[common.Hash][]Order{}
+	blocks := &[]ethtypes.Block{}
+	blocksOrder := &map[common.Hash][]ethtypes.Order{}
 
 	processed, err := sut.processBananaEvent(ctx, vLog, blocks, blocksOrder)
 	require.NoError(t, err)
@@ -27,8 +29,8 @@ func TestBananaEventsUnknownTopics(t *testing.T) {
 	vLog := types.Log{
 		Topics: []common.Hash{common.HexToHash("0x12345678")},
 	}
-	blocks := &[]Block{}
-	blocksOrder := &map[common.Hash][]Order{}
+	blocks := &[]ethtypes.Block{}
+	blocksOrder := &map[common.Hash][]ethtypes.Order{}
 
 	processed, err := sut.processBananaEvent(ctx, vLog, blocks, blocksOrder)
 	require.NoError(t, err)

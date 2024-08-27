@@ -8,7 +8,7 @@ import (
 
 	common "github.com/ethereum/go-ethereum/common"
 
-	etherman "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	ethermantypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 
 	mock "github.com/stretchr/testify/mock"
 
@@ -88,23 +88,23 @@ func (_c *EthermanFullInterface_EthBlockByNumber_Call) RunAndReturn(run func(con
 }
 
 // GetL1BlockByNumber provides a mock function with given fields: ctx, blockNumber
-func (_m *EthermanFullInterface) GetL1BlockByNumber(ctx context.Context, blockNumber uint64) (*etherman.Block, error) {
+func (_m *EthermanFullInterface) GetL1BlockByNumber(ctx context.Context, blockNumber uint64) (*ethermantypes.Block, error) {
 	ret := _m.Called(ctx, blockNumber)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetL1BlockByNumber")
 	}
 
-	var r0 *etherman.Block
+	var r0 *ethermantypes.Block
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) (*etherman.Block, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) (*ethermantypes.Block, error)); ok {
 		return rf(ctx, blockNumber)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) *etherman.Block); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) *ethermantypes.Block); ok {
 		r0 = rf(ctx, blockNumber)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*etherman.Block)
+			r0 = ret.Get(0).(*ethermantypes.Block)
 		}
 	}
 
@@ -136,12 +136,12 @@ func (_c *EthermanFullInterface_GetL1BlockByNumber_Call) Run(run func(ctx contex
 	return _c
 }
 
-func (_c *EthermanFullInterface_GetL1BlockByNumber_Call) Return(_a0 *etherman.Block, _a1 error) *EthermanFullInterface_GetL1BlockByNumber_Call {
+func (_c *EthermanFullInterface_GetL1BlockByNumber_Call) Return(_a0 *ethermantypes.Block, _a1 error) *EthermanFullInterface_GetL1BlockByNumber_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *EthermanFullInterface_GetL1BlockByNumber_Call) RunAndReturn(run func(context.Context, uint64) (*etherman.Block, error)) *EthermanFullInterface_GetL1BlockByNumber_Call {
+func (_c *EthermanFullInterface_GetL1BlockByNumber_Call) RunAndReturn(run func(context.Context, uint64) (*ethermantypes.Block, error)) *EthermanFullInterface_GetL1BlockByNumber_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -404,32 +404,32 @@ func (_c *EthermanFullInterface_GetRollupID_Call) RunAndReturn(run func() uint) 
 }
 
 // GetRollupInfoByBlockRange provides a mock function with given fields: ctx, fromBlock, toBlock
-func (_m *EthermanFullInterface) GetRollupInfoByBlockRange(ctx context.Context, fromBlock uint64, toBlock *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error) {
+func (_m *EthermanFullInterface) GetRollupInfoByBlockRange(ctx context.Context, fromBlock uint64, toBlock *uint64) ([]ethermantypes.Block, map[common.Hash][]ethermantypes.Order, error) {
 	ret := _m.Called(ctx, fromBlock, toBlock)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetRollupInfoByBlockRange")
 	}
 
-	var r0 []etherman.Block
-	var r1 map[common.Hash][]etherman.Order
+	var r0 []ethermantypes.Block
+	var r1 map[common.Hash][]ethermantypes.Order
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64) ([]ethermantypes.Block, map[common.Hash][]ethermantypes.Order, error)); ok {
 		return rf(ctx, fromBlock, toBlock)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64) []etherman.Block); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64) []ethermantypes.Block); ok {
 		r0 = rf(ctx, fromBlock, toBlock)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]etherman.Block)
+			r0 = ret.Get(0).([]ethermantypes.Block)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, *uint64) map[common.Hash][]etherman.Order); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, *uint64) map[common.Hash][]ethermantypes.Order); ok {
 		r1 = rf(ctx, fromBlock, toBlock)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(map[common.Hash][]etherman.Order)
+			r1 = ret.Get(1).(map[common.Hash][]ethermantypes.Order)
 		}
 	}
 
@@ -462,43 +462,43 @@ func (_c *EthermanFullInterface_GetRollupInfoByBlockRange_Call) Run(run func(ctx
 	return _c
 }
 
-func (_c *EthermanFullInterface_GetRollupInfoByBlockRange_Call) Return(_a0 []etherman.Block, _a1 map[common.Hash][]etherman.Order, _a2 error) *EthermanFullInterface_GetRollupInfoByBlockRange_Call {
+func (_c *EthermanFullInterface_GetRollupInfoByBlockRange_Call) Return(_a0 []ethermantypes.Block, _a1 map[common.Hash][]ethermantypes.Order, _a2 error) *EthermanFullInterface_GetRollupInfoByBlockRange_Call {
 	_c.Call.Return(_a0, _a1, _a2)
 	return _c
 }
 
-func (_c *EthermanFullInterface_GetRollupInfoByBlockRange_Call) RunAndReturn(run func(context.Context, uint64, *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error)) *EthermanFullInterface_GetRollupInfoByBlockRange_Call {
+func (_c *EthermanFullInterface_GetRollupInfoByBlockRange_Call) RunAndReturn(run func(context.Context, uint64, *uint64) ([]ethermantypes.Block, map[common.Hash][]ethermantypes.Order, error)) *EthermanFullInterface_GetRollupInfoByBlockRange_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetRollupInfoByBlockRangePreviousRollupGenesis provides a mock function with given fields: ctx, fromBlock, toBlock
-func (_m *EthermanFullInterface) GetRollupInfoByBlockRangePreviousRollupGenesis(ctx context.Context, fromBlock uint64, toBlock *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error) {
+func (_m *EthermanFullInterface) GetRollupInfoByBlockRangePreviousRollupGenesis(ctx context.Context, fromBlock uint64, toBlock *uint64) ([]ethermantypes.Block, map[common.Hash][]ethermantypes.Order, error) {
 	ret := _m.Called(ctx, fromBlock, toBlock)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetRollupInfoByBlockRangePreviousRollupGenesis")
 	}
 
-	var r0 []etherman.Block
-	var r1 map[common.Hash][]etherman.Order
+	var r0 []ethermantypes.Block
+	var r1 map[common.Hash][]ethermantypes.Order
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64) ([]ethermantypes.Block, map[common.Hash][]ethermantypes.Order, error)); ok {
 		return rf(ctx, fromBlock, toBlock)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64) []etherman.Block); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64) []ethermantypes.Block); ok {
 		r0 = rf(ctx, fromBlock, toBlock)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]etherman.Block)
+			r0 = ret.Get(0).([]ethermantypes.Block)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, *uint64) map[common.Hash][]etherman.Order); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, *uint64) map[common.Hash][]ethermantypes.Order); ok {
 		r1 = rf(ctx, fromBlock, toBlock)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(map[common.Hash][]etherman.Order)
+			r1 = ret.Get(1).(map[common.Hash][]ethermantypes.Order)
 		}
 	}
 
@@ -531,12 +531,12 @@ func (_c *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_C
 	return _c
 }
 
-func (_c *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call) Return(_a0 []etherman.Block, _a1 map[common.Hash][]etherman.Order, _a2 error) *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call {
+func (_c *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call) Return(_a0 []ethermantypes.Block, _a1 map[common.Hash][]ethermantypes.Order, _a2 error) *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call {
 	_c.Call.Return(_a0, _a1, _a2)
 	return _c
 }
 
-func (_c *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call) RunAndReturn(run func(context.Context, uint64, *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error)) *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call {
+func (_c *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call) RunAndReturn(run func(context.Context, uint64, *uint64) ([]ethermantypes.Block, map[common.Hash][]ethermantypes.Order, error)) *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call {
 	_c.Call.Return(run)
 	return _c
 }
