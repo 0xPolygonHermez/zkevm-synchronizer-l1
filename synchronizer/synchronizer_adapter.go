@@ -27,6 +27,13 @@ func (s *SynchronizerAdapter) SetCallbackOnReorgDone(callback func(reorgData Reo
 }
 
 func (s *SynchronizerAdapter) SetCallbackOnRollbackBatches(callback func(data RollbackBatchesData)) {
+	s.internalSyncrhonizer.SetCallbackOnRollbackBatches(
+		func(data internal.RollbackBatchesData) {
+			callback(RollbackBatchesData{
+				LastBatchNumber:       data.LastBatchNumber,
+				LastBatchAccInputHash: data.LastBatchAccInputHash,
+			})
+		})
 }
 
 func (s *SynchronizerAdapter) Sync(returnOnSync bool) error {

@@ -30,5 +30,7 @@ func NewState(storageImpl storage.Storer) *State {
 	}
 	// Connect cache invalidation on Reorg
 	res.ReorgState.AddOnReorgCallback(res.L1InfoTreeState.OnReorg)
+	// Before doing a reorg rollbackBatches must validate it
+	res.ReorgState.AddPreExecuteReorg(res.RollbackBatchesState.PreExecuteReorg)
 	return res
 }

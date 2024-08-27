@@ -22,6 +22,7 @@ type StorageRollbackBatchesInterface interface {
 	GetSequencesGreatestOrEqualBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) (*SequencesBatchesSlice, error)
 	DeleteSequencesGreatestOrEqualBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) error
 	AddRollbackBatchesLogEntry(ctx context.Context, entry *RollbackBatchesLogEntry, dbTx dbTxType) error
+	GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber(ctx context.Context, l1BlockNumber uint64, dbTx dbTxType) ([]RollbackBatchesLogEntry, error)
 }
 
 type RollbackBatchesExecutionResult struct {
@@ -105,4 +106,24 @@ func (s *RollbackBatchesState) ExecuteRollbackBatches(ctx context.Context, rollb
 	// Add commit callback to execute the onRollbackBatchesCallbacks
 	dbTx.AddCommitCallback(func(dbTx storageTxType, err error) { s.onTxCommit(response, dbTx, err) })
 	return response, nil
+}
+
+// PreExecuteReorg check that is possible to execute the reorg
+// or add more info to the reorg request
+func (s *RollbackBatchesState) PreExecuteReorg(ctx context.Context, reorgRequest *ReorgRequest, dbTx storageTxType) error {
+	entries, err := s.storage.GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber(ctx, reorgRequest.FirstL1BlockNumberToKeep+1, dbTx)
+	if err != nil {
+		err = fmt.Errorf("pre_execute_reorg: error getting rollback batches log entries (L1BlockNumber>=%d): %w", reorgRequest.FirstL1BlockNumberToKeep+1, err)
+		log.Error(err.Error())
+		return err
+	}
+	if len(entries) == 0 {
+		log.Infof("pre_execute_reorg: no rollback batches log entries affected for reorg (L1BlockNumber>=%d)", reorgRequest.FirstL1BlockNumberToKeep+1)
+		return nil
+	}
+	// Todo a real reorg you must get the lowest UndoFirstBlockNumber and execute the reorg from this point
+	err = fmt.Errorf("pre_execute_reorg: reorg not possible (L1BlockNumber>=%d), affect to rollback batches! (%v)", reorgRequest.FirstL1BlockNumberToKeep+1, entries)
+	log.Error(err.Error())
+	return err
+
 }
