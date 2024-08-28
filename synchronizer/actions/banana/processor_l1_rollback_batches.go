@@ -21,7 +21,7 @@ func NewProcessorRollbackBatches(state stateOnRollbackBatchesInterface) *Process
 		ProcessorBase: actions.ProcessorBase[ProcessorRollbackBatches]{
 			SupportedEvent: []etherman.EventOrder{etherman.RollbackBatchesOrder},
 			// This event is processed for all forks, if the meaning or the way to execute depends on forkid need to be adapted
-			SupportedForkdIds: &actions.ForksIdOnlyBanana},
+			SupportedForkdIds: &actions.ForksIdAll},
 		state: state,
 	}
 }
