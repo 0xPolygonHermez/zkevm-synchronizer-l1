@@ -25,7 +25,7 @@ func NewState(storageImpl storage.Storer) *State {
 		model.NewBatchState(storageImpl),
 		model.NewReorgState(storageImpl),
 		model.NewStorageCompatibilityState(storageImpl),
-		model.NewRollbackBatchesState(storageImpl),
+		model.NewRollbackBatchesState(storageImpl, true),
 		storageImpl,
 	}
 	// Connect cache invalidation on Reorg

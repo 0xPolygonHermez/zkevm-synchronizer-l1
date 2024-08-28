@@ -46,6 +46,7 @@ type sequencedBatchStorer interface {
 	AddSequencedBatches(ctx context.Context, sequence *SequencedBatches, dbTx storageTxType) error
 	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) (*SequencedBatches, error)
 	GetSequencesGreatestOrEqualBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) (*SequencedBatchesSlice, error)
+	GetLatestSequence(ctx context.Context, dbTx storageTxType) (*SequencedBatches, error)
 	DeleteSequencesGreatestOrEqualBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) error
 }
 

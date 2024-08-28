@@ -118,6 +118,65 @@ func (_c *sequencedBatchStorer_DeleteSequencesGreatestOrEqualBatchNumber_Call) R
 	return _c
 }
 
+// GetLatestSequence provides a mock function with given fields: ctx, dbTx
+func (_m *sequencedBatchStorer) GetLatestSequence(ctx context.Context, dbTx entities.Tx) (*entities.SequencedBatches, error) {
+	ret := _m.Called(ctx, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLatestSequence")
+	}
+
+	var r0 *entities.SequencedBatches
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, entities.Tx) (*entities.SequencedBatches, error)); ok {
+		return rf(ctx, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, entities.Tx) *entities.SequencedBatches); ok {
+		r0 = rf(ctx, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entities.SequencedBatches)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, entities.Tx) error); ok {
+		r1 = rf(ctx, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// sequencedBatchStorer_GetLatestSequence_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLatestSequence'
+type sequencedBatchStorer_GetLatestSequence_Call struct {
+	*mock.Call
+}
+
+// GetLatestSequence is a helper method to define mock.On call
+//   - ctx context.Context
+//   - dbTx entities.Tx
+func (_e *sequencedBatchStorer_Expecter) GetLatestSequence(ctx interface{}, dbTx interface{}) *sequencedBatchStorer_GetLatestSequence_Call {
+	return &sequencedBatchStorer_GetLatestSequence_Call{Call: _e.mock.On("GetLatestSequence", ctx, dbTx)}
+}
+
+func (_c *sequencedBatchStorer_GetLatestSequence_Call) Run(run func(ctx context.Context, dbTx entities.Tx)) *sequencedBatchStorer_GetLatestSequence_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *sequencedBatchStorer_GetLatestSequence_Call) Return(_a0 *entities.SequencedBatches, _a1 error) *sequencedBatchStorer_GetLatestSequence_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *sequencedBatchStorer_GetLatestSequence_Call) RunAndReturn(run func(context.Context, entities.Tx) (*entities.SequencedBatches, error)) *sequencedBatchStorer_GetLatestSequence_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetSequenceByBatchNumber provides a mock function with given fields: ctx, batchNumber, dbTx
 func (_m *sequencedBatchStorer) GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx entities.Tx) (*entities.SequencedBatches, error) {
 	ret := _m.Called(ctx, batchNumber, dbTx)

@@ -8,6 +8,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/config"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/rpcsync"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage/pgstorage"
 	internal "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/internal"
@@ -179,5 +180,8 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 	}
 
 	syncAdapter := NewSynchronizerAdapter(NewSyncrhronizerQueries(state, storage, ctx), sync)
+
+	rpcsync.StartRPC(state)
+
 	return syncAdapter, nil
 }
