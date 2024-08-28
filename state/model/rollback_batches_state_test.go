@@ -23,8 +23,8 @@ func TestRollbackBatchesHappyPath(t *testing.T) {
 	}
 	seqs := &model.SequencesBatchesSlice{
 		model.SequencedBatches{
-			FromBatchNumber: 1,
-			ToBatchNumber:   123,
+			FromBatchNumber: 124,
+			ToBatchNumber:   125,
 			L1BlockNumber:   50,
 		},
 	}
@@ -37,4 +37,26 @@ func TestRollbackBatchesHappyPath(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, request.LastBatchNumber, res.RollbackEntry.LastBatchNumber)
 	require.Equal(t, uint64(50), res.RollbackEntry.UndoFirstBlockNumber)
+}
+
+func TestRollbackBatchesCantBreakSequence(t *testing.T) {
+	storageMock := mock_model.NewStorageRollbackBatchesInterface(t)
+	sut := model.NewRollbackBatchesState(storageMock, false)
+	request := model.RollbackBatchesRequest{
+		LastBatchNumber:       123,
+		LastBatchAccInputHash: [32]byte{},
+		L1BlockNumber:         60,
+		L1BlockTimestamp:      time.Now(),
+	}
+	seqs := &model.SequencesBatchesSlice{
+		model.SequencedBatches{
+			FromBatchNumber: 125,
+			ToBatchNumber:   126,
+			L1BlockNumber:   50,
+		},
+	}
+	dbTxMock := mock_entities.NewTx(t)
+	storageMock.EXPECT().GetSequencesGreatestOrEqualBatchNumber(context.TODO(), request.LastBatchNumber+1, dbTxMock).Return(seqs, nil)
+	_, err := sut.ExecuteRollbackBatches(context.TODO(), request, dbTxMock)
+	require.Error(t, err)
 }
