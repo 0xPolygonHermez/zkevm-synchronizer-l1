@@ -15,6 +15,13 @@ type VirtualBatch = entities.VirtualBatch
 type SequencedBatches = entities.SequencedBatches
 type SequenceOfBatches = model.SequenceOfBatches
 
+type RollbackBatchesRequest = model.RollbackBatchesRequest
+type RollbackBatchesExecutionResult = model.RollbackBatchesExecutionResult
+
 type stateOnSequencedBatchesInterface interface {
 	OnSequencedBatchesOnL1(ctx context.Context, seq SequenceOfBatches, dbTx stateTxType) error
+}
+
+type stateOnRollbackBatchesInterface interface {
+	ExecuteRollbackBatches(ctx context.Context, rollbackBatchesRequest RollbackBatchesRequest, dbTx stateTxType) (*RollbackBatchesExecutionResult, error)
 }

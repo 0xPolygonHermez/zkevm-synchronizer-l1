@@ -6,6 +6,7 @@ import (
 
 	"github.com/0xPolygon/cdk-contracts-tooling/contracts/banana/polygonvalidiumetrog"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
+	ethtypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -51,7 +52,7 @@ func NewSequenceBatchesDecoderBananaValidium(da dataavailability.BatchDataProvid
 	return &SequenceBatchesDecoderBananaValidium{*base, da}, nil
 }
 
-func (s *SequenceBatchesDecoderBananaValidium) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
+func (s *SequenceBatchesDecoderBananaValidium) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]ethtypes.SequencedBatch, error) {
 
 	if s.da == nil {
 		return nil, fmt.Errorf("data availability backend not set")
@@ -76,7 +77,7 @@ func (s *SequenceBatchesDecoderBananaValidium) DecodeSequenceBatches(txData []by
 	coinbase := data[4].(common.Address)
 	dataAvailabilityMsg := data[5].([]byte)
 
-	bananaData := BananaSequenceData{
+	bananaData := ethtypes.BananaSequenceData{
 		CounterL1InfoRoot:         counterL1InfoRoot,
 		MaxSequenceTimestamp:      maxSequenceTimestamp,
 		ExpectedFinalAccInputHash: expectedFinalAccInputHash,
@@ -96,10 +97,10 @@ func (s *SequenceBatchesDecoderBananaValidium) DecodeSequenceBatches(txData []by
 	for i, d := range batchData {
 		log.Debugf("%s    BatchData[%d]: %s", methodIDSequenceBatchesBananaValidiumName, i, common.Bytes2Hex(d.Data))
 	}
-	SequencedBatchMetadata := &SequencedBatchMetadata{
+	SequencedBatchMetadata := &ethtypes.SequencedBatchMetadata{
 		CallFunctionName: s.NameMethodID(txData[:4]),
 		ForkName:         "banana",
-		RollupFlavor:     RollupFlavorValidium,
+		RollupFlavor:     ethtypes.RollupFlavorValidium,
 	}
 	sequencedBatches := createSequencedBatchListBanana(sequencesValidium, batchInfos, batchData, l1InfoRoot, sequencer, txHash, nonce, coinbase, maxSequenceTimestamp, bananaData, SequencedBatchMetadata)
 
@@ -124,12 +125,12 @@ func createBatchInfoBanana(sequencesValidium []polygonvalidiumetrog.PolygonValid
 func createSequencedBatchListBanana(sequencesValidium []polygonvalidiumetrog.PolygonValidiumEtrogValidiumBatchData, batchInfos []batchInfo, batchData []dataavailability.BatchL2Data,
 	l1InfoRoot common.Hash, sequencer common.Address, txHash common.Hash, nonce uint64, coinbase common.Address,
 	maxSequenceTimestamp uint64,
-	bananaSequenceData BananaSequenceData,
-	metaData *SequencedBatchMetadata) []SequencedBatch {
-	sequencedBatches := make([]SequencedBatch, len(sequencesValidium))
+	bananaSequenceData ethtypes.BananaSequenceData,
+	metaData *ethtypes.SequencedBatchMetadata) []ethtypes.SequencedBatch {
+	sequencedBatches := make([]ethtypes.SequencedBatch, len(sequencesValidium))
 	for i, info := range batchInfos {
 		bn := info.num
-		s := EtrogSequenceData{
+		s := ethtypes.EtrogSequenceData{
 			Transactions:         batchData[i].Data,
 			ForcedGlobalExitRoot: sequencesValidium[i].ForcedGlobalExitRoot,
 			ForcedTimestamp:      sequencesValidium[i].ForcedTimestamp,
@@ -138,14 +139,14 @@ func createSequencedBatchListBanana(sequencesValidium []polygonvalidiumetrog.Pol
 		if metaData != nil {
 			switch batchData[i].Source {
 			case dataavailability.External:
-				metaData.SourceBatchData = SourceBatchDataValidiumDAExternal
+				metaData.SourceBatchData = ethtypes.SourceBatchDataValidiumDAExternal
 			case dataavailability.Trusted:
-				metaData.SourceBatchData = SourceBatchDataValidiumDATrusted
+				metaData.SourceBatchData = ethtypes.SourceBatchDataValidiumDATrusted
 
 				metaData.SourceBatchData = string(batchData[i].Source)
 			}
 		}
-		batch := SequencedBatch{
+		batch := ethtypes.SequencedBatch{
 			BatchNumber:       bn,
 			L1InfoRoot:        &l1InfoRoot,
 			SequencerAddr:     sequencer,

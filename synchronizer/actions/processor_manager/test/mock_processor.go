@@ -3,7 +3,7 @@ package processor_manager_test
 import (
 	"context"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	etherman "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
 )

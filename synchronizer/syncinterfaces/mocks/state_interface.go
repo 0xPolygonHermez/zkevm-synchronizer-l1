@@ -216,6 +216,39 @@ func (_c *StateInterface_AddOnReorgCallback_Call) RunAndReturn(run func(func(mod
 	return _c
 }
 
+// AddOnRollbackBatchesCallback provides a mock function with given fields: f
+func (_m *StateInterface) AddOnRollbackBatchesCallback(f func(model.RollbackBatchesExecutionResult)) {
+	_m.Called(f)
+}
+
+// StateInterface_AddOnRollbackBatchesCallback_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddOnRollbackBatchesCallback'
+type StateInterface_AddOnRollbackBatchesCallback_Call struct {
+	*mock.Call
+}
+
+// AddOnRollbackBatchesCallback is a helper method to define mock.On call
+//   - f func(model.RollbackBatchesExecutionResult)
+func (_e *StateInterface_Expecter) AddOnRollbackBatchesCallback(f interface{}) *StateInterface_AddOnRollbackBatchesCallback_Call {
+	return &StateInterface_AddOnRollbackBatchesCallback_Call{Call: _e.mock.On("AddOnRollbackBatchesCallback", f)}
+}
+
+func (_c *StateInterface_AddOnRollbackBatchesCallback_Call) Run(run func(f func(model.RollbackBatchesExecutionResult))) *StateInterface_AddOnRollbackBatchesCallback_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(func(model.RollbackBatchesExecutionResult)))
+	})
+	return _c
+}
+
+func (_c *StateInterface_AddOnRollbackBatchesCallback_Call) Return() *StateInterface_AddOnRollbackBatchesCallback_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *StateInterface_AddOnRollbackBatchesCallback_Call) RunAndReturn(run func(func(model.RollbackBatchesExecutionResult))) *StateInterface_AddOnRollbackBatchesCallback_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // BeginTransaction provides a mock function with given fields: ctx
 func (_m *StateInterface) BeginTransaction(ctx context.Context) (entities.Tx, error) {
 	ret := _m.Called(ctx)
@@ -318,6 +351,66 @@ func (_c *StateInterface_ExecuteReorg_Call) Return(_a0 model.ReorgExecutionResul
 }
 
 func (_c *StateInterface_ExecuteReorg_Call) RunAndReturn(run func(context.Context, model.ReorgRequest, entities.Tx) model.ReorgExecutionResult) *StateInterface_ExecuteReorg_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ExecuteRollbackBatches provides a mock function with given fields: ctx, rollbackBatchesRequest, dbTx
+func (_m *StateInterface) ExecuteRollbackBatches(ctx context.Context, rollbackBatchesRequest model.RollbackBatchesRequest, dbTx entities.Tx) (*model.RollbackBatchesExecutionResult, error) {
+	ret := _m.Called(ctx, rollbackBatchesRequest, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ExecuteRollbackBatches")
+	}
+
+	var r0 *model.RollbackBatchesExecutionResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, model.RollbackBatchesRequest, entities.Tx) (*model.RollbackBatchesExecutionResult, error)); ok {
+		return rf(ctx, rollbackBatchesRequest, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, model.RollbackBatchesRequest, entities.Tx) *model.RollbackBatchesExecutionResult); ok {
+		r0 = rf(ctx, rollbackBatchesRequest, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.RollbackBatchesExecutionResult)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, model.RollbackBatchesRequest, entities.Tx) error); ok {
+		r1 = rf(ctx, rollbackBatchesRequest, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StateInterface_ExecuteRollbackBatches_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ExecuteRollbackBatches'
+type StateInterface_ExecuteRollbackBatches_Call struct {
+	*mock.Call
+}
+
+// ExecuteRollbackBatches is a helper method to define mock.On call
+//   - ctx context.Context
+//   - rollbackBatchesRequest model.RollbackBatchesRequest
+//   - dbTx entities.Tx
+func (_e *StateInterface_Expecter) ExecuteRollbackBatches(ctx interface{}, rollbackBatchesRequest interface{}, dbTx interface{}) *StateInterface_ExecuteRollbackBatches_Call {
+	return &StateInterface_ExecuteRollbackBatches_Call{Call: _e.mock.On("ExecuteRollbackBatches", ctx, rollbackBatchesRequest, dbTx)}
+}
+
+func (_c *StateInterface_ExecuteRollbackBatches_Call) Run(run func(ctx context.Context, rollbackBatchesRequest model.RollbackBatchesRequest, dbTx entities.Tx)) *StateInterface_ExecuteRollbackBatches_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(model.RollbackBatchesRequest), args[2].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *StateInterface_ExecuteRollbackBatches_Call) Return(_a0 *model.RollbackBatchesExecutionResult, _a1 error) *StateInterface_ExecuteRollbackBatches_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StateInterface_ExecuteRollbackBatches_Call) RunAndReturn(run func(context.Context, model.RollbackBatchesRequest, entities.Tx) (*model.RollbackBatchesExecutionResult, error)) *StateInterface_ExecuteRollbackBatches_Call {
 	_c.Call.Return(run)
 	return _c
 }

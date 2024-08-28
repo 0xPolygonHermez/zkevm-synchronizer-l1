@@ -121,6 +121,9 @@ generate-mocks: clean-mocks
 
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../dataavailability --output ../dataavailability/mocks --outpkg mock_dataavailability ${COMMON_MOCKERY_PARAMS}
 	
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../etherman --output ../etherman/mocks --outpkg mock_etherman ${COMMON_MOCKERY_PARAMS}
+	
+
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Client --srcpkg=github.com/0xPolygon/cdk-data-availability/client --output=../dataavailability/mocks --structname=DACClientMock --filename=mock_dac_client.go --outpkg mock_dataavailability ${COMMON_MOCKERY_PARAMS}
 	
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../synchronizer/mocks --structname=DbTxMock --filename=mock_dbtx.go --outpkg mock_synchronizer ${COMMON_MOCKERY_PARAMS}

@@ -15,6 +15,8 @@ type ReorgRequest struct {
 	ReasonError              error
 }
 
+type PreExecuteReorgFunc = func(ctx context.Context, reorgRequest *ReorgRequest, dbTx storageTxType) error
+
 func (r *ReorgRequest) String() string {
 	return fmt.Sprintf("FirstL1BlockNumberToKeep: %d, ReasonError: %s", r.FirstL1BlockNumberToKeep, r.ReasonError)
 }
@@ -49,6 +51,7 @@ type ReorgState struct {
 	storage          StorageReorgInterface
 	onReorgCallbacks []ReorgCallbackType
 	lastReorgResult  *ReorgExecutionResult
+	preExecuteReorg  []PreExecuteReorgFunc
 }
 
 func NewReorgState(storage StorageReorgInterface) *ReorgState {
@@ -57,15 +60,35 @@ func NewReorgState(storage StorageReorgInterface) *ReorgState {
 	}
 }
 
+func (s *ReorgState) AddPreExecuteReorg(f PreExecuteReorgFunc) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.preExecuteReorg = append(s.preExecuteReorg, f)
+}
+
 func (s *ReorgState) AddOnReorgCallback(f ReorgCallbackType) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.onReorgCallbacks = append(s.onReorgCallbacks, f)
 }
 
+func (s *ReorgState) executePreExecuteReorg(ctx context.Context, reorgRequest *ReorgRequest, dbTx storageTxType) error {
+	for _, f := range s.preExecuteReorg {
+		err := f(ctx, reorgRequest, dbTx)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *ReorgState) ExecuteReorg(ctx context.Context, reorgRequest ReorgRequest, dbTx storageTxType) ReorgExecutionResult {
 	startTime := time.Now()
-	err := s.storage.ResetToL1BlockNumber(ctx, reorgRequest.FirstL1BlockNumberToKeep, dbTx)
+	err := s.executePreExecuteReorg(ctx, &reorgRequest, dbTx)
+	if err != nil {
+		return s.createNewResult(reorgRequest, err, startTime)
+	}
+	err = s.storage.ResetToL1BlockNumber(ctx, reorgRequest.FirstL1BlockNumberToKeep, dbTx)
 	res := s.createNewResult(reorgRequest, err, startTime)
 	dbTx.AddCommitCallback(s.onTxCommit)
 	dbTx.AddCommitCallback(s.onTxRollback)

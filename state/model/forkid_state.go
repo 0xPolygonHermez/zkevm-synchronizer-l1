@@ -115,10 +115,11 @@ func (s *ForkIdState) GetForkIDByBlockNumber(ctx context.Context, blockNumber ui
 	}
 	maxForId := uint64(0)
 	for _, v := range forks {
-		if v.BlockNumber >= blockNumber {
-			maxForId = v.ForkId
-		} else {
+
+		if v.BlockNumber > blockNumber {
 			return maxForId
+		} else {
+			maxForId = v.ForkId
 		}
 	}
 	return maxForId

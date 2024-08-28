@@ -3,7 +3,7 @@ package syncinterfaces
 import (
 	"context"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	ethtypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -16,6 +16,6 @@ const (
 )
 
 type BlockRangeProcessor interface {
-	ProcessBlockRange(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64) error
-	ProcessBlockRangeSingleDbTx(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, finalizedBlockNumber uint64, storeBlocks ProcessBlockRangeL1BlocksMode, dbTx entities.Tx) error
+	ProcessBlockRange(ctx context.Context, blocks []ethtypes.Block, order map[common.Hash][]ethtypes.Order, finalizedBlockNumber uint64) error
+	ProcessBlockRangeSingleDbTx(ctx context.Context, blocks []ethtypes.Block, order map[common.Hash][]ethtypes.Order, finalizedBlockNumber uint64, storeBlocks ProcessBlockRangeL1BlocksMode, dbTx entities.Tx) error
 }

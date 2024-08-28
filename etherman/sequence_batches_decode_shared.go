@@ -8,6 +8,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
+	ethtypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -92,11 +93,11 @@ func createBatchInfo(sequencesValidium []polygonzkevm.PolygonValidiumEtrogValidi
 func createSequencedBatchList(sequencesValidium []polygonzkevm.PolygonValidiumEtrogValidiumBatchData, batchInfos []batchInfo, batchData []dataavailability.BatchL2Data,
 	l1InfoRoot common.Hash, sequencer common.Address, txHash common.Hash, nonce uint64, coinbase common.Address,
 	maxSequenceTimestamp uint64, initSequencedBatchNumber uint64,
-	metaData *SequencedBatchMetadata) []SequencedBatch {
-	sequencedBatches := make([]SequencedBatch, len(sequencesValidium))
+	metaData *ethtypes.SequencedBatchMetadata) []ethtypes.SequencedBatch {
+	sequencedBatches := make([]ethtypes.SequencedBatch, len(sequencesValidium))
 	for i, info := range batchInfos {
 		bn := info.num
-		s := EtrogSequenceData{
+		s := ethtypes.EtrogSequenceData{
 			Transactions:         batchData[i].Data,
 			ForcedGlobalExitRoot: sequencesValidium[i].ForcedGlobalExitRoot,
 			ForcedTimestamp:      sequencesValidium[i].ForcedTimestamp,
@@ -105,14 +106,14 @@ func createSequencedBatchList(sequencesValidium []polygonzkevm.PolygonValidiumEt
 		if metaData != nil {
 			switch batchData[i].Source {
 			case dataavailability.External:
-				metaData.SourceBatchData = SourceBatchDataValidiumDAExternal
+				metaData.SourceBatchData = ethtypes.SourceBatchDataValidiumDAExternal
 			case dataavailability.Trusted:
-				metaData.SourceBatchData = SourceBatchDataValidiumDATrusted
+				metaData.SourceBatchData = ethtypes.SourceBatchDataValidiumDATrusted
 
 				metaData.SourceBatchData = string(batchData[i].Source)
 			}
 		}
-		batch := SequencedBatch{
+		batch := ethtypes.SequencedBatch{
 			BatchNumber:       bn,
 			L1InfoRoot:        &l1InfoRoot,
 			SequencerAddr:     sequencer,
@@ -123,7 +124,7 @@ func createSequencedBatchList(sequencesValidium []polygonzkevm.PolygonValidiumEt
 			Metadata:          metaData,
 		}
 
-		elderberry := &SequencedBatchElderberryData{
+		elderberry := &ethtypes.SequencedBatchElderberryData{
 			MaxSequenceTimestamp:     maxSequenceTimestamp,
 			InitSequencedBatchNumber: initSequencedBatchNumber,
 		}

@@ -8,6 +8,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/config"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/rpcsync"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage/pgstorage"
 	internal "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/internal"
@@ -114,6 +115,18 @@ type SynchronizerReorgSupporter interface {
 	SetCallbackOnReorgDone(callback func(reorgData ReorgExecutionResult))
 }
 
+type RollbackBatchesData struct {
+	LastBatchNumber       uint64
+	LastBatchAccInputHash common.Hash
+}
+
+// SynchronizerRollbackSupporter is an interface that give support to the banna rollbackBatches
+type SynchronizerRollbackBatchesSupporter interface {
+	// SetCallbackOnRollbackBatches sets a callback that will be called when the rollbackBatches  is done
+	// to disable it you can set nil
+	SetCallbackOnRollbackBatches(callback func(data RollbackBatchesData))
+}
+
 type Synchronizer interface {
 	SynchronizerRunner
 	SynchornizerStatusQuerier
@@ -122,6 +135,7 @@ type Synchronizer interface {
 	SynchronizerReorgSupporter
 	SynchronizerVirtualBatchesQuerier
 	SynchronizerBlockQuerier
+	SynchronizerRollbackBatchesSupporter
 }
 
 func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Synchronizer, error) {
@@ -166,5 +180,8 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 	}
 
 	syncAdapter := NewSynchronizerAdapter(NewSyncrhronizerQueries(state, storage, ctx), sync)
+
+	rpcsync.StartRPC(state)
+
 	return syncAdapter, nil
 }

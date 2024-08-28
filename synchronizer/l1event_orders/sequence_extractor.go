@@ -1,7 +1,7 @@
 package l1event_orders
 
 import (
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	etherman "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 )
 
 type Sequence struct {

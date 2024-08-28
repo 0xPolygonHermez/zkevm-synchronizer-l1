@@ -1,4 +1,4 @@
-package etherman
+package types
 
 import (
 	"encoding/hex"
@@ -9,6 +9,26 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/oldpolygonzkevm"
 	"github.com/ethereum/go-ethereum/common"
 )
+
+type L1InfoTreeV2Data struct {
+	CurrentL1InfoRoot common.Hash
+	LeafCount         uint32
+	BlockHash         common.Hash
+	MinTimestamp      uint64
+}
+
+func (l *L1InfoTreeV2Data) String() string {
+	return fmt.Sprintf("CurrentL1InfoRoot: %s LeafCount: %d BlockHash: %s MinTimestamp: %d", l.CurrentL1InfoRoot.String(), l.LeafCount, l.BlockHash.String(), l.MinTimestamp)
+}
+
+type RollbackBatchesData struct {
+	TargetBatch            uint64
+	AccInputHashToRollback common.Hash
+}
+
+func (r *RollbackBatchesData) String() string {
+	return fmt.Sprintf("TargetBatch: %d AccInputHashToRollback: %s", r.TargetBatch, r.AccInputHashToRollback.String())
+}
 
 // Block struct
 type Block struct {
@@ -24,6 +44,8 @@ type Block struct {
 	ReceivedAt            time.Time
 	// GER data
 	GlobalExitRoots, L1InfoTree []GlobalExitRoot
+	L1InfoTreeV2                []L1InfoTreeV2Data
+	RollbackBatches             []RollbackBatchesData
 }
 
 func (b *Block) HasEvents() bool {
@@ -39,6 +61,11 @@ type GlobalExitRoot struct {
 	GlobalExitRoot    common.Hash
 	Timestamp         time.Time
 	PreviousBlockHash common.Hash
+}
+
+func (g *GlobalExitRoot) String() string {
+	return fmt.Sprintf("BlockNumber: %d MainnetExitRoot: %s RollupExitRoot: %s GlobalExitRoot: %s Timestamp: %s PreviousBlockHash: %s",
+		g.BlockNumber, g.MainnetExitRoot.String(), g.RollupExitRoot.String(), g.GlobalExitRoot.String(), g.Timestamp.String(), g.PreviousBlockHash.String())
 }
 
 // SequencedBatchElderberryData represents an Elderberry sequenced batch data

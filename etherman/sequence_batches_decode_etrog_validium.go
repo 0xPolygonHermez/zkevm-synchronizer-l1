@@ -7,6 +7,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/etrogvalidiumpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
+	ethtypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -28,7 +29,7 @@ func NewDecodeSequenceBatchesEtrogValidium(da dataavailability.BatchDataProvider
 	return &SequenceBatchesDecodeEtrogValidium{*base, da}, nil
 }
 
-func (s *SequenceBatchesDecodeEtrogValidium) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
+func (s *SequenceBatchesDecodeEtrogValidium) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]ethtypes.SequencedBatch, error) {
 	if s.da == nil {
 		return nil, fmt.Errorf("data availability backend not set")
 	}
@@ -60,9 +61,9 @@ func (s *SequenceBatchesDecodeEtrogValidium) DecodeSequenceBatches(txData []byte
 		return nil, err
 	}
 
-	SequencedBatchMetadata := &SequencedBatchMetadata{
+	SequencedBatchMetadata := &ethtypes.SequencedBatchMetadata{
 		CallFunctionName: s.NameMethodID(txData[:4]),
-		RollupFlavor:     RollupFlavorValidium,
+		RollupFlavor:     ethtypes.RollupFlavorValidium,
 		ForkName:         "etrog",
 	}
 

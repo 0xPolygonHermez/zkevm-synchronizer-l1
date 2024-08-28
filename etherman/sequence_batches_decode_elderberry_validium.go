@@ -6,6 +6,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
+	ethtypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -43,7 +44,7 @@ func NewDecodeSequenceBatchesElderberryValidium(da dataavailability.BatchDataPro
 	return &SequenceBatchesDecodeElderberryValidium{*base, da}, nil
 }
 
-func (s *SequenceBatchesDecodeElderberryValidium) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]SequencedBatch, error) {
+func (s *SequenceBatchesDecodeElderberryValidium) DecodeSequenceBatches(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash) ([]ethtypes.SequencedBatch, error) {
 	if s.da == nil {
 		return nil, fmt.Errorf("data availability backend not set")
 	}
@@ -70,10 +71,10 @@ func (s *SequenceBatchesDecodeElderberryValidium) DecodeSequenceBatches(txData [
 	if err != nil {
 		return nil, err
 	}
-	SequencedBatchMetadata := &SequencedBatchMetadata{
+	SequencedBatchMetadata := &ethtypes.SequencedBatchMetadata{
 		CallFunctionName: s.NameMethodID(txData[:4]),
 		ForkName:         "elderberry",
-		RollupFlavor:     RollupFlavorValidium,
+		RollupFlavor:     ethtypes.RollupFlavorValidium,
 	}
 
 	sequencedBatches := createSequencedBatchList(sequencesValidium, batchInfos, batchData, l1InfoRoot, sequencer, txHash, nonce, coinbase, maxSequenceTimestamp, initSequencedBatchNumber, SequencedBatchMetadata)
