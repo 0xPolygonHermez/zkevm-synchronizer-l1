@@ -2,7 +2,6 @@ package banana
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	etherman "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
@@ -20,7 +19,8 @@ type ProcessorRollbackBatches struct {
 func NewProcessorRollbackBatches(state stateOnRollbackBatchesInterface) *ProcessorRollbackBatches {
 	return &ProcessorRollbackBatches{
 		ProcessorBase: actions.ProcessorBase[ProcessorRollbackBatches]{
-			SupportedEvent:    []etherman.EventOrder{etherman.RollbackBatchesOrder},
+			SupportedEvent: []etherman.EventOrder{etherman.RollbackBatchesOrder},
+			// This event is processed for all forks, if the meaning or the way to execute depends on forkid need to be adapted
 			SupportedForkdIds: &actions.ForksIdOnlyBanana},
 		state: state,
 	}
@@ -49,5 +49,5 @@ func (p *ProcessorRollbackBatches) ProcessRollbackBatches(ctx context.Context, f
 		return err
 	}
 
-	return fmt.Errorf("not implemented")
+	return nil
 }
