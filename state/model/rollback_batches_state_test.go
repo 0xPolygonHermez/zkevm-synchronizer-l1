@@ -14,7 +14,7 @@ import (
 
 func TestRollbackBatchesHappyPath(t *testing.T) {
 	storageMock := mock_model.NewStorageRollbackBatchesInterface(t)
-	sut := model.NewRollbackBatchesState(storageMock)
+	sut := model.NewRollbackBatchesState(storageMock, false)
 	request := model.RollbackBatchesRequest{
 		LastBatchNumber:       123,
 		LastBatchAccInputHash: [32]byte{},

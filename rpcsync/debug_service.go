@@ -66,7 +66,10 @@ func (b *DebugEndpoints) ForceReorg(firstL1BlockNumberToKeep uint64) (interface{
 	log.Warnf("RPC: Execute fake ExecuteReorg %v", req)
 	res := b.State.ExecuteReorg(ctx, req, dbTx)
 	if res.ExecutionError != nil {
-		dbTx.Rollback(ctx)
+		errRollback := dbTx.Rollback(ctx)
+		if errRollback != nil {
+			log.Warnf("RPC: ExecuteReorg fails %v. Rollback DB result: %v", res.ExecutionError, errRollback)
+		}
 		return nil, rpc.NewRPCError(rpc.DefaultErrorCode, res.ExecutionError.Error())
 	}
 	err = dbTx.Commit(ctx)
