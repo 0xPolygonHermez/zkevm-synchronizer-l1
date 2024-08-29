@@ -79,3 +79,11 @@ func TestBlockRange_SettingWrongFromBlockReturnsNil(t *testing.T) {
 	it := l1sync.NewBlockRangeIterator(fromBlock, chunck, lastBlock)
 	require.Nil(t, it)
 }
+
+func TestBlockRange_IsAlreadySincornizedReturnsNilblockRangeIterator(t *testing.T) {
+	chunck := uint64(10)
+	fromBlock := uint64(110)
+	maxBlock := uint64(110)
+	blockRangeIterator := l1sync.NewBlockRangeIterator(fromBlock, chunck, maxBlock)
+	require.Nil(t, blockRangeIterator)
+}
