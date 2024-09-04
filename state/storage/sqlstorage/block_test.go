@@ -54,7 +54,6 @@ func TestBlockSetTimeToUTC(t *testing.T) {
 	dbBlock, err := storage.GetBlockByNumber(ctx, block310.BlockNumber, dbTx)
 	require.NoError(t, err)
 	require.Equal(t, block310.ReceivedAt.UTC(), dbBlock.ReceivedAt, "GetBlockByNumber tstamp is UTC")
-
 }
 
 func TestBlockAddAndGets(t *testing.T) {

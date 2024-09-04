@@ -39,5 +39,4 @@ func TestReset(t *testing.T) {
 	lastBlock, err = storage.GetLastBlock(ctx, nil)
 	require.NoError(t, err)
 	require.Equal(t, block300.BlockNumber, lastBlock.BlockNumber)
-
 }
