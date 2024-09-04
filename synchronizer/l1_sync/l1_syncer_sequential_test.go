@@ -70,10 +70,10 @@ func TestSyncBlocksSequentialNothingToDo(t *testing.T) {
 func TestSyncBlocksSequentialReorgMissingFirstBlockOnRollupResponse(t *testing.T) {
 	testData := newL1SyncData(t)
 	testData.mockBlockRetriever.EXPECT().GetL1BlockPoints(testData.ctx).Return(l1sync.BlockPoints{
-		L1LastBlockToSync:      100,
+		L1LastBlockToSync:      101,
 		L1FinalizedBlockNumber: 100,
 	}, nil)
-	toBlock := uint64(100)
+	toBlock := uint64(101)
 	testData.mockEth.EXPECT().GetRollupInfoByBlockRange(testData.ctx, uint64(100), &toBlock).Return(nil, nil, nil)
 	_, _, err := testData.sut.SyncBlocks(testData.ctx, testData.lastEthBlock)
 	require.Error(t, err)
@@ -82,10 +82,10 @@ func TestSyncBlocksSequentialReorgMissingFirstBlockOnRollupResponse(t *testing.T
 func TestSyncBlocksSequentialReorgDetected(t *testing.T) {
 	testData := newL1SyncData(t)
 	testData.mockBlockRetriever.EXPECT().GetL1BlockPoints(testData.ctx).Return(l1sync.BlockPoints{
-		L1LastBlockToSync:      100,
+		L1LastBlockToSync:      101,
 		L1FinalizedBlockNumber: 100,
 	}, nil)
-	toBlock := uint64(100)
+	toBlock := uint64(101)
 	testData.mockEth.EXPECT().GetRollupInfoByBlockRange(testData.ctx, uint64(100), &toBlock).Return(nil, nil, nil)
 	_, _, err := testData.sut.SyncBlocks(testData.ctx, testData.lastEthBlock)
 	require.Error(t, err)
