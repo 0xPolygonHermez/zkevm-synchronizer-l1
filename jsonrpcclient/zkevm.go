@@ -7,6 +7,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/hex"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/jsonrpcclient/types"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -82,6 +83,7 @@ func (c *Client) batchesByNumbers(_ context.Context, numbers []*big.Int, method 
 
 	response, err := JSONRPCCall(c.url, method, &types.BatchFilter{Numbers: batchNumbers})
 	if err != nil {
+		log.Warn(response)
 		return nil, err
 	}
 
