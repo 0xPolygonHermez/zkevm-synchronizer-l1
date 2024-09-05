@@ -16,7 +16,8 @@ func TestAddForkID(t *testing.T) {
 	require.NoError(t, err)
 	dbTx, err := storage.BeginTransaction(ctx)
 	require.NoError(t, err)
-	defer func() { _ = dbTx.Commit(ctx) }()
+	err = storage.AddBlock(ctx, &sqlstorage.L1Block{BlockNumber: 1}, dbTx)
+	require.NoError(t, err)
 	forkInterval := sqlstorage.ForkIDInterval{
 		FromBatchNumber: 1,
 		ToBatchNumber:   2,
@@ -41,7 +42,11 @@ func TestAddForkIDOnConlict(t *testing.T) {
 	require.NoError(t, err)
 	dbTx, err := storage.BeginTransaction(ctx)
 	require.NoError(t, err)
-	defer func() { _ = dbTx.Commit(ctx) }()
+	err = storage.AddBlock(ctx, &sqlstorage.L1Block{BlockNumber: 1}, dbTx)
+	require.NoError(t, err)
+	err = storage.AddBlock(ctx, &sqlstorage.L1Block{BlockNumber: 2}, dbTx)
+	require.NoError(t, err)
+
 	forkInterval := sqlstorage.ForkIDInterval{
 		FromBatchNumber: 1,
 		ToBatchNumber:   2,
@@ -70,6 +75,9 @@ func TestUpdateForkID(t *testing.T) {
 	require.NoError(t, err)
 	dbTx, err := storage.BeginTransaction(ctx)
 	require.NoError(t, err)
+	err = storage.AddBlock(ctx, &sqlstorage.L1Block{BlockNumber: 1}, dbTx)
+	require.NoError(t, err)
+
 	forkInterval := sqlstorage.ForkIDInterval{
 		FromBatchNumber: 1,
 		ToBatchNumber:   2,

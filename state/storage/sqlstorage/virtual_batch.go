@@ -14,7 +14,7 @@ import (
 type VirtualBatch = entities.VirtualBatch
 
 var (
-	virtualBatchTable           = "sync.virtual_batch"
+	virtualBatchTable           = "virtual_batch"
 	mandatoryFieldsVirtualBatch = []string{"batch_num", "fork_id", "raw_txs_data", "vlog_tx_hash", "coinbase", "sequence_from_batch_num", "block_num",
 		"sequencer_addr", "received_at", "sync_version"}
 	optionalFieldsVirtualBatch = []string{"l1_info_root", "extra_info", "batch_timestamp"}
@@ -30,7 +30,12 @@ func (p *SqlStorage) AddVirtualBatch(ctx context.Context, virtualBatch *VirtualB
 		tmp := virtualBatch.L1InfoRoot.String()
 		l1inforoot = &tmp
 	}
-	optionalArguments := []interface{}{l1inforoot, virtualBatch.ExtraInfo, virtualBatch.BatchTimestamp.UTC()}
+	var tmpBatchTimestamp *time.Time
+	if virtualBatch.BatchTimestamp != nil {
+		utcTime := virtualBatch.BatchTimestamp.UTC()
+		tmpBatchTimestamp = &utcTime
+	}
+	optionalArguments := []interface{}{l1inforoot, virtualBatch.ExtraInfo, tmpBatchTimestamp}
 	fields := append(mandatoryFieldsVirtualBatch, optionalFieldsVirtualBatch...)
 	arguments := append(mandatoryArguments, optionalArguments...)
 	sql := composeInsertSql(fields, p.BuildTableName(virtualBatchTable))

@@ -14,6 +14,6 @@ func skipDatabaseTestIfNeeded(t *testing.T) {
 func getStorageConfig() sqlstorage.Config {
 	return sqlstorage.Config{
 		DriverName: "sqlite3",
-		DataSource: "file::memory:?cache=shared",
+		DataSource: "file::memory:",
 	}
 }
