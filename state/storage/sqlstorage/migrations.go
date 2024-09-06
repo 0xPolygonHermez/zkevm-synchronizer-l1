@@ -11,13 +11,13 @@ import (
 //go:embed migrations/*
 var dbMigrations embed.FS
 
-func RunMigrationsUp(cfg Config, db *sql.DB) error {
+func RunMigrationsUp(driverName string, db *sql.DB) error {
 	migrations := migrate.EmbedFileSystemMigrationSource{
 		FileSystem: dbMigrations,
 		Root:       "migrations",
 	}
 	direction := migrate.Up
-	nMigrations, err := migrate.Exec(db, cfg.DriverName, migrations, direction)
+	nMigrations, err := migrate.Exec(db, driverName, migrations, direction)
 	if err != nil {
 		return err
 	}

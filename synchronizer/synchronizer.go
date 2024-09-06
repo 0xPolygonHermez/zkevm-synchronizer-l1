@@ -10,7 +10,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/rpcsync"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage/pgstorage"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage"
 	internal "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/internal"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -149,18 +149,20 @@ func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Sync
 }
 
 func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, error) {
-	configStorage := pgstorage.Config{
-		Name:     config.DB.Name,
-		User:     config.DB.User,
-		Password: config.DB.Password,
-		Host:     config.DB.Host,
-		Port:     config.DB.Port,
-		MaxConns: config.DB.MaxConns,
-	}
-
+	/*	configStorage := pgstorage.Config{
+			Name:     config.DB.Name,
+			User:     config.DB.User,
+			Password: config.DB.Password,
+			Host:     config.DB.Host,
+			Port:     config.DB.Port,
+			MaxConns: config.DB.MaxConns,
+		}
+	*/
 	log.Init(config.Log)
 
-	storage, err := pgstorage.NewPostgresStorage(configStorage)
+	//storage, err := pgstorage.NewPostgresStorage(configStorage)
+
+	storage, err := storage.NewStorage(config.SQLDB)
 	if err != nil {
 		log.Error(err)
 		return nil, err

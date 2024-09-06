@@ -36,7 +36,19 @@ func TestAddL1InfoTreeLeafFailsForeignBlockKey(t *testing.T) {
 	leaf := testLeafData
 	err = storage.AddL1InfoTreeLeaf(ctx, leaf, dbTx)
 	require.Error(t, err)
+}
 
+func TestGetLatestL1InfoTreeLeafErrorNotFoundReturnsNil(t *testing.T) {
+	skipDatabaseTestIfNeeded(t)
+	ctx := context.TODO()
+	dbConfig := getStorageConfig()
+	storage, err := sqlstorage.NewSqlStorage(dbConfig, true)
+	require.NoError(t, err)
+	dbTx, err := storage.BeginTransaction(ctx)
+	require.NoError(t, err)
+	leaf, err := storage.GetLatestL1InfoTreeLeaf(ctx, dbTx)
+	require.NoError(t, err)
+	require.Nil(t, leaf)
 }
 
 func TestAddL1InfoTreeLeafOk(t *testing.T) {

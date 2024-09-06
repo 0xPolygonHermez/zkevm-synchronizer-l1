@@ -28,7 +28,7 @@ const (
 type Config struct {
 	// Configure Log level for all the services, allow also to store the logs in a file
 	Log          log.Config        `mapstructure:"Log"`
-	DB           storage.Config    `mapstructure:"DB"`
+	SQLDB        storage.Config    `mapstructure:"SQLDB"`
 	Synchronizer syncconfig.Config `mapstructure:"Synchronizer"`
 	Etherman     etherman.Config   `mapstructure:"Etherman"`
 }

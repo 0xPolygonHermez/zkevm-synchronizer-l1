@@ -13,6 +13,9 @@ const DefaultValues = `
 	Host = "localhost"
 	Port = "5436"
 	MaxConns = 10
+[SQLDB]
+	DriverName = "set_driver. example: sqlite"
+	DataSource = "example: file::memory:?cache=shared"
 [Synchronizer]
 	SyncInterval = "10s"
 	SyncChunkSize = 500

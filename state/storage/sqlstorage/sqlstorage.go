@@ -7,6 +7,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
+	_ "github.com/jackc/pgx/v4"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -25,7 +26,7 @@ func NewSqlStorage(cfg Config, runMigrations bool) (*SqlStorage, error) {
 		return nil, err
 	}
 	if runMigrations {
-		err := RunMigrationsUp(cfg, db)
+		err := RunMigrationsUp(cfg.DriverName, db)
 		if err != nil {
 			err := fmt.Errorf("error executing migrations: %w", err)
 			log.Errorf(err.Error())

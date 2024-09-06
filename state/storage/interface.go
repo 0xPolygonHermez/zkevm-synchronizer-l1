@@ -11,6 +11,7 @@ type L1Block = entities.L1Block
 type L1InfoTreeLeaf = entities.L1InfoTreeLeaf
 type ForkIDInterval = entities.ForkIDInterval
 type VirtualBatch = entities.VirtualBatch
+type VirtualBatchConstraints = entities.VirtualBatchConstraints
 type SequencedBatches = entities.SequencedBatches
 type storageTxType = entities.Tx
 type kVMetadataEntry = entities.KVMetadataEntry
@@ -53,6 +54,7 @@ type sequencedBatchStorer interface {
 type virtualBatchStorer interface {
 	AddVirtualBatch(ctx context.Context, virtualBatch *VirtualBatch, dbTx storageTxType) error
 	GetVirtualBatchByBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) (*VirtualBatch, error)
+	GetLastestVirtualBatchNumber(ctx context.Context, constrains *VirtualBatchConstraints, dbTx storageTxType) (uint64, error)
 }
 
 type reorgStorer interface {

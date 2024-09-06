@@ -20,6 +20,8 @@ var (
 	optionalFieldsVirtualBatch = []string{"l1_info_root", "extra_info", "batch_timestamp"}
 )
 
+type VirtualBatchConstraints = entities.VirtualBatchConstraints
+
 // AddVirtualBatch adds a new virtual batch to the storage.
 func (p *SqlStorage) AddVirtualBatch(ctx context.Context, virtualBatch *VirtualBatch, dbTx dbTxType) error {
 	mandatoryArguments := []interface{}{virtualBatch.BatchNumber, virtualBatch.ForkID, virtualBatch.BatchL2Data, virtualBatch.VlogTxHash.String(),
@@ -72,40 +74,6 @@ func (p *SqlStorage) GetLastestVirtualBatchNumber(ctx context.Context, constrain
 		return 0, err
 	}
 	return batchNumber, nil
-}
-
-// VirtualBatchConstraints is a struct that contains the constraints to filter the virtual batches.
-// is ready to add constraints to the query.
-type VirtualBatchConstraints struct {
-	batchNumberEqual *uint64
-	batchNumberGt    *uint64
-	batchNumberLt    *uint64
-}
-
-func (c *VirtualBatchConstraints) BatchNumberEqual(batchNumber uint64) {
-	c.batchNumberEqual = &batchNumber
-}
-
-func (c *VirtualBatchConstraints) BatchNumberGt(batchNumber uint64) {
-	c.batchNumberGt = &batchNumber
-}
-
-func (c *VirtualBatchConstraints) BatchNumberLt(batchNumber uint64) {
-	c.batchNumberLt = &batchNumber
-}
-
-func (c *VirtualBatchConstraints) WhereClause() string {
-	res := ""
-	if c.batchNumberEqual != nil {
-		res += fmt.Sprintf("batch_num = %d ", *c.batchNumberEqual)
-	}
-	if c.batchNumberGt != nil {
-		res += fmt.Sprintf("batch_num>%d ", *c.batchNumberEqual)
-	}
-	if c.batchNumberLt != nil {
-		res += fmt.Sprintf("batch_num<%d ", *c.batchNumberEqual)
-	}
-	return res
 }
 
 func scanVirtualBatch(row pgx.Row, contextDescription string) (*VirtualBatch, error) {

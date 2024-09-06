@@ -61,7 +61,8 @@ func (p *SqlStorage) GetLatestL1InfoTreeLeaf(ctx context.Context, dbTx dbTxType)
 	e := p.getExecQuerier(getSqlTx(dbTx))
 	row := e.QueryRowContext(ctx, getLatestL1InfoTreeLeafSQL)
 	entry, err := scanL1InfoTreeExitRootStorageEntry(row)
-	if errors.Is(err, pgx.ErrNoRows) {
+	err = translateSqlError(err, "GetLatestL1InfoTreeLeaf")
+	if errors.Is(err, entities.ErrNotFound) {
 		return nil, nil
 	}
 	return &entry, err
@@ -74,7 +75,8 @@ func (p *SqlStorage) GetL1InfoLeafPerIndex(ctx context.Context, L1InfoTreeIndex 
 	e := p.getExecQuerier(getSqlTx(dbTx))
 	row := e.QueryRowContext(ctx, getL1InfoLeafPerIndexSQL, L1InfoTreeIndex)
 	entry, err := scanL1InfoTreeExitRootStorageEntry(row)
-	if errors.Is(err, pgx.ErrNoRows) {
+	err = translateSqlError(err, "GetL1InfoLeafPerIndex")
+	if errors.Is(err, entities.ErrNotFound) {
 		return nil, nil
 	}
 	return &entry, err
