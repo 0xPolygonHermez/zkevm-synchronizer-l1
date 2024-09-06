@@ -9,7 +9,7 @@ else
 endif
 GOBASE := $(shell pwd)
 GOBIN := $(GOBASE)/dist
-GOENVVARS := GOBIN=$(GOBIN) CGO_ENABLED=0 GOOS=linux GOARCH=$(ARCH)
+GOENVVARS := GOBIN=$(GOBIN) GOOS=linux GOARCH=$(ARCH)
 GOBINARY := zkevm-synchronizer-l1
 GOCMD := $(GOBASE)/cmd
 

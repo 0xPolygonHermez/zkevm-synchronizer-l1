@@ -25,8 +25,8 @@ func TestDefault(t *testing.T) {
 			Outputs:     []string{"stderr"},
 		},
 		SQLDB: storage.Config{
-			DriverName: "set_driver. example: sqlite",
-			DataSource: "example: file::memory:?cache=shared",
+			DriverName: "choose_driver. example: sqlite3 or postgres",
+			DataSource: "example for sqlite3: file:/tmp/sync_db.sqlite",
 		},
 		Synchronizer: syncconfig.Config{
 			SyncInterval:         types.Duration{Duration: time.Second * 10},

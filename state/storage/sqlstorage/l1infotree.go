@@ -22,6 +22,7 @@ func (p *SqlStorage) AddL1InfoTreeLeaf(ctx context.Context, exitRoot *L1InfoTree
 	_, err := e.ExecContext(ctx, addGlobalExitRootSQL,
 		exitRoot.BlockNumber, exitRoot.Timestamp.UTC(), exitRoot.MainnetExitRoot.String(), exitRoot.RollupExitRoot.String(),
 		exitRoot.GlobalExitRoot.String(), exitRoot.PreviousBlockHash.String(), exitRoot.L1InfoTreeRoot.String(), exitRoot.L1InfoTreeIndex)
+	err = translateSqlError(err, "AddL1InfoTreeLeaf")
 	return err
 }
 
@@ -33,7 +34,8 @@ func (p *SqlStorage) GetAllL1InfoTreeLeaves(ctx context.Context, dbTx dbTxType) 
 
 	e := p.getExecQuerier(getSqlTx(dbTx))
 	rows, err := e.QueryContext(ctx, getL1InfoRootSQL)
-	if errors.Is(err, pgx.ErrNoRows) {
+	err = translateSqlError(err, "GetAllL1InfoTreeLeaves")
+	if errors.Is(err, entities.ErrNotFound) {
 		return nil, nil
 	}
 	if err != nil {
