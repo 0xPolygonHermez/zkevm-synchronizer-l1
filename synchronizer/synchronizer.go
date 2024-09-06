@@ -149,30 +149,20 @@ func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Sync
 }
 
 func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, error) {
-	/*	configStorage := pgstorage.Config{
-			Name:     config.DB.Name,
-			User:     config.DB.User,
-			Password: config.DB.Password,
-			Host:     config.DB.Host,
-			Port:     config.DB.Port,
-			MaxConns: config.DB.MaxConns,
-		}
-	*/
 	log.Init(config.Log)
-
-	//storage, err := pgstorage.NewPostgresStorage(configStorage)
-
+	log.Debugf("Creating storage")
 	storage, err := storage.NewStorage(config.SQLDB)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-
+	log.Debugf("Creating etherman")
 	etherman, err := etherman.NewClient(config.Etherman)
 	if err != nil {
 		log.Error("Error creating etherman", err)
 		return nil, err
 	}
+	log.Debugf("Creating state")
 	state := state.NewState(storage)
 	storageCompatibilityChecker := internal.NewSanityStorageCheckerImpl(state, etherman, config.Synchronizer.OverrideStorageCheck)
 	sync, err := internal.NewSynchronizerImpl(ctx, storage, state, etherman, storageCompatibilityChecker, config.Synchronizer)
@@ -180,9 +170,9 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 		log.Error("Error creating synchronizer", err)
 		return nil, err
 	}
-
+	log.Debugf("Creating synchronizer adapter")
 	syncAdapter := NewSynchronizerAdapter(NewSyncrhronizerQueries(state, storage, ctx), sync)
-
+	log.Debugf("Starting RPC if enabled")
 	rpcsync.StartRPC(state)
 
 	return syncAdapter, nil
