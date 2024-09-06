@@ -13,6 +13,7 @@ import (
 type L1InfoTreeLeaf = entities.L1InfoTreeLeaf
 
 const exitRootTable = "exit_root"
+const selectSQLAllFieldsExitRoot = "SELECT block_num, timestamp, mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index "
 
 func (p *SqlStorage) AddL1InfoTreeLeaf(ctx context.Context, exitRoot *L1InfoTreeLeaf, dbTx dbTxType) error {
 	addGlobalExitRootSQL := "INSERT INTO " + p.BuildTableName(exitRootTable) + "(block_num, timestamp, mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index) " +
@@ -27,7 +28,7 @@ func (p *SqlStorage) AddL1InfoTreeLeaf(ctx context.Context, exitRoot *L1InfoTree
 }
 
 func (p *SqlStorage) GetAllL1InfoTreeLeaves(ctx context.Context, dbTx dbTxType) ([]L1InfoTreeLeaf, error) {
-	getL1InfoRootSQL := "SELECT block_num, timestamp, mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index " +
+	getL1InfoRootSQL := selectSQLAllFieldsExitRoot +
 		"FROM " + p.BuildTableName(exitRootTable) + " " +
 		"WHERE l1_info_tree_index IS NOT NULL " +
 		"ORDER BY l1_info_tree_index"
@@ -56,7 +57,7 @@ func (p *SqlStorage) GetAllL1InfoTreeLeaves(ctx context.Context, dbTx dbTxType) 
 }
 
 func (p *SqlStorage) GetLatestL1InfoTreeLeaf(ctx context.Context, dbTx dbTxType) (*L1InfoTreeLeaf, error) {
-	getLatestL1InfoTreeLeafSQL := "SELECT block_num, timestamp, mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index " +
+	getLatestL1InfoTreeLeafSQL := selectSQLAllFieldsExitRoot +
 		"FROM " + p.BuildTableName(exitRootTable) + " " +
 		"WHERE l1_info_tree_index IS NOT NULL " +
 		"ORDER BY l1_info_tree_index DESC LIMIT 1"
@@ -71,7 +72,7 @@ func (p *SqlStorage) GetLatestL1InfoTreeLeaf(ctx context.Context, dbTx dbTxType)
 }
 
 func (p *SqlStorage) GetL1InfoLeafPerIndex(ctx context.Context, L1InfoTreeIndex uint32, dbTx dbTxType) (*L1InfoTreeLeaf, error) {
-	getL1InfoLeafPerIndexSQL := "SELECT block_num, timestamp, mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index " +
+	getL1InfoLeafPerIndexSQL := selectSQLAllFieldsExitRoot +
 		"FROM " + p.BuildTableName(exitRootTable) + " " +
 		"WHERE l1_info_tree_index = $1"
 	e := p.getExecQuerier(getSqlTx(dbTx))
@@ -85,7 +86,7 @@ func (p *SqlStorage) GetL1InfoLeafPerIndex(ctx context.Context, L1InfoTreeIndex 
 }
 
 func (p *SqlStorage) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx dbTxType) ([]L1InfoTreeLeaf, error) {
-	getLeafsByL1InfoRootSQL := "SELECT block_num, timestamp, mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index " +
+	getLeafsByL1InfoRootSQL := selectSQLAllFieldsExitRoot +
 		"FROM " + p.BuildTableName(exitRootTable) + " " +
 		"WHERE l1_info_tree_index IS NOT NULL AND l1_info_tree_index <= (SELECT l1_info_tree_index FROM " + p.BuildTableName(exitRootTable) + " WHERE l1_info_root=$1) " +
 		"ORDER BY l1_info_tree_index ASC"

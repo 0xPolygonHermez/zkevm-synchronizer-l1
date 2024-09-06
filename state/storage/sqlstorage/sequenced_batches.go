@@ -10,7 +10,10 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-const sequencedBatchesTable = "sequenced_batches"
+const (
+	sequencedBatchesTable     = "sequenced_batches"
+	sqlSelectSequencedBatches = "SELECT from_batch_num, to_batch_num, fork_id, timestamp, block_num, l1_info_root, received_at, source "
+)
 
 type SequencedBatches = entities.SequencedBatches
 type SequencedBatchesSlice = entities.SequencesBatchesSlice
@@ -25,7 +28,7 @@ func (p *SqlStorage) AddSequencedBatches(ctx context.Context, sequence *Sequence
 }
 
 func (p *SqlStorage) GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx dbTxType) (*SequencedBatches, error) {
-	sql := "SELECT from_batch_num, to_batch_num,fork_id, timestamp,block_num, l1_info_root,received_at,source " +
+	sql := sqlSelectSequencedBatches +
 		"FROM " + p.BuildTableName(sequencedBatchesTable) + " " +
 		"WHERE  $1 >= from_batch_num  AND $1 <= to_batch_num " +
 		"ORDER BY block_num DESC LIMIT 1;"
@@ -43,7 +46,7 @@ func (p *SqlStorage) GetSequenceByBatchNumber(ctx context.Context, batchNumber u
 }
 
 func (p *SqlStorage) GetLatestSequence(ctx context.Context, dbTx dbTxType) (*SequencedBatches, error) {
-	sql := "SELECT from_batch_num, to_batch_num,fork_id, timestamp,block_num, l1_info_root,received_at,source " +
+	sql := sqlSelectSequencedBatches +
 		"FROM " + p.BuildTableName(sequencedBatchesTable) + "  " +
 		"ORDER BY block_num DESC LIMIT 1;"
 	sequences, err := p.querySequences(ctx, "GetLatestSequence", sql, getSqlTx(dbTx))
@@ -60,7 +63,7 @@ func (p *SqlStorage) GetLatestSequence(ctx context.Context, dbTx dbTxType) (*Seq
 }
 
 func (p *SqlStorage) GetSequencesGreatestOrEqualBatchNumber(ctx context.Context, batchNumber uint64, dbTx dbTxType) (*SequencedBatchesSlice, error) {
-	sql := "SELECT from_batch_num, to_batch_num,fork_id, timestamp,block_num, l1_info_root,received_at,source " +
+	sql := sqlSelectSequencedBatches +
 		"FROM " + p.BuildTableName(sequencedBatchesTable) + "  " +
 		"WHERE    from_batch_num >= $1 OR to_batch_num >= $1 " +
 		"ORDER BY block_num;"
