@@ -168,7 +168,8 @@ func TestL1InfoRootRemovedOnCascade(t *testing.T) {
 		err = storage.AddL1InfoTreeLeaf(ctx, &leaf, dbTx)
 		require.NoError(t, err)
 	}
-	storage.ResetToL1BlockNumber(ctx, 1, dbTx)
+	err = storage.ResetToL1BlockNumber(ctx, 1, dbTx)
+	require.NoError(t, err)
 	leafsRead, err := storage.GetAllL1InfoTreeLeaves(ctx, dbTx)
 	require.NoError(t, err)
 	require.NotNil(t, leafsRead)

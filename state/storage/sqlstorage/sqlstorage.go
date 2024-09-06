@@ -17,6 +17,10 @@ type SqlStorage struct {
 	db *sql.DB
 }
 
+const (
+	SqliteDriverName = "sqlite3"
+)
+
 func NewSqlStorage(cfg Config, runMigrations bool) (*SqlStorage, error) {
 	log.Infof("Running DB migrations")
 
@@ -33,7 +37,15 @@ func NewSqlStorage(cfg Config, runMigrations bool) (*SqlStorage, error) {
 			return nil, err
 		}
 	}
-	db.Exec("PRAGMA foreign_keys = ON;")
+	if cfg.DriverName == SqliteDriverName {
+		log.Debugf("Enabling foreign keys for sqlite database")
+		_, err = db.Exec("PRAGMA foreign_keys = ON;")
+		if err != nil {
+			err := fmt.Errorf("error enabling foreign keys: %w", err)
+			log.Errorf(err.Error())
+			return nil, err
+		}
+	}
 	return &SqlStorage{db}, nil
 }
 

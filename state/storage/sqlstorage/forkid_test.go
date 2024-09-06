@@ -88,7 +88,8 @@ func TestUpdateForkID(t *testing.T) {
 	err = storage.AddForkID(ctx, forkInterval, dbTx)
 	require.NoError(t, err)
 	forkInterval.ToBatchNumber = 3
-	storage.UpdateForkID(ctx, forkInterval, dbTx)
+	err = storage.UpdateForkID(ctx, forkInterval, dbTx)
+	require.NoError(t, err)
 	readForkIntervals, err := storage.GetForkIDs(ctx, dbTx)
 	require.NoError(t, err)
 	require.Len(t, readForkIntervals, 1)
