@@ -13,6 +13,9 @@ const DefaultValues = `
 	Host = "localhost"
 	Port = "5436"
 	MaxConns = 10
+[SQLDB]
+	DriverName = "choose_driver. example: sqlite3 or postgres"
+	DataSource = "example for sqlite3: file:/tmp/sync_db.sqlite"
 [Synchronizer]
 	SyncInterval = "10s"
 	SyncChunkSize = 500

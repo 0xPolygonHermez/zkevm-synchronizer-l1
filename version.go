@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	Version = "v0.7.1"
+	Version = "v1.0.0"
 )
 
 // PrintVersion prints version info into the provided io.Writer.

@@ -1,6 +1,4 @@
-package storage
-
-// Config struct
+package sqlstorage
 
 type Config struct {
 	// Name of the database
