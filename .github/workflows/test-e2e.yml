@@ -1,4 +1,3 @@
-# placeholder for e2e tests
 name: Test e2e
 on: 
   push:
@@ -20,6 +19,48 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+      env:
+        GOARCH: ${{ matrix.goarch }}
 
+    - name: Build Docker
+      run: make build-docker
+ 
+    - name: Install kurtosis
+      shell: bash
+      run: |
+        echo "deb [trusted=yes] https://apt.fury.io/kurtosis-tech/ /" | sudo tee /etc/apt/sources.list.d/kurtosis.list
+        sudo apt update
+        sudo apt install kurtosis-cli=0.90.1
+        kurtosis version
+
+    - name: Disable kurtosis analytics
+      shell: bash
+      run: kurtosis analytics disable
+
+    - name: Install yq
+      shell: bash
+      run: |
+        pip3 install yq
+        yq --version
+
+    - name: Install foundry
+      uses: foundry-rs/foundry-toolchain@v1
+
+    - name: checkout kurtosis-cdk
+      uses: actions/checkout@v4
+      with:
+        repository: 0xPolygon/kurtosis-cdk
+        ref: v0.2.9
+        path: "ext/kurtosis-cdk"
+    
+    - name: Test
+      run: make test-e2e-${{ matrix.e2e-group }}
+      working-directory: test
+      env:
+        KURTOSIS_FOLDER: ${{ github.workspace }}/ext/kurtosis-cdk
 
     
