@@ -24,13 +24,9 @@ func TestDefault(t *testing.T) {
 			Level:       "info",
 			Outputs:     []string{"stderr"},
 		},
-		DB: storage.Config{
-			Name:     "sync",
-			User:     "test_user",
-			Password: "test_password",
-			Host:     "localhost",
-			Port:     "5436",
-			MaxConns: 10,
+		SQLDB: storage.Config{
+			DriverName: "choose_driver. example: sqlite3 or postgres",
+			DataSource: "example for sqlite3: file:/tmp/sync_db.sqlite",
 		},
 		Synchronizer: syncconfig.Config{
 			SyncInterval:         types.Duration{Duration: time.Second * 10},
