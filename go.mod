@@ -22,7 +22,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.2
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.27.0
-	golang.org/x/net v0.25.0
+	golang.org/x/net v0.29.0
 )
 
 require (
