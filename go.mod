@@ -4,7 +4,7 @@ go 1.21.3
 
 require (
 	github.com/0xPolygon/cdk-contracts-tooling v0.0.0-20240819092536-5a65d4761b2f
-	github.com/0xPolygon/cdk-data-availability v0.0.8-0.20240712072318-72ae67613cbf
+	github.com/0xPolygon/cdk-data-availability v0.0.9
 	github.com/0xPolygon/cdk-rpc v0.0.0-20240419104226-c0a62ba0f49d
 	github.com/ethereum/go-ethereum v1.14.8
 	github.com/hermeznetwork/tracerr v0.3.2
