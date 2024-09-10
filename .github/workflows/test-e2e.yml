@@ -13,7 +13,7 @@ jobs:
       matrix:
         go-version: [ 1.21.x ]
         goarch: [ "amd64" ]
-        e2e-group: [ "elderberry-validium", "elderberry-rollup" ]
+        e2e-group: [ "rollup" ]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
