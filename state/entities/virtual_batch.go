@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	ethtypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -54,7 +54,7 @@ func (b *VirtualBatch) String() string {
 	return res
 }
 
-func NewVirtualBatchFromL1(l1BlockNumber, seqFromBatchNumber, forkID uint64, ethSeqBatch etherman.SequencedBatch) *VirtualBatch {
+func NewVirtualBatchFromL1(l1BlockNumber, seqFromBatchNumber, forkID uint64, ethSeqBatch ethtypes.SequencedBatch) *VirtualBatch {
 	res := &VirtualBatch{
 		BatchNumber:             ethSeqBatch.BatchNumber,
 		ForkID:                  forkID,
@@ -70,6 +70,40 @@ func NewVirtualBatchFromL1(l1BlockNumber, seqFromBatchNumber, forkID uint64, eth
 	if ethSeqBatch.SequencedBatchElderberryData != nil {
 		tstamp := time.Unix(int64(ethSeqBatch.SequencedBatchElderberryData.MaxSequenceTimestamp), 0)
 		res.BatchTimestamp = &tstamp
+	}
+	return res
+}
+
+// VirtualBatchConstraints is a struct that contains the constraints to filter the virtual batches.
+// is ready to add constraints to the query.
+type VirtualBatchConstraints struct {
+	batchNumberEqual *uint64
+	batchNumberGt    *uint64
+	batchNumberLt    *uint64
+}
+
+func (c *VirtualBatchConstraints) BatchNumberEqual(batchNumber uint64) {
+	c.batchNumberEqual = &batchNumber
+}
+
+func (c *VirtualBatchConstraints) BatchNumberGt(batchNumber uint64) {
+	c.batchNumberGt = &batchNumber
+}
+
+func (c *VirtualBatchConstraints) BatchNumberLt(batchNumber uint64) {
+	c.batchNumberLt = &batchNumber
+}
+
+func (c *VirtualBatchConstraints) WhereClause() string {
+	res := ""
+	if c.batchNumberEqual != nil {
+		res += fmt.Sprintf("batch_num = %d ", *c.batchNumberEqual)
+	}
+	if c.batchNumberGt != nil {
+		res += fmt.Sprintf("batch_num>%d ", *c.batchNumberEqual)
+	}
+	if c.batchNumberLt != nil {
+		res += fmt.Sprintf("batch_num<%d ", *c.batchNumberEqual)
 	}
 	return res
 }

@@ -1,14 +1,34 @@
-package etherman
+package types
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/oldpolygonzkevm"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/smartcontracts/polygonzkevm"
 	"github.com/ethereum/go-ethereum/common"
 )
+
+type L1InfoTreeV2Data struct {
+	CurrentL1InfoRoot common.Hash
+	LeafCount         uint32
+	BlockHash         common.Hash
+	MinTimestamp      uint64
+}
+
+func (l *L1InfoTreeV2Data) String() string {
+	return fmt.Sprintf("CurrentL1InfoRoot: %s LeafCount: %d BlockHash: %s MinTimestamp: %d", l.CurrentL1InfoRoot.String(), l.LeafCount, l.BlockHash.String(), l.MinTimestamp)
+}
+
+type RollbackBatchesData struct {
+	TargetBatch            uint64
+	AccInputHashToRollback common.Hash
+}
+
+func (r *RollbackBatchesData) String() string {
+	return fmt.Sprintf("TargetBatch: %d AccInputHashToRollback: %s", r.TargetBatch, r.AccInputHashToRollback.String())
+}
 
 // Block struct
 type Block struct {
@@ -24,6 +44,8 @@ type Block struct {
 	ReceivedAt            time.Time
 	// GER data
 	GlobalExitRoots, L1InfoTree []GlobalExitRoot
+	L1InfoTreeV2                []L1InfoTreeV2Data
+	RollbackBatches             []RollbackBatchesData
 }
 
 func (b *Block) HasEvents() bool {
@@ -39,6 +61,11 @@ type GlobalExitRoot struct {
 	GlobalExitRoot    common.Hash
 	Timestamp         time.Time
 	PreviousBlockHash common.Hash
+}
+
+func (g *GlobalExitRoot) String() string {
+	return fmt.Sprintf("BlockNumber: %d MainnetExitRoot: %s RollupExitRoot: %s GlobalExitRoot: %s Timestamp: %s PreviousBlockHash: %s",
+		g.BlockNumber, g.MainnetExitRoot.String(), g.RollupExitRoot.String(), g.GlobalExitRoot.String(), g.Timestamp.String(), g.PreviousBlockHash.String())
 }
 
 // SequencedBatchElderberryData represents an Elderberry sequenced batch data
@@ -75,6 +102,38 @@ func (s *SequencedBatchMetadata) String() string {
 	return fmt.Sprintf("SourceBatchData: %s RollupFlavor: %s CallFunctionName: %s ForkName: %s", s.SourceBatchData, s.RollupFlavor, s.CallFunctionName, s.ForkName)
 }
 
+type BananaSequenceData struct {
+	CounterL1InfoRoot         uint32
+	MaxSequenceTimestamp      uint64
+	ExpectedFinalAccInputHash common.Hash
+	DataAvailabilityMsg       []byte
+}
+
+func (b *BananaSequenceData) String() string {
+	res := fmt.Sprintf("CounterL1InfoRoot: %d MaxSequenceTimestamp: %d ExpectedFinalAccInputHash: %s", b.CounterL1InfoRoot, b.MaxSequenceTimestamp, b.ExpectedFinalAccInputHash.String())
+	daMsg := fmt.Sprintf("DataAvailabilityMsg(%d):", len(b.DataAvailabilityMsg))
+	if len(b.DataAvailabilityMsg) > 0 {
+		daMsg += " " + hex.EncodeToString(b.DataAvailabilityMsg)
+	}
+	return res + " " + daMsg
+}
+
+func (b *BananaSequenceData) ToJson() string {
+	jsonData, err := json.Marshal(b)
+	if err != nil {
+		return "error"
+	}
+	return string(jsonData)
+}
+
+// EtrogSequenceData also apply to Elderberry
+type EtrogSequenceData struct {
+	Transactions         []byte
+	ForcedGlobalExitRoot common.Hash
+	ForcedTimestamp      uint64
+	ForcedBlockHashL1    common.Hash
+}
+
 // SequencedBatch represents virtual batch
 type SequencedBatch struct {
 	BatchNumber   uint64
@@ -86,10 +145,12 @@ type SequencedBatch struct {
 	// Struct used in preEtrog forks
 	*oldpolygonzkevm.PolygonZkEVMBatchData
 	// Struct used in Etrog + Elderberry
-	*polygonzkevm.PolygonRollupBaseEtrogBatchData
+	//*polygonzkevm.PolygonRollupBaseEtrogBatchData
+	*EtrogSequenceData
 	// Struct used in Elderberry
 	*SequencedBatchElderberryData
-	Metadata *SequencedBatchMetadata
+	BananaData *BananaSequenceData
+	Metadata   *SequencedBatchMetadata
 }
 
 func (s *SequencedBatch) String() string {
@@ -104,14 +165,14 @@ func (s *SequencedBatch) String() string {
 	} else {
 		res += "PolygonZkEVMBatchData: nil\n"
 	}
-	if s.PolygonRollupBaseEtrogBatchData != nil {
-		res += fmt.Sprintf("___PolygonRollupBaseEtrogBatchData:ForcedTimestamp: %d\n", s.PolygonRollupBaseEtrogBatchData.ForcedTimestamp)
-		res += fmt.Sprintf("___PolygonRollupBaseEtrogBatchData:ForcedGlobalExitRoot: %s\n", hex.EncodeToString(s.PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot[:]))
-		res += fmt.Sprintf("___PolygonRollupBaseEtrogBatchData:ForcedBlockHashL1: %s\n", hex.EncodeToString(s.PolygonRollupBaseEtrogBatchData.ForcedBlockHashL1[:]))
-		res += fmt.Sprintf("___PolygonRollupBaseEtrogBatchData:Transactions: %s\n", hex.EncodeToString(s.PolygonRollupBaseEtrogBatchData.Transactions))
+	if s.EtrogSequenceData != nil {
+		res += fmt.Sprintf("___EtrogSequenceData:ForcedTimestamp: %d\n", s.EtrogSequenceData.ForcedTimestamp)
+		res += fmt.Sprintf("___EtrogSequenceData:ForcedGlobalExitRoot: %s\n", hex.EncodeToString(s.EtrogSequenceData.ForcedGlobalExitRoot[:]))
+		res += fmt.Sprintf("___EtrogSequenceData:ForcedBlockHashL1: %s\n", hex.EncodeToString(s.EtrogSequenceData.ForcedBlockHashL1[:]))
+		res += fmt.Sprintf("___EtrogSequenceData:Transactions: %s\n", hex.EncodeToString(s.EtrogSequenceData.Transactions))
 
 	} else {
-		res += "PolygonRollupBaseEtrogBatchData: nil\n"
+		res += "EtrogSequenceData: nil\n"
 	}
 	if s.SequencedBatchElderberryData != nil {
 		res += fmt.Sprintf("___SequencedBatchElderberryData:MaxSequenceTimestamp %d\n", s.SequencedBatchElderberryData.MaxSequenceTimestamp)
@@ -120,12 +181,16 @@ func (s *SequencedBatch) String() string {
 	} else {
 		res += "SequencedBatchElderberryData: nil\n"
 	}
+	if s.BananaData != nil {
+		res += fmt.Sprintf("BananaData: %s\n", s.BananaData.String())
+	}
 	if s.Metadata != nil {
 		res += fmt.Sprintf("Metadata: %s\n", s.Metadata.String())
 	} else {
 		res += "Metadata: nil\n"
 
 	}
+
 	return res
 }
 
@@ -133,8 +198,8 @@ func (s *SequencedBatch) BatchL2Data() []byte {
 	if s.PolygonZkEVMBatchData != nil {
 		return s.PolygonZkEVMBatchData.Transactions
 	}
-	if s.PolygonRollupBaseEtrogBatchData != nil {
-		return s.PolygonRollupBaseEtrogBatchData.Transactions
+	if s.EtrogSequenceData != nil {
+		return s.EtrogSequenceData.Transactions
 	}
 	return nil
 }
@@ -146,7 +211,7 @@ type UpdateEtrogSequence struct {
 	TxHash        common.Hash
 	Nonce         uint64
 	// Struct used in Etrog
-	*polygonzkevm.PolygonRollupBaseEtrogBatchData
+	*EtrogSequenceData
 }
 
 // ForcedBatch represents a ForcedBatch
@@ -175,7 +240,7 @@ type SequencedForceBatch struct {
 	TxHash      common.Hash
 	Timestamp   time.Time
 	Nonce       uint64
-	polygonzkevm.PolygonRollupBaseEtrogBatchData
+	EtrogSequenceData
 }
 
 // ForkID is a sturct to track the ForkID event.

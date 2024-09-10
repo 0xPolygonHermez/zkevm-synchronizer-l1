@@ -4,7 +4,7 @@ import (
 	"context"
 	"math/big"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	etherman "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 )

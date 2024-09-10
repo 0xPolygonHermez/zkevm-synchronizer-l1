@@ -5,7 +5,7 @@ import (
 	"time"
 
 	zkevm_synchronizer_l1 "github.com/0xPolygonHermez/zkevm-synchronizer-l1"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	ethtypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -32,7 +32,7 @@ func (b *L1Block) String() string {
 		b.BlockNumber, b.BlockHash.String(), b.ParentHash.String(), b.ReceivedAt.String(), b.Checked, b.SyncVersion)
 }
 
-func NewL1BlockFromEthermanBlock(block *etherman.Block, isFinalized bool) *L1Block {
+func NewL1BlockFromEthermanBlock(block *ethtypes.Block, isFinalized bool) *L1Block {
 	return &L1Block{
 		BlockNumber: block.BlockNumber,
 		BlockHash:   block.BlockHash,

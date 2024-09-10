@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	ethtypes "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
 )
@@ -26,18 +26,18 @@ var (
 // To build the object use L1EventProcessorsBuilder
 type L1EventProcessors struct {
 	// forkId -> event -> processor
-	processors map[actions.ForkIdType]map[etherman.EventOrder]actions.L1EventProcessor
+	processors map[actions.ForkIdType]map[ethtypes.EventOrder]actions.L1EventProcessor
 }
 
 // NewL1EventProcessors returns a empty new L1EventProcessors
 func NewL1EventProcessors() *L1EventProcessors {
 	return &L1EventProcessors{
-		processors: make(map[actions.ForkIdType]map[etherman.EventOrder]actions.L1EventProcessor),
+		processors: make(map[actions.ForkIdType]map[ethtypes.EventOrder]actions.L1EventProcessor),
 	}
 }
 
 // Get returns the processor, first try specific, if not wildcard and if not found returns nil
-func (p *L1EventProcessors) Get(forkId actions.ForkIdType, event etherman.EventOrder) actions.L1EventProcessor {
+func (p *L1EventProcessors) Get(forkId actions.ForkIdType, event ethtypes.EventOrder) actions.L1EventProcessor {
 	if _, ok := p.processors[forkId]; !ok {
 		if forkId == actions.WildcardForkId {
 			return nil
@@ -54,7 +54,7 @@ func (p *L1EventProcessors) Get(forkId actions.ForkIdType, event etherman.EventO
 }
 
 // Process execute the event for the forkId and event
-func (p *L1EventProcessors) Process(ctx context.Context, forkId actions.ForkIdType, order etherman.Order, block *etherman.Block, dbTx dbTxType) error {
+func (p *L1EventProcessors) Process(ctx context.Context, forkId actions.ForkIdType, order ethtypes.Order, block *ethtypes.Block, dbTx dbTxType) error {
 	processor := p.Get(forkId, order.Name)
 	if processor == nil {
 		var strBlockNumber string

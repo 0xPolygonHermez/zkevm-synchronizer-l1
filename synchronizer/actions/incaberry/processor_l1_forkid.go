@@ -4,7 +4,7 @@ import (
 	"context"
 	"math"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	etherman "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
@@ -39,10 +39,11 @@ func (p *ProcessorForkId) Process(ctx context.Context, forkId actions.ForkIdType
 func (s *ProcessorForkId) processForkID(ctx context.Context, forkID etherman.ForkID, blockNumber uint64, dbTx entities.Tx) error {
 	fID := entities.ForkIDInterval{
 		FromBatchNumber: forkID.BatchNumber + 1,
-		ToBatchNumber:   math.MaxUint64,
-		ForkId:          forkID.ForkID,
-		Version:         forkID.Version,
-		BlockNumber:     blockNumber,
+		//ToBatchNumber:   math.MaxUint64,
+		ToBatchNumber: uint64(math.MaxInt64),
+		ForkId:        forkID.ForkID,
+		Version:       forkID.Version,
+		BlockNumber:   blockNumber,
 	}
 
 	// If forkID affects to a batch from the past. State must be reseted.

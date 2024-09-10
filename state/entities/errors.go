@@ -16,4 +16,6 @@ var (
 	// ErrMismatchStorageAndExecutionEnvironment is used when the storage and execution environment are different
 	// for example the rollup id is different
 	ErrMismatchStorageAndExecutionEnvironment = errors.New("mismatch storage and execution environment")
+	// ErrBadParams is used when any params is wrong
+	ErrBadParams = errors.New("params are wrong")
 )

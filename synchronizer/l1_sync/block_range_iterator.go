@@ -53,7 +53,7 @@ func (i *BlockRangeIterator) NextRange(fromBlock uint64) *BlockRangeIterator {
 	if i.toBlock > i.MaximumBlock {
 		i.toBlock = i.MaximumBlock
 	}
-	if i.fromBlock > i.toBlock {
+	if i.fromBlock >= i.toBlock {
 		return nil
 	}
 	return i

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	zkevm_synchronizer_l1 "github.com/0xPolygonHermez/zkevm-synchronizer-l1"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	etherman "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	mock_entities "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities/mocks"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage/pgstorage"
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
+	etherman "github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman/types"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions"
@@ -22,7 +22,7 @@ func NewProcessorL1InitialSequenceBatches(state stateOnSequencedBatchesInterface
 	return &ProcessorL1InitialSequenceBatches{
 		ProcessorBase: actions.ProcessorBase[ProcessorL1InitialSequenceBatches]{
 			SupportedEvent:    []etherman.EventOrder{etherman.InitialSequenceBatchesOrder},
-			SupportedForkdIds: &actions.ForksIdOnlyEtrogAndElderberry},
+			SupportedForkdIds: &actions.ForksIdEtrogElderberryBanana},
 		state: state,
 	}
 }
@@ -46,8 +46,8 @@ func (p *ProcessorL1InitialSequenceBatches) ProcessSequenceBatches(ctx context.C
 		return fmt.Errorf("invalid initial batch number, expected 1 , received %d", sequencedBatches[0].BatchNumber)
 	}
 
-	l1inforoot := sequencedBatches[0].PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot
-	l1BlockTimestamp := time.Unix(int64(sequencedBatches[0].PolygonRollupBaseEtrogBatchData.ForcedTimestamp), 0)
+	l1inforoot := sequencedBatches[0].EtrogSequenceData.ForcedGlobalExitRoot
+	l1BlockTimestamp := time.Unix(int64(sequencedBatches[0].EtrogSequenceData.ForcedTimestamp), 0)
 	seq := SequenceOfBatches{}
 
 	seq.Sequence = *entities.NewSequencedBatches(

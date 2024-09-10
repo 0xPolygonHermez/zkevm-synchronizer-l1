@@ -9,6 +9,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/entities"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/model"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/banana"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/elderberry"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/etrog"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/actions/incaberry"
@@ -36,7 +37,8 @@ type SynchronizerImpl struct {
 	l1Sync              syncinterfaces.L1Syncer
 	storageChecker      syncinterfaces.StorageCompatibilityChecker
 
-	reorgCallback func(nreorgData ReorgExecutionResult)
+	reorgCallback           func(nreorgData ReorgExecutionResult)
+	rollbackBatchesCallback func(data RollbackBatchesData)
 }
 
 // NewSynchronizer creates and initializes an instance of Synchronizer
@@ -110,6 +112,7 @@ func NewSynchronizerImpl(
 		blockRangeProcessor: blockRangeProcessor,
 	}
 	state.AddOnReorgCallback(sync.OnReorgExecuted)
+	state.AddOnRollbackBatchesCallback(sync.OnRollbackBatchesExecuted)
 
 	err = sync.CheckStorage(ctx)
 	if err != nil {
@@ -142,6 +145,11 @@ func newL1EventProcessor(state syncinterfaces.StateInterface) *processor_manager
 	builder.Register(etrog.NewProcessorL1InitialSequenceBatches(state))
 	builder.Register(elderberry.NewProcessorL1SequenceBatchesElderberry(etrogSequenceBatchesProcessor))
 	builder.Register(etrog.NewProcessorL1UpdateEtrogSequence(state))
+	builder.Register(banana.NewProcessorL1SequenceBatchesBanana(state))
+
+	builder.Register(banana.NewProcessorUpdateL1InfoTreeV2(state))
+	builder.Register(banana.NewProcessorRollbackBatches(state))
+
 	return builder.Build()
 }
 
@@ -156,6 +164,10 @@ func (s *SynchronizerImpl) SetCallbackOnReorgDone(callback func(reorgData ReorgE
 	s.reorgCallback = callback
 }
 
+func (s *SynchronizerImpl) SetCallbackOnRollbackBatches(callback func(data RollbackBatchesData)) {
+	s.rollbackBatchesCallback = callback
+}
+
 // OnReorgExecuted this is a CB setted to state reorg
 func (s *SynchronizerImpl) OnReorgExecuted(reorg model.ReorgExecutionResult) {
 	log.Infof("Reorg executed! %s", reorg.String())
@@ -168,6 +180,19 @@ func (s *SynchronizerImpl) OnReorgExecuted(reorg model.ReorgExecutionResult) {
 		go s.reorgCallback(param)
 	}
 
+}
+
+// OnReorgExecuted this is a CB setted to state reorg
+func (s *SynchronizerImpl) OnRollbackBatchesExecuted(data model.RollbackBatchesExecutionResult) {
+	log.Infof("RollbackBatches executed! %s", data.String())
+	if s.rollbackBatchesCallback != nil {
+		param := RollbackBatchesData{
+			LastBatchNumber:       data.Request.LastBatchNumber,
+			LastBatchAccInputHash: data.Request.LastBatchAccInputHash,
+		}
+		log.Infof("Executing reorg callback in a goroutine")
+		go s.rollbackBatchesCallback(param)
+	}
 }
 
 func (s *SynchronizerImpl) CheckStorage(ctx context.Context) error {
@@ -248,7 +273,7 @@ func (s *SynchronizerImpl) Sync(executionFlags SyncExecutionFlags) error {
 			}
 			s.setSyncedStatus(isSynced)
 			if s.synced {
-				log.Infof("NetworkID %d Synced!   lastBlockSynced:%d ", s.networkID, lastBlockSynced.BlockNumber)
+				log.Infof("NetworkID %d Synced!   lastBlockSynced:%s", s.networkID, lastBlockSynced.String())
 				if (executionFlags & FlagReturnOnSync) != 0 {
 					log.Infof("NetworkID: %d, Synchronization finished, returning because returnOnSync=true", s.networkID)
 					return nil

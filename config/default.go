@@ -13,6 +13,9 @@ const DefaultValues = `
 	Host = "localhost"
 	Port = "5436"
 	MaxConns = 10
+[SQLDB]
+	DriverName = "choose_driver. example: sqlite3 or postgres"
+	DataSource = "example for sqlite3: file:/tmp/sync_db.sqlite"
 [Synchronizer]
 	SyncInterval = "10s"
 	SyncChunkSize = 500
@@ -32,7 +35,11 @@ const DefaultValues = `
 	[Etherman.Validium]
 		Enabled = false
 		TrustedSequencerURL = ""
+		RetryOnDACErrorInterval = "1m"
 		DataSourcePriority = ["trusted", "external"]
 		[Etherman.Validium.Translator]
 			FullMatchRules = []
+		[Etherman.Validium.RateLimit]
+			NumRequests = 900
+			Interval = "1s"
 `

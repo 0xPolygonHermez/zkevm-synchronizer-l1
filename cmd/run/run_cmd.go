@@ -8,8 +8,10 @@ import (
 )
 
 func RunCmd(cliCtx *cli.Context) error {
+	log.Debugf("Reading config file: %s", cliCtx.String("cfg"))
 	config, err := config.Load(cliCtx)
 	if err != nil {
+		log.Errorf("Error loading config: %v", err)
 		return err
 	}
 	log.Init(config.Log)
@@ -20,7 +22,7 @@ func RunCmd(cliCtx *cli.Context) error {
 		log.Error("Error creating synchronizer", err)
 		return err
 	}
-	err = sync.Sync(true)
+	err = sync.Sync(false)
 	if err != nil {
 		log.Error("Error syncing", err)
 	} else {

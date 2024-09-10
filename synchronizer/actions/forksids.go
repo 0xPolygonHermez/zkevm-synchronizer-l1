@@ -18,6 +18,8 @@ const (
 	ForkID10 = ForkIdType(10) //nolint:gomnd
 	// ForkID11 is the forkId for 11. No changes on interfaces
 	ForkID11 = ForkIdType(11) //nolint:gomnd
+	// ForkIDBanana is the forkId for Banana
+	ForkIDBanana = ForkIdType(12) //nolint:gomnd
 )
 
 var (
@@ -25,11 +27,20 @@ var (
 	// ForksIdAll support all forkIds
 	ForksIdAll = []ForkIdType{WildcardForkId}
 
+	// ForksIdOnlyBanana support only banana forkId
+	ForksIdOnlyBanana = []ForkIdType{ForkIDBanana}
+
 	// ForksIdOnlyEtrogAndElderberry support ETROG and ELDERBERRY
 	ForksIdOnlyEtrogAndElderberry = []ForkIdType{ForkIDEtrog, ForkIDElderberry, ForkID9, ForkID10, ForkID11}
 
+	// ForksIdEtrogElderberryBanana support etrog, elderberry, and banana forkId
+	ForksIdEtrogElderberryBanana = []ForkIdType{ForkIDEtrog, ForkIDElderberry, ForkID9, ForkID10, ForkID11, ForkIDBanana}
+
 	// ForksIdOnlyElderberry support only elderberry forkId
 	ForksIdOnlyElderberry = []ForkIdType{ForkIDElderberry, ForkID9, ForkID10, ForkID11}
+
+	// ForksIdElderberryAndBanana support elderberry and banana forkId
+	ForksIdElderberryAndBanana = []ForkIdType{ForkIDElderberry, ForkID9, ForkID10, ForkID11, ForkIDBanana}
 
 	// ForksIdOnlyEtrog support only etrog forkId
 	ForksIdOnlyEtrog = []ForkIdType{ForkIDEtrog}

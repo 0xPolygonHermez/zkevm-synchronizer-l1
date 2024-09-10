@@ -12,6 +12,7 @@ import (
 	storage "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage"
 	syncconfig "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/config"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/translator"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
@@ -23,13 +24,9 @@ func TestDefault(t *testing.T) {
 			Level:       "info",
 			Outputs:     []string{"stderr"},
 		},
-		DB: storage.Config{
-			Name:     "sync",
-			User:     "test_user",
-			Password: "test_password",
-			Host:     "localhost",
-			Port:     "5436",
-			MaxConns: 10,
+		SQLDB: storage.Config{
+			DriverName: "choose_driver. example: sqlite3 or postgres",
+			DataSource: "example for sqlite3: file:/tmp/sync_db.sqlite",
 		},
 		Synchronizer: syncconfig.Config{
 			SyncInterval:         types.Duration{Duration: time.Second * 10},
@@ -49,10 +46,12 @@ func TestDefault(t *testing.T) {
 				ZkEVMAddr:                 common.HexToAddress("0x89BA0Ed947a88fe43c22Ae305C0713eC8a7Eb361"),
 			},
 			Validium: etherman.ValidiumConfig{
-				Enabled:             false,
-				TrustedSequencerURL: "",
-				DataSourcePriority:  []dataavailability.DataSourcePriority{dataavailability.Trusted, dataavailability.External},
-				Translator:          translator.Config{},
+				Enabled:                 false,
+				TrustedSequencerURL:     "",
+				DataSourcePriority:      []dataavailability.DataSourcePriority{dataavailability.Trusted, dataavailability.External},
+				Translator:              translator.Config{FullMatchRules: []translator.ConfigRuleFullMatch{}},
+				RetryOnDACErrorInterval: types.Duration{Duration: time.Minute},
+				RateLimit:               utils.NewRateLimitConfig(900, time.Second),
 			},
 		},
 	}

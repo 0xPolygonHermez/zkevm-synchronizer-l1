@@ -8,8 +8,9 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/config"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/rpcsync"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
-	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage/pgstorage"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage"
 	internal "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/internal"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -114,6 +115,18 @@ type SynchronizerReorgSupporter interface {
 	SetCallbackOnReorgDone(callback func(reorgData ReorgExecutionResult))
 }
 
+type RollbackBatchesData struct {
+	LastBatchNumber       uint64
+	LastBatchAccInputHash common.Hash
+}
+
+// SynchronizerRollbackSupporter is an interface that give support to the banna rollbackBatches
+type SynchronizerRollbackBatchesSupporter interface {
+	// SetCallbackOnRollbackBatches sets a callback that will be called when the rollbackBatches  is done
+	// to disable it you can set nil
+	SetCallbackOnRollbackBatches(callback func(data RollbackBatchesData))
+}
+
 type Synchronizer interface {
 	SynchronizerRunner
 	SynchornizerStatusQuerier
@@ -122,6 +135,7 @@ type Synchronizer interface {
 	SynchronizerReorgSupporter
 	SynchronizerVirtualBatchesQuerier
 	SynchronizerBlockQuerier
+	SynchronizerRollbackBatchesSupporter
 }
 
 func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Synchronizer, error) {
@@ -135,28 +149,20 @@ func NewSynchronizerFromConfigfile(ctx context.Context, configFile string) (Sync
 }
 
 func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, error) {
-	configStorage := pgstorage.Config{
-		Name:     config.DB.Name,
-		User:     config.DB.User,
-		Password: config.DB.Password,
-		Host:     config.DB.Host,
-		Port:     config.DB.Port,
-		MaxConns: config.DB.MaxConns,
-	}
-
 	log.Init(config.Log)
-
-	storage, err := pgstorage.NewPostgresStorage(configStorage)
+	log.Debugf("Creating storage")
+	storage, err := storage.NewStorage(config.SQLDB)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-
+	log.Debugf("Creating etherman")
 	etherman, err := etherman.NewClient(config.Etherman)
 	if err != nil {
 		log.Error("Error creating etherman", err)
 		return nil, err
 	}
+	log.Debugf("Creating state")
 	state := state.NewState(storage)
 	storageCompatibilityChecker := internal.NewSanityStorageCheckerImpl(state, etherman, config.Synchronizer.OverrideStorageCheck)
 	sync, err := internal.NewSynchronizerImpl(ctx, storage, state, etherman, storageCompatibilityChecker, config.Synchronizer)
@@ -164,7 +170,10 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 		log.Error("Error creating synchronizer", err)
 		return nil, err
 	}
-
+	log.Debugf("Creating synchronizer adapter")
 	syncAdapter := NewSynchronizerAdapter(NewSyncrhronizerQueries(state, storage, ctx), sync)
+	log.Debugf("Starting RPC if enabled")
+	rpcsync.StartRPC(state)
+
 	return syncAdapter, nil
 }

@@ -11,9 +11,12 @@ type L1Block = entities.L1Block
 type L1InfoTreeLeaf = entities.L1InfoTreeLeaf
 type ForkIDInterval = entities.ForkIDInterval
 type VirtualBatch = entities.VirtualBatch
+type VirtualBatchConstraints = entities.VirtualBatchConstraints
 type SequencedBatches = entities.SequencedBatches
 type storageTxType = entities.Tx
 type kVMetadataEntry = entities.KVMetadataEntry
+type RollbackBatchesLogEntry = entities.RollbackBatchesLogEntry
+type SequencedBatchesSlice = entities.SequencesBatchesSlice
 
 type BlockStorer interface {
 	AddBlock(ctx context.Context, block *L1Block, dbTx storageTxType) error
@@ -43,11 +46,15 @@ type l1infoTreeStorer interface {
 type sequencedBatchStorer interface {
 	AddSequencedBatches(ctx context.Context, sequence *SequencedBatches, dbTx storageTxType) error
 	GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) (*SequencedBatches, error)
+	GetSequencesGreatestOrEqualBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) (*SequencedBatchesSlice, error)
+	GetLatestSequence(ctx context.Context, dbTx storageTxType) (*SequencedBatches, error)
+	DeleteSequencesGreatestOrEqualBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) error
 }
 
 type virtualBatchStorer interface {
 	AddVirtualBatch(ctx context.Context, virtualBatch *VirtualBatch, dbTx storageTxType) error
 	GetVirtualBatchByBatchNumber(ctx context.Context, batchNumber uint64, dbTx storageTxType) (*VirtualBatch, error)
+	GetLastestVirtualBatchNumber(ctx context.Context, constrains *VirtualBatchConstraints, dbTx storageTxType) (uint64, error)
 }
 
 type reorgStorer interface {
@@ -63,6 +70,11 @@ type KvStorer interface {
 	KVGetJson(ctx context.Context, key string, value interface{}, metadata *kVMetadataEntry, dbTx storageTxType) error
 }
 
+type rollbackBatchesLogStorer interface {
+	AddRollbackBatchesLogEntry(ctx context.Context, entry *RollbackBatchesLogEntry, dbTx storageTxType) error
+	GetRollbackBatchesLogEntryGreaterOrEqualL1BlockNumber(ctx context.Context, l1BlockNumber uint64, dbTx storageTxType) ([]RollbackBatchesLogEntry, error)
+}
+
 type Storer interface {
 	txStorer
 	BlockStorer
@@ -72,4 +84,5 @@ type Storer interface {
 	sequencedBatchStorer
 	reorgStorer
 	KvStorer
+	rollbackBatchesLogStorer
 }
