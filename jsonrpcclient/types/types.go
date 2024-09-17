@@ -245,7 +245,7 @@ type BatchData struct {
 
 // BatchDataResult is a list of BatchData for a BatchFilter
 type BatchDataResult struct {
-	Data []*BatchData `json:"data"`
+	Data []*BatchData
 }
 
 // TransactionOrHash for union type of transaction and types.Hash

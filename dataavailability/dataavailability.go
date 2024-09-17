@@ -91,7 +91,7 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 			if !d.isTrustedSequencer {
 				data, err := d.rpcData(batchNums, batchHashes, d.zkEVMClient.BatchesByNumbers)
 				if err != nil {
-					log.Warnf(failedDataRetrievalTemplate, batchNums, err.Error())
+					log.Warnf("Trusted RPC: "+failedDataRetrievalTemplate, batchNums, err.Error())
 				} else {
 					return data, nil
 				}
@@ -99,7 +99,7 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 		case External:
 			batchl2dataRaw, err := d.backend.GetSequence(d.ctx, batchHashes, dataAvailabilityMessage)
 			if err != nil {
-				log.Warnf(failedDataRetrievalTemplate, batchNums, err.Error())
+				log.Warnf("DAC Server: "+failedDataRetrievalTemplate, batchNums, err.Error())
 				return nil, err
 			}
 			return createBatchL2DataResonses(batchl2dataRaw, External), nil

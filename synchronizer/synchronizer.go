@@ -173,7 +173,7 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 	log.Debugf("Creating synchronizer adapter")
 	syncAdapter := NewSynchronizerAdapter(NewSyncrhronizerQueries(state, storage, ctx), sync)
 	log.Debugf("Starting RPC if enabled")
-	rpcsync.StartRPC(state)
+	rpcsync.StartRPC(config.RPC, syncAdapter, state)
 
 	return syncAdapter, nil
 }

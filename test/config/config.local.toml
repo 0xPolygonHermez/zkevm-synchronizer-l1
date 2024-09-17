@@ -2,6 +2,9 @@
 	Environment = "development" # "production" or "development"
 	Level = "info"
 	Outputs = ["stderr"]
+[SQLDB]
+	DriverName = "sqlite3"
+	DataSource = "file:/tmp/sync_db.sqlite"
 [DB]
 	Name = "sync"
 	User = "test_user"

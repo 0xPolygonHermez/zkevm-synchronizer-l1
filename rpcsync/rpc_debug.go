@@ -4,9 +4,8 @@
 package rpcsync
 
 import (
-	"log"
-
 	jRPC "github.com/0xPolygon/cdk-rpc/rpc"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 )
 
 /*
@@ -27,22 +26,19 @@ curl -X POST http://localhost:1025/ -H "Con -application/json" -d '{"method":"de
 curl -X POST http://localhost:1025/ -H "Con -application/json" -d '{"method":"debug_forceReorg", "params":[5159956], "id":1}'
 */
 
-func StartRPC(state interface{}) {
-	cfg := jRPC.Config{
-		Port:                      1025,
-		MaxRequestsPerIPAndSecond: 1000,
+func buildRPCServiceEndPoints(sync interface{}, state interface{}) []jRPC.Service {
+	stateImpl, ok := state.(StateDebugInterface)
+	if !ok {
+		log.Fatal("State must implement StateDebugInterface")
 	}
-	server := jRPC.NewServer(cfg, []jRPC.Service{
+	endPoints := []jRPC.Service{
 		{
 			Name: "debug",
 			Service: &DebugEndpoints{
-				State: state.(StateDebugInterface),
+				State: stateImpl,
 			},
 		},
-	})
-	go func() {
-		if err := server.Start(); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	}
+	endPoints = addSyncerEndpoint(sync, endPoints)
+	return endPoints
 }

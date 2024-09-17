@@ -42,4 +42,8 @@ const DefaultValues = `
 		[Etherman.Validium.RateLimit]
 			NumRequests = 900
 			Interval = "1s"
+[RPC]
+	Enabled = false
+	Port = 8025
+	MaxRequestsPerIPAndSecond = 1000
 `

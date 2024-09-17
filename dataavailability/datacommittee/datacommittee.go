@@ -416,6 +416,7 @@ func (d *DataCommitteeBackend) getCurrentDataCommitteeMembers() ([]DataCommittee
 			Addr: member.Addr,
 			URL:  member.Url,
 		})
+		log.Debugf("member %d: %s, %s", i, member.Addr.Hex(), member.Url)
 	}
 	return members, nil
 }

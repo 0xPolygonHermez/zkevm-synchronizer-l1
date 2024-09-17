@@ -9,6 +9,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/rpcsync"
 	storage "github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage"
 	syncconfig "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/config"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/translator"
@@ -53,6 +54,11 @@ func TestDefault(t *testing.T) {
 				RetryOnDACErrorInterval: types.Duration{Duration: time.Minute},
 				RateLimit:               utils.NewRateLimitConfig(900, time.Second),
 			},
+		},
+		RPC: rpcsync.Config{
+			Enabled:                   false,
+			Port:                      8025,
+			MaxRequestsPerIPAndSecond: 1000,
 		},
 	}
 	cfg, err := config.Default()

@@ -7,6 +7,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/hex"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/jsonrpcclient/types"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -92,9 +93,10 @@ func (c *Client) batchesByNumbers(_ context.Context, numbers []*big.Int, method 
 	var result *types.BatchDataResult
 	err = json.Unmarshal(response.Result, &result)
 	if err != nil {
+		log.Warnf("Error unmarshalling batch data: %v result:%s", err, response.Result)
 		return nil, err
 	}
-
+	log.Debugf("Query: url:%s  method:%s Response: %s", c.url, method, response.Result)
 	return result.Data, nil
 }
 

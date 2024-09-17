@@ -3,9 +3,12 @@
 
 package rpcsync
 
-import "github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
+import (
+	jRPC "github.com/0xPolygon/cdk-rpc/rpc"
+)
 
-// On release (no debug) there are no RPC server
-func StartRPC(state interface{}) {
-	log.Debug("RPC server is disabled on release")
+func buildRPCServiceEndPoints(sync interface{}, _ interface{}) []jRPC.Service {
+	endPoints := []jRPC.Service{}
+	endPoints = addSyncerEndpoint(sync, endPoints)
+	return endPoints
 }
