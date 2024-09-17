@@ -237,12 +237,14 @@ func (s *SynchronizerImpl) Sync(executionFlags SyncExecutionFlags) error {
 		log.Infof("networkID: %d, continuing from the last block stored on DB. lastBlockSynced: %+v", s.networkID, lastBlockSynced)
 	}
 	log.Infof("NetworkID: %d, initial lastBlockSynced: %+v", s.networkID, lastBlockSynced)
-	err = s.lastExecutionChecker.StartingSynchronization(s.ctx, nil)
-	if err != nil {
+	if s.lastExecutionChecker != nil {
+		err = s.lastExecutionChecker.StartingSynchronization(s.ctx, nil)
+		if err != nil {
 
-		err := fmt.Errorf("error checking last execution data. Error: %w", err)
-		log.Errorf(" %s", err)
-		return err
+			err := fmt.Errorf("error checking last execution data. Error: %w", err)
+			log.Errorf(" %s", err)
+			return err
+		}
 	}
 	for {
 		select {
