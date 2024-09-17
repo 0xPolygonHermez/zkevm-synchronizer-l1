@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -68,6 +69,14 @@ func LoadFileFromString(configFileData string, configType string) (*Config, erro
 		return nil, err
 	}
 	return cfg, nil
+}
+
+func SaveConfigToString(cfg Config) (string, error) {
+	b, err := json.Marshal(cfg)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
 
 // Load loads the configuration

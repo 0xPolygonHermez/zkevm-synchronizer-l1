@@ -5,11 +5,13 @@ import (
 	"errors"
 	"time"
 
+	zkevm_synchronizer_l1 "github.com/0xPolygonHermez/zkevm-synchronizer-l1"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/config"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/etherman"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/log"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/rpcsync"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state"
+	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/model"
 	"github.com/0xPolygonHermez/zkevm-synchronizer-l1/state/storage"
 	internal "github.com/0xPolygonHermez/zkevm-synchronizer-l1/synchronizer/internal"
 	"github.com/ethereum/go-ethereum/common"
@@ -165,7 +167,8 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 	log.Debugf("Creating state")
 	state := state.NewState(storage)
 	storageCompatibilityChecker := internal.NewSanityStorageCheckerImpl(state, etherman, config.Synchronizer.OverrideStorageCheck)
-	sync, err := internal.NewSynchronizerImpl(ctx, storage, state, etherman, storageCompatibilityChecker, config.Synchronizer)
+	LastExecutionChecker := newLastExecutionState(storage, config)
+	sync, err := internal.NewSynchronizerImpl(ctx, storage, state, etherman, storageCompatibilityChecker, LastExecutionChecker, config.Synchronizer)
 	if err != nil {
 		log.Error("Error creating synchronizer", err)
 		return nil, err
@@ -176,4 +179,12 @@ func NewSynchronizer(ctx context.Context, config config.Config) (Synchronizer, e
 	rpcsync.StartRPC(state)
 
 	return syncAdapter, nil
+}
+
+func newLastExecutionState(storage storage.KvStorer, cfg config.Config) *model.LastExecutionState {
+	configStr, err := config.SaveConfigToString(cfg)
+	if err != nil {
+		log.Fatal("Error saving config to string", err)
+	}
+	return model.NewLastExecutionState(storage, configStr, zkevm_synchronizer_l1.Version)
 }

@@ -24,7 +24,7 @@ var (
 			//https://github.com/0xPolygonHermez/zkevm-contracts/blob/a9b4f742f66bd4f3bcd98a3a188422480ffe0d4e/contracts/v2/consensus/validium/PolygonValidiumEtrog.sol#L91
 			function sequenceBatchesValidium(
 				ValidiumBatchData[] calldata batches,
-				uint32 indexL1InfoRoot,
+				uint32 l1InfoTreeLeafCount,
 				uint64 maxSequenceTimestamp,
 				bytes32 expectedFinalAccInputHash,
 				address l2Coinbase,

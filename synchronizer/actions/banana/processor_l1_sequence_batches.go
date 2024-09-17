@@ -54,10 +54,11 @@ func (p *ProcessorL1SequenceBatchesBanana) ProcessSequenceBatches(ctx context.Co
 	if sequencedBatches[0].Metadata != nil {
 		seqSource = seqSource + "/" + sequencedBatches[0].Metadata.RollupFlavor + "/" + sequencedBatches[0].Metadata.ForkName
 	}
+	seqTimeStamp := time.Unix(int64(sequencedBatches[0].BananaData.MaxSequenceTimestamp), 0)
 	seq.Sequence = *entities.NewSequencedBatches(
 		sequencedBatches[0].BatchNumber, sequencedBatches[len(sequencedBatches)-1].BatchNumber,
 		blockNumber, uint64(forkId),
-		l1BlockTimestamp, time.Now(),
+		seqTimeStamp, time.Now(),
 		l1inforoot, seqSource)
 
 	for _, sequencedBatch := range sequencedBatches {

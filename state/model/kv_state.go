@@ -15,6 +15,8 @@ type StorageKVInterface = storage.KvStorer
 const (
 	// keyStorageContentBound is the name of the KEY for sanity storage
 	keyStorageContentBound KVKey = "ContentBound"
+	// keyStorageLastExecution is the name of the KEY for last run
+	keyStorageLastExecution KVKey = "LastExecution"
 )
 
 // GetKVHelper is a helper function to get a value from the KV storage, if not found returns nil
