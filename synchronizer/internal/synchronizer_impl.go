@@ -33,9 +33,10 @@ type SynchronizerImpl struct {
 	networkID      uint
 	synced         bool
 
-	blockRangeProcessor syncinterfaces.BlockRangeProcessor
-	l1Sync              syncinterfaces.L1Syncer
-	storageChecker      syncinterfaces.StorageCompatibilityChecker
+	blockRangeProcessor  syncinterfaces.BlockRangeProcessor
+	l1Sync               syncinterfaces.L1Syncer
+	storageChecker       syncinterfaces.StorageCompatibilityChecker
+	lastExecutionChecker syncinterfaces.LastExecutionChecker
 
 	reorgCallback           func(nreorgData ReorgExecutionResult)
 	rollbackBatchesCallback func(data RollbackBatchesData)
@@ -48,6 +49,7 @@ func NewSynchronizerImpl(
 	state syncinterfaces.StateInterface,
 	ethMan syncinterfaces.EthermanFullInterface,
 	storageChecker syncinterfaces.StorageCompatibilityChecker,
+	lastExecutionChecker syncinterfaces.LastExecutionChecker,
 	cfg syncconfig.Config) (*SynchronizerImpl, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	networkID := uint(0)
@@ -99,17 +101,18 @@ func NewSynchronizerImpl(
 		})
 
 	sync := SynchronizerImpl{
-		storage:             storage,
-		state:               state,
-		etherMan:            ethMan,
-		ctx:                 ctx,
-		cancelCtx:           cancel,
-		genBlockNumber:      genesisBlockNumber,
-		cfg:                 cfg,
-		networkID:           networkID,
-		storageChecker:      storageChecker,
-		l1Sync:              l1SequentialSync,
-		blockRangeProcessor: blockRangeProcessor,
+		storage:              storage,
+		state:                state,
+		etherMan:             ethMan,
+		ctx:                  ctx,
+		cancelCtx:            cancel,
+		genBlockNumber:       genesisBlockNumber,
+		cfg:                  cfg,
+		networkID:            networkID,
+		storageChecker:       storageChecker,
+		lastExecutionChecker: lastExecutionChecker,
+		l1Sync:               l1SequentialSync,
+		blockRangeProcessor:  blockRangeProcessor,
 	}
 	state.AddOnReorgCallback(sync.OnReorgExecuted)
 	state.AddOnRollbackBatchesCallback(sync.OnRollbackBatchesExecuted)
@@ -234,6 +237,15 @@ func (s *SynchronizerImpl) Sync(executionFlags SyncExecutionFlags) error {
 		log.Infof("networkID: %d, continuing from the last block stored on DB. lastBlockSynced: %+v", s.networkID, lastBlockSynced)
 	}
 	log.Infof("NetworkID: %d, initial lastBlockSynced: %+v", s.networkID, lastBlockSynced)
+	if s.lastExecutionChecker != nil {
+		err = s.lastExecutionChecker.StartingSynchronization(s.ctx, nil)
+		if err != nil {
+
+			err := fmt.Errorf("error checking last execution data. Error: %w", err)
+			log.Errorf(" %s", err)
+			return err
+		}
+	}
 	for {
 		select {
 		case <-s.ctx.Done():
