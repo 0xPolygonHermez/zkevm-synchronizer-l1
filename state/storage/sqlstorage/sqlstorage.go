@@ -22,14 +22,18 @@ const (
 )
 
 func NewSqlStorage(cfg Config, runMigrations bool) (*SqlStorage, error) {
-	log.Infof("Running DB migrations")
-
+	err := cfg.SanityCheck()
+	if err != nil {
+		return nil, fmt.Errorf("config %s dont pass sanityCheck. Err: %w", cfg.String(), err)
+	}
+	log.Infof("Opening sync DB: cfg=%s", cfg.String())
 	db, err := sql.Open(cfg.DriverName, cfg.DataSource)
 	if err != nil {
 		log.Errorf("Unable to connect to database: %v\n", err)
 		return nil, err
 	}
 	if runMigrations {
+		log.Infof("Running DB migrations")
 		err := RunMigrationsUp(cfg.DriverName, db)
 		if err != nil {
 			err := fmt.Errorf("error executing migrations: %w", err)
