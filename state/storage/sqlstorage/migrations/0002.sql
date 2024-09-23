@@ -14,4 +14,4 @@ CREATE TABLE IF NOT EXISTS sequenced_batches
 
 
 -- +migrate Down
-DROP TABLE IF EXISTS sync.sequenced_batches;
+DROP TABLE IF EXISTS sequenced_batches;
