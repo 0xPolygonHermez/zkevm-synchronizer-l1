@@ -14,4 +14,4 @@ CREATE TABLE IF NOT EXISTS rollback_batches_log (
 
 -- +migrate Down
 
-DROP TABLE IF EXISTS sync.rollback_batches_log;
+DROP TABLE IF EXISTS rollback_batches_log;
