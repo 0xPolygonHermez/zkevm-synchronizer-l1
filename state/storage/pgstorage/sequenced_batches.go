@@ -24,7 +24,7 @@ func (p *PostgresStorage) AddSequencedBatches(ctx context.Context, sequence *Seq
 func (p *PostgresStorage) GetSequenceByBatchNumber(ctx context.Context, batchNumber uint64, dbTx dbTxType) (*SequencedBatches, error) {
 	const sql = `SELECT from_batch_num, to_batch_num,fork_id, timestamp,block_num, l1_info_root,received_at,source FROM sync.sequenced_batches 
 		WHERE  $1 >= from_batch_num  AND $1 <= to_batch_num 
-		ORDER BY block_num DESC LIMIT 1;`
+		ORDER BY from_batch_num DESC LIMIT 1;`
 	sequences, err := p.querySequences(ctx, fmt.Sprintf("GetSequenceByBatchNumber %d", batchNumber), sql, getPgTx(dbTx), batchNumber)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (p *PostgresStorage) GetLatestSequence(ctx context.Context, dbTx dbTxType) 
 func (p *PostgresStorage) GetSequencesGreatestOrEqualBatchNumber(ctx context.Context, batchNumber uint64, dbTx dbTxType) (*SequencedBatchesSlice, error) {
 	const sql = `SELECT from_batch_num, to_batch_num,fork_id, timestamp,block_num, l1_info_root,received_at,source FROM sync.sequenced_batches 
 		WHERE    from_batch_num >= $1 OR to_batch_num >= $1
-		ORDER BY block_num;`
+		ORDER BY from_batch_num;`
 	seq, err := p.querySequences(ctx, fmt.Sprintf("GetSequencesGreatestOrEqualBatchNumber %d", batchNumber), sql, getPgTx(dbTx), batchNumber)
 	if err != nil {
 		return nil, err
