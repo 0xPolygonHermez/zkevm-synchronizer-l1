@@ -31,7 +31,7 @@ func (p *SqlStorage) GetSequenceByBatchNumber(ctx context.Context, batchNumber u
 	sql := sqlSelectSequencedBatches +
 		"FROM " + p.BuildTableName(sequencedBatchesTable) + " " +
 		"WHERE  $1 >= from_batch_num  AND $1 <= to_batch_num " +
-		"ORDER BY block_num DESC LIMIT 1;"
+		"ORDER BY from_batch_num DESC LIMIT 1;"
 	sequences, err := p.querySequences(ctx, fmt.Sprintf("GetSequenceByBatchNumber %d", batchNumber), sql, getSqlTx(dbTx), batchNumber)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (p *SqlStorage) GetSequenceByBatchNumber(ctx context.Context, batchNumber u
 func (p *SqlStorage) GetLatestSequence(ctx context.Context, dbTx dbTxType) (*SequencedBatches, error) {
 	sql := sqlSelectSequencedBatches +
 		"FROM " + p.BuildTableName(sequencedBatchesTable) + "  " +
-		"ORDER BY block_num DESC LIMIT 1;"
+		"ORDER BY from_batch_num DESC LIMIT 1;"
 	sequences, err := p.querySequences(ctx, "GetLatestSequence", sql, getSqlTx(dbTx))
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (p *SqlStorage) GetSequencesGreatestOrEqualBatchNumber(ctx context.Context,
 	sql := sqlSelectSequencedBatches +
 		"FROM " + p.BuildTableName(sequencedBatchesTable) + "  " +
 		"WHERE    from_batch_num >= $1 OR to_batch_num >= $1 " +
-		"ORDER BY block_num;"
+		"ORDER BY from_batch_num;"
 	seq, err := p.querySequences(ctx, fmt.Sprintf("GetSequencesGreatestOrEqualBatchNumber %d", batchNumber), sql, getSqlTx(dbTx), batchNumber)
 	if err != nil {
 		return nil, err
