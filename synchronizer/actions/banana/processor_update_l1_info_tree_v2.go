@@ -47,10 +47,15 @@ func (p *ProcessorUpdateL1InfoTreeV2) ProcessUpdateL1InfoTreeV2(ctx context.Cont
 		log.Errorf("error getting the state leaf. Error: %v", err)
 		return err
 	}
-	err = compareL1InfoTreeLeaf(*stateLeaf, data)
-	if err != nil {
-		log.Errorf("error comparing the state leaf. Error: %v", err)
-		return err
+	if stateLeaf != nil {
+		err = compareL1InfoTreeLeaf(*stateLeaf, data)
+		if err != nil {
+			log.Errorf("error comparing the state leaf. Error: %v", err)
+			return err
+		}
+		log.Infof("L1InfoTreeLeafV2 sanity check OK: %s", data.String())
+	} else {
+		log.Warnf("this l1nfotree is not stored on local DB. So can't check it: data:%s ", data.String())
 	}
 	return nil
 }
