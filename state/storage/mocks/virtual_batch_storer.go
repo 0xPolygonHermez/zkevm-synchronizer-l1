@@ -70,6 +70,64 @@ func (_c *virtualBatchStorer_AddVirtualBatch_Call) RunAndReturn(run func(context
 	return _c
 }
 
+// GetLastestVirtualBatchNumber provides a mock function with given fields: ctx, constrains, dbTx
+func (_m *virtualBatchStorer) GetLastestVirtualBatchNumber(ctx context.Context, constrains *entities.VirtualBatchConstraints, dbTx entities.Tx) (uint64, error) {
+	ret := _m.Called(ctx, constrains, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLastestVirtualBatchNumber")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *entities.VirtualBatchConstraints, entities.Tx) (uint64, error)); ok {
+		return rf(ctx, constrains, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *entities.VirtualBatchConstraints, entities.Tx) uint64); ok {
+		r0 = rf(ctx, constrains, dbTx)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *entities.VirtualBatchConstraints, entities.Tx) error); ok {
+		r1 = rf(ctx, constrains, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// virtualBatchStorer_GetLastestVirtualBatchNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLastestVirtualBatchNumber'
+type virtualBatchStorer_GetLastestVirtualBatchNumber_Call struct {
+	*mock.Call
+}
+
+// GetLastestVirtualBatchNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - constrains *entities.VirtualBatchConstraints
+//   - dbTx entities.Tx
+func (_e *virtualBatchStorer_Expecter) GetLastestVirtualBatchNumber(ctx interface{}, constrains interface{}, dbTx interface{}) *virtualBatchStorer_GetLastestVirtualBatchNumber_Call {
+	return &virtualBatchStorer_GetLastestVirtualBatchNumber_Call{Call: _e.mock.On("GetLastestVirtualBatchNumber", ctx, constrains, dbTx)}
+}
+
+func (_c *virtualBatchStorer_GetLastestVirtualBatchNumber_Call) Run(run func(ctx context.Context, constrains *entities.VirtualBatchConstraints, dbTx entities.Tx)) *virtualBatchStorer_GetLastestVirtualBatchNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*entities.VirtualBatchConstraints), args[2].(entities.Tx))
+	})
+	return _c
+}
+
+func (_c *virtualBatchStorer_GetLastestVirtualBatchNumber_Call) Return(_a0 uint64, _a1 error) *virtualBatchStorer_GetLastestVirtualBatchNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *virtualBatchStorer_GetLastestVirtualBatchNumber_Call) RunAndReturn(run func(context.Context, *entities.VirtualBatchConstraints, entities.Tx) (uint64, error)) *virtualBatchStorer_GetLastestVirtualBatchNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetVirtualBatchByBatchNumber provides a mock function with given fields: ctx, batchNumber, dbTx
 func (_m *virtualBatchStorer) GetVirtualBatchByBatchNumber(ctx context.Context, batchNumber uint64, dbTx entities.Tx) (*entities.VirtualBatch, error) {
 	ret := _m.Called(ctx, batchNumber, dbTx)

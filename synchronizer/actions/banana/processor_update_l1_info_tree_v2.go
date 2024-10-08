@@ -13,6 +13,7 @@ import (
 
 type stateVerifyL1InfoTreeInterface interface {
 	GetL1InfoLeafPerIndex(ctx context.Context, L1InfoTreeIndex uint32, dbTx stateTxType) (*L1InfoTreeLeaf, error)
+	GetLatestL1InfoTreeLeaf(ctx context.Context, dbTx stateTxType) (*L1InfoTreeLeaf, error)
 }
 
 type ProcessorUpdateL1InfoTreeV2 struct {
@@ -55,7 +56,16 @@ func (p *ProcessorUpdateL1InfoTreeV2) ProcessUpdateL1InfoTreeV2(ctx context.Cont
 		}
 		log.Infof("L1InfoTreeLeafV2 sanity check OK: %s", data.String())
 	} else {
-		log.Warnf("this l1nfotree is not stored on local DB. So can't check it: data:%s ", data.String())
+		responseErr := fmt.Sprintf("this l1nfotree is not stored on local DB. So it's likely that is desynced : incomming data:%s ", data.String())
+		lastLeafOnDb, err := p.state.GetLatestL1InfoTreeLeaf(ctx, dbTx)
+		if err == nil && lastLeafOnDb != nil {
+			responseErr += fmt.Sprintf(" Latest leaf on DB: %s", lastLeafOnDb.String())
+		} else {
+			responseErr += fmt.Sprintf(" Error getting latest leaf on DB: %v", err)
+		}
+		log.Error(responseErr)
+		return fmt.Errorf(responseErr)
+
 	}
 	return nil
 }
