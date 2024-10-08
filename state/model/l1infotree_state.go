@@ -165,3 +165,7 @@ func (s *L1InfoTreeState) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot c
 func (s *L1InfoTreeState) GetL1InfoLeafPerIndex(ctx context.Context, L1InfoTreeIndex uint32, dbTx stateTxType) (*L1InfoTreeLeaf, error) {
 	return s.storage.GetL1InfoLeafPerIndex(ctx, L1InfoTreeIndex, dbTx)
 }
+
+func (s *L1InfoTreeState) GetLatestL1InfoTreeLeaf(ctx context.Context, dbTx stateTxType) (*L1InfoTreeLeaf, error) {
+	return s.storage.GetLatestL1InfoTreeLeaf(ctx, dbTx)
+}

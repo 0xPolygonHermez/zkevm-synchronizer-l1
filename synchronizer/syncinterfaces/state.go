@@ -43,6 +43,7 @@ type StateInterface interface {
 	GetL1InfoRootPerLeafIndex(ctx context.Context, L1InfoTreeIndex uint32, dbTx stateTxType) (common.Hash, error)
 	GetL1InfoLeafPerIndex(ctx context.Context, L1InfoTreeIndex uint32, dbTx stateTxType) (*entities.L1InfoTreeLeaf, error)
 	GetL1InfoTreeLeaves(ctx context.Context, indexLeaves []uint32, dbTx stateTxType) (map[uint32]entities.L1InfoTreeLeaf, error)
+	GetLatestL1InfoTreeLeaf(ctx context.Context, dbTx stateTxType) (*entities.L1InfoTreeLeaf, error)
 
 	AddForkID(ctx context.Context, newForkID entities.ForkIDInterval, dbTx stateTxType) error
 
